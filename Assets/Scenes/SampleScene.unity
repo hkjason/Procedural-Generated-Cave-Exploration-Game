@@ -246,9 +246,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c22e44ee5f6f0334a90b428c6d77c6ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  iterations: 5
-  cubePrefab: {fileID: 7678260739530072030, guid: 840d04f7b2b9dd042994733685af7d37, type: 3}
-  caveVisualisor: {fileID: 1656487381}
+  iterations: 10
 --- !u!4 &926529048
 Transform:
   m_ObjectHideFlags: 0
@@ -403,11 +401,11 @@ MonoBehaviour:
   width: 100
   height: 100
   depth: 100
-  _seed: 0
+  _seed: 1000
   randomSeed: 0
-  cubePrefab: {fileID: 7678260739530072030, guid: 840d04f7b2b9dd042994733685af7d37, type: 3}
   cellularAutomata: {fileID: 926529047}
   caveVisualisor: {fileID: 1656487381}
+  prefab: {fileID: 1746616157882772443, guid: 797b0fd97f0f59b44809ea5513379a32, type: 3}
 --- !u!1 &1656487380
 GameObject:
   m_ObjectHideFlags: 0
@@ -439,7 +437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f33709d0fd15a847a0b9ecec571f591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainSurface: 0
+  terrainSurface: 0.5
 --- !u!4 &1656487382
 Transform:
   m_ObjectHideFlags: 0

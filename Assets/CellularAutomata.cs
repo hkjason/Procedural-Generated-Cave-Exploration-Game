@@ -13,18 +13,9 @@ public class CellularAutomata : MonoBehaviour
     private int[,,] _lastStateCaveGrid;
     private int[,,] _thisStateCaveGrid;
 
-    public GameObject cubePrefab;
-
-    private List<GameObject> _prefabList;
-
-    //temp
-    public CaveVisualisor caveVisualisor;
-
     void Start()
     {
         caveGenerator = CaveGenerator.Instance;
-
-        _prefabList = new List<GameObject>();
     }
 
     int GetNeighborCount(int locX, int locY, int locZ)
@@ -48,6 +39,22 @@ public class CellularAutomata : MonoBehaviour
                 }
             }
         }
+        return neighborCount;
+    }
+
+    int GetNeighborCountVM(int locX, int locY, int locZ)
+    {
+        int neighborCount = 0;
+
+        if (_lastStateCaveGrid[locX - 1, locY, locZ] > 0) neighborCount++;
+        if (_lastStateCaveGrid[locX + 1, locY, locZ] > 0) neighborCount++;
+        if (_lastStateCaveGrid[locX, locY - 1, locZ] > 0) neighborCount++;
+        if (_lastStateCaveGrid[locX, locY + 1, locZ] > 0) neighborCount++;
+        if (_lastStateCaveGrid[locX, locY, locZ - 1] > 0) neighborCount++;
+        if (_lastStateCaveGrid[locX, locY, locZ + 1] > 0) neighborCount++;
+
+        if (neighborCount >= 2) return neighborCount;
+
         return neighborCount;
     }
 
@@ -75,8 +82,6 @@ public class CellularAutomata : MonoBehaviour
             }
         }
 
-        //Iter
-        
         for (int iter = 0; iter < iterations; iter++)
         {
 
@@ -88,9 +93,10 @@ public class CellularAutomata : MonoBehaviour
                 for (int j = 1; j < caveGenerator.height -1 ; j++)
                 {
                     for (int k = 1; k < caveGenerator.depth -1; k++)
-                    { 
+                    {
+
                         int neighborCount = GetNeighborCount(i, j, k);
-                        if (neighborCount >= 13 && neighborCount <= 26)
+                        if (neighborCount >= 13)
                         {
                             _thisStateCaveGrid[i, j, k]++;
                         }
@@ -102,9 +108,21 @@ public class CellularAutomata : MonoBehaviour
                         {
                             _thisStateCaveGrid[i, j, k]--;
                         }
+                        
+                        /*
+                        int neighborCount = GetNeighborCountVM(i, j, k);
+                        if (neighborCount >= 2 && neighborCount <= 6)
+                        {
+                            _thisStateCaveGrid[i, j, k]++;
+                        }
+                        else
+                        {
+                            _thisStateCaveGrid[i, j, k]--;
+                        }
 
                         if (_thisStateCaveGrid[i, j, k] > 4) _thisStateCaveGrid[i, j, k] = 4;
                         else if (_thisStateCaveGrid[i, j, k] < 0) _thisStateCaveGrid[i, j, k] = 0;
+                        */
                     }
                 }
             }
@@ -121,57 +139,7 @@ public class CellularAutomata : MonoBehaviour
                     }
                 }
             }
-
-            caveVisualisor.CreateMeshData();
         }
-        
-
-        //non iter
-        /*
-        _lastStateCaveGrid = DeepClone(_thisStateCaveGrid);
-
-        //Skip boundaries
-        for (int i = 1; i < caveGenerator.width - 1; i++)
-        {
-            for (int j = 1; j < caveGenerator.height - 1; j++)
-            {
-                for (int k = 1; k < caveGenerator.depth - 1; k++)
-                {
-                    int neighborCount = GetNeighborCount(i, j, k);
-                    if (neighborCount >= 13 && neighborCount <= 26)
-                    {
-                        _thisStateCaveGrid[i, j, k]++;
-                    }
-                    else if (neighborCount == 1 || neighborCount == 4 || neighborCount == 8 || neighborCount == 11)
-                    {
-                        _thisStateCaveGrid[i, j, k]++;
-                    }
-                    else
-                    {
-                        _thisStateCaveGrid[i, j, k]--;
-                    }
-
-                    if (_thisStateCaveGrid[i, j, k] > 4) _thisStateCaveGrid[i, j, k] = 4;
-                    else if (_thisStateCaveGrid[i, j, k] < 0) _thisStateCaveGrid[i, j, k] = 0;
-                }
-            }
-        }
-        for (int i = 1; i < caveGenerator.width; i++)
-        {
-            for (int j = 1; j < caveGenerator.height; j++)
-            {
-                for (int k = 1; k < caveGenerator.depth; k++)
-                {
-                    if (_thisStateCaveGrid[i, j, k] > 0)
-                    { caveGenerator.caveGrid[i, j, k] = true; }
-                    else
-                    { caveGenerator.caveGrid[i, j, k] = false; }
-                }
-            }
-        }
-        */
-
-        caveVisualisor.CreateMeshData();
     }
 
     int[,,] DeepClone(int[,,] obj)

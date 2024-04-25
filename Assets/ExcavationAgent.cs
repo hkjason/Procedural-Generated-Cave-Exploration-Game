@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class ExcavationAgent : CaveAgent
@@ -9,25 +10,23 @@ public class ExcavationAgent : CaveAgent
         // Any additional initialization for TunnelAgent
     }
 
+
     public override void Walk()
     {
-        while (tokens > 0)
+        Vector3Int direction = new Vector3Int(0,0,0);
+        for (int i = - weight/2; i < weight/2 + 1; i++)
         {
-
-            Vector3Int direction;
-            do
+            for (int j = - weight/2; j <  weight /2 +1; j++)
             {
-                direction = new Vector3Int(Random.Range(-1, 2), Random.Range(-1, 2), Random.Range(-1, 2));
-
-                //direction = cornerTable[Random.Range(0, 6)];
+                for (int k = - weight /2; k < weight /2 +1; k++)
+                {
+                    direction = new Vector3Int(i, j, k);
+                }
             }
-            while (!WithinBounds(currentPos + (direction * weight)));
-
-            currentPos += (direction* weight);
-
-            CaveGenerator.Instance.caveGrid[currentPos.x, currentPos.y, currentPos.z] = false;
-
-            tokens--;
+        }
+        if (WithinBounds(currentPos + direction))
+        { 
+            CaveGenerator.Instance.caveGrid[currentPos.x + direction.x, currentPos.y + direction.y, currentPos.z + direction.z] = false; 
         }
 
     }

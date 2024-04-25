@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TunnelAgent : CaveAgent
+public class GrowAgent : CaveAgent
 {
-    public TunnelAgent(Vector3Int agentStartPt, int tokens, int weight) : base(agentStartPt, tokens, weight)
-    {
+    List<TunnelAgent> tunnelAgentList;
 
+    public GrowAgent(Vector3Int agentStartPt, int tokens, int weight) : base(agentStartPt, tokens, weight)
+    {
+        tunnelAgentList = new List<TunnelAgent>();
     }
 
     public override void Walk()
@@ -35,8 +37,23 @@ public class TunnelAgent : CaveAgent
                     }
                 }
             }
+
+            //Probability to spawn a smaller agent
+            //int randomNumber = Random.Range(0, tokens);
+            int randomNumber = Random.Range(0, 100);
+
+            if (randomNumber == 0)
+            {
+                TunnelAgent tunnelAgent = new TunnelAgent(currentPos, Random.Range(tokens / 4 - tokens / 8, tokens / 4 + tokens / 8), weight / 2);
+                tunnelAgentList.Add(tunnelAgent);
+                Debug.Log("Spawn");
+            }
         }
 
+        foreach (TunnelAgent tunnelAgent in tunnelAgentList)
+        {
+            tunnelAgent.Walk();
+        }
 
     }
 
