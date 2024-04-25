@@ -8,6 +8,7 @@ public class CaveVisualisor : MonoBehaviour
     List<Vector2> uvs = new List<Vector2>();
 
     [SerializeField] float terrainSurface;
+    [SerializeField] bool smoothTerrain =true;
 
     MeshFilter meshFilter;
 
@@ -311,16 +312,15 @@ public class CaveVisualisor : MonoBehaviour
         meshFilter = GetComponent<MeshFilter>();
     }
 
-    #region "IntMarchingCube for testing"
     public void CreateMeshData()
     {
-        
+        /*
         for (int y = 1; y < _height; y++)
         {
             for (int z = 1; z < _depth; z++)
             {
-                caveGenerator.caveGrid[1, y, z] = false;
-                caveGenerator.caveGrid[_width - 1, y, z] = false;
+                caveGenerator.caveGrid[1, y, z] = -1f;
+                caveGenerator.caveGrid[_width - 1, y, z] = -1f;
             }
         }
 
@@ -330,8 +330,8 @@ public class CaveVisualisor : MonoBehaviour
         {
             for (int z = 1; z < _depth; z++)
             {
-                caveGenerator.caveGrid[x, 1, z] = false;
-                caveGenerator.caveGrid[x, _height - 1, z] = false;
+                caveGenerator.caveGrid[x, 1, z] = -1f;
+                caveGenerator.caveGrid[x, _height - 1, z] = -1f;
             }
         }
 
@@ -340,125 +340,13 @@ public class CaveVisualisor : MonoBehaviour
         {
             for (int y = 1; y < _height; y++)
             {
-                caveGenerator.caveGrid[x, y, 1] = false;
-                caveGenerator.caveGrid[x, y, _depth - 1] = false;
+                caveGenerator.caveGrid[x, y, 1] = -1f;
+                caveGenerator.caveGrid[x, y, _depth - 1] = -1f;
             }
         }
-        
-
+        */
 
         ClearMeshData();
-
-        for (int i = 1; i < _width - 1; i++)
-        {
-            for (int j = 1; j < _height - 1; j++)
-            {
-                for (int k = 1; k < _depth - 1; k++)
-                {
-                    bool[] cube = new bool[8];
-
-                    for (int cornerIdx = 0; cornerIdx < 8; cornerIdx++)
-                    {
-                        Vector3Int corner = new Vector3Int(i, j, k) + cornerTable[cornerIdx];
-                        cube[cornerIdx] = caveGenerator.caveGrid[corner.x, corner.y, corner.z];
-                    }
-
-                    MarchingCube(new Vector3(i, j, k), cube);
-                }
-            }
-        }
-
-        BuildMesh();
-    }
-
-    void MarchingCube(Vector3 position, bool[] cube)
-    {
-        int configIndex = GetCubeConfiguration(cube);
-
-        if (configIndex == 0 || configIndex == 255) return;
-
-        int edgeIndex = 0;
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 3; j++)
-            {
-                int index = triangleTable[configIndex, edgeIndex];
-
-                if (index == -1) return;
-
-                Vector3 vert1 = position + cornerTable[edgeTable[index, 0]];
-                Vector3 vert2 = position + cornerTable[edgeTable[index, 1]];
-
-                Vector3 vertPosition = (vert1 + vert2) / 2f;
-
-                vertices.Add(vertPosition);
-                triangles.Add(vertices.Count - 1);
-                uvs.Add(uvTable[edgeIndex % 6]);
-
-
-                edgeIndex++;
-            }
-        }
-    }
-
-    //int GetCubeConfiguration(float[] cube)
-    int GetCubeConfiguration(bool[] cube)
-    {
-        int configurationIndex = 0;
-        for (int i = 0; i < 8; i++)
-        {
-            if (cube[i])
-                configurationIndex |= 1 << i;
-        }
-        return configurationIndex;
-    }
-    #endregion
-
-    #region "FloatMarchingCube"
-    public void CreateMeshDataF()
-    {
-        ClearMeshData();
-
-        /////
-        /////
-        float[,,] noiseGrid = new float[100, 100, 100];
-
-
-        FastNoiseLite fastNoise = new FastNoiseLite();
-        FastNoiseLite fastNoise1 = new FastNoiseLite();
-        fastNoise.SetSeed(1000);
-        fastNoise.SetSeed(1000 + 1);
-
-        float magnitude = 2f;
-        for (int x = 0; x < 100; x++)
-        {
-            for (int y = 0; y < 100; y++)
-            {
-                for (int z = 0; z < 100; z++)
-                {
-
-                    float noise = fastNoise.GetNoise((float)x * magnitude, (float)y * magnitude, (float)z * magnitude);
-                    float noise1 = fastNoise1.GetNoise((float)x * magnitude, (float)y * magnitude, (float)z * magnitude);
-
-                    //blend noise
-                    float blendFactor = 0.5f;
-                    float combinedNoise = Mathf.Lerp(noise, noise1, blendFactor);
-
-                    if (caveGenerator.caveGrid[x, y, z] == false)
-                    {
-                        noiseGrid[x,y,z] += combinedNoise;
-                    }
-                    else
-                    {
-                        noiseGrid[x, y, z] = 0;
-                    }
-                    //noiseGrid[x, y, z] = combinedNoise + 0.3f * (caveGenerator.caveGrid[x,y,z]? 1f : 0f) ;
-                }
-            }
-        }
-        /////
-        /////
-
 
         for (int x = 1; x < _width - 1; x++)
         {
@@ -466,21 +354,19 @@ public class CaveVisualisor : MonoBehaviour
             {
                 for (int z = 1; z < _depth - 1; z++)
                 {
-                    MarchingCube(new Vector3Int(x, y, z), noiseGrid);
+                    MarchingCube(new Vector3Int(x, y, z));
                 }
             }
         }
         BuildMesh();
     }
 
-    void MarchingCube(Vector3Int position, float[,,] noiseGrid)
+    void MarchingCube(Vector3Int position)
     {
-        bool smoothTerrain = true;
-
         float[] cube = new float[8];
         for (int i = 0; i < 8; i++)
         {
-            cube[i] = noiseGrid[position.x + cornerTable[i].x, position.y + cornerTable[i].y, position.z + cornerTable[i].z];
+            cube[i] = GetPosition(position + cornerTable[i]);
         }
 
         int configIndex = GetCubeConfiguration(cube);
@@ -506,7 +392,7 @@ public class CaveVisualisor : MonoBehaviour
                     float vert2Sample = cube[edgeTable[index, 1]];
 
                     float difference = vert2Sample - vert1Sample;
-
+                    
                     if (difference == 0)
                         difference = terrainSurface;
                     else
@@ -528,6 +414,11 @@ public class CaveVisualisor : MonoBehaviour
         }
     }
 
+    float GetPosition(Vector3Int point)
+    {
+        return caveGenerator.caveGrid[point.x, point.y, point.z];
+    }
+
     int GetCubeConfiguration(float[] cube)
     {
         int configurationIndex = 0;
@@ -538,15 +429,6 @@ public class CaveVisualisor : MonoBehaviour
         }
         return configurationIndex;
     }
-
-    #endregion
-
-    float GetGridPoint(Vector3Int point)
-    {
-        return caveGenerator.caveGrid[point.x, point.y, point.z] ? 1f : 0f;
-    }
-
-
 
     void ClearMeshData()
     {
@@ -569,5 +451,22 @@ public class CaveVisualisor : MonoBehaviour
 
         mesh.RecalculateNormals();
         meshFilter.mesh = mesh;
+    }
+
+    int GetNeighborCount(int locX, int locY, int locZ)
+    {
+        if (locX == 0 || locX == 99 || locY == 0 || locY == 99 || locZ == 0 || locZ == 99)
+            return 6;
+
+        int neighborCount = 0;
+
+        if (caveGenerator.caveGrid[locX - 1,locY,locZ] < 0) neighborCount++;
+        if (caveGenerator.caveGrid[locX + 1, locY, locZ] < 0) neighborCount++;
+        if (caveGenerator.caveGrid[locX, locY - 1, locZ] < 0) neighborCount++;
+        if (caveGenerator.caveGrid[locX, locY + 1, locZ] < 0) neighborCount++;
+        if (caveGenerator.caveGrid[locX, locY, locZ - 1] < 0) neighborCount++;
+        if (caveGenerator.caveGrid[locX, locY, locZ + 1] < 0) neighborCount++;
+
+        return neighborCount;
     }
 }

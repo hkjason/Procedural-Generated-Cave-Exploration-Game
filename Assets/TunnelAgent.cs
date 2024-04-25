@@ -31,7 +31,7 @@ public class TunnelAgent : CaveAgent
                 {
                     for (int z = -(weight / 2); z <= (weight / 2); z++)
                     {
-                        CaveGenerator.Instance.caveGrid[currentPos.x + x, currentPos.y + y, currentPos.z + z] = false;
+                        CaveGenerator.Instance.caveGrid[currentPos.x + x, currentPos.y + y, currentPos.z + z] = -1f;
                     }
                 }
             }

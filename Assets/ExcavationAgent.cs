@@ -10,7 +10,6 @@ public class ExcavationAgent : CaveAgent
         // Any additional initialization for TunnelAgent
     }
 
-
     public override void Walk()
     {
         Vector3Int direction = new Vector3Int(0,0,0);
@@ -26,7 +25,7 @@ public class ExcavationAgent : CaveAgent
         }
         if (WithinBounds(currentPos + direction))
         { 
-            CaveGenerator.Instance.caveGrid[currentPos.x + direction.x, currentPos.y + direction.y, currentPos.z + direction.z] = false; 
+            CaveGenerator.Instance.caveGrid[currentPos.x + direction.x, currentPos.y + direction.y, currentPos.z + direction.z] = -1f; 
         }
 
     }

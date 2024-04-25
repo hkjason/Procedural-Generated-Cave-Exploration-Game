@@ -74,7 +74,7 @@ public class CellularAutomata : MonoBehaviour
                 for (int k = 0; k < caveGenerator.depth; k++)
                 {
                     //Works when 0, 4 print if ==0
-                    if (caveGenerator.caveGrid[i, j, k] == true)
+                    if (caveGenerator.caveGrid[i, j, k] > 0)
                     { _thisStateCaveGrid[i, j, k] = 0; }
                     else
                     { _thisStateCaveGrid[i, j, k] = 4; }
@@ -108,21 +108,6 @@ public class CellularAutomata : MonoBehaviour
                         {
                             _thisStateCaveGrid[i, j, k]--;
                         }
-                        
-                        /*
-                        int neighborCount = GetNeighborCountVM(i, j, k);
-                        if (neighborCount >= 2 && neighborCount <= 6)
-                        {
-                            _thisStateCaveGrid[i, j, k]++;
-                        }
-                        else
-                        {
-                            _thisStateCaveGrid[i, j, k]--;
-                        }
-
-                        if (_thisStateCaveGrid[i, j, k] > 4) _thisStateCaveGrid[i, j, k] = 4;
-                        else if (_thisStateCaveGrid[i, j, k] < 0) _thisStateCaveGrid[i, j, k] = 0;
-                        */
                     }
                 }
             }
@@ -133,9 +118,9 @@ public class CellularAutomata : MonoBehaviour
                     for (int k = 1; k < caveGenerator.depth; k++)
                     {
                         if (_thisStateCaveGrid[i, j, k] > 0)
-                        { caveGenerator.caveGrid[i, j, k] = true; }
+                        { caveGenerator.caveGrid[i, j, k] = 1f; }
                         else
-                        { caveGenerator.caveGrid[i, j, k] = false; }
+                        { caveGenerator.caveGrid[i, j, k] = -1f; }
                     }
                 }
             }

@@ -398,10 +398,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b470d29dd4dbb4c849a2ce2374e616, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 100
-  height: 100
-  depth: 100
-  _seed: 1000
+  width: 200
+  height: 200
+  depth: 200
+  _seed: 1
   randomSeed: 0
   cellularAutomata: {fileID: 926529047}
   caveVisualisor: {fileID: 1656487381}
@@ -437,7 +437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f33709d0fd15a847a0b9ecec571f591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainSurface: 0.5
+  terrainSurface: 0
 --- !u!4 &1656487382
 Transform:
   m_ObjectHideFlags: 0
