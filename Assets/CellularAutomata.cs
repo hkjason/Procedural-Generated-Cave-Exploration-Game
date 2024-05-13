@@ -42,6 +42,30 @@ public class CellularAutomata : MonoBehaviour
         return neighborCount;
     }
 
+    int GetNeighborCountQuick(int locX, int locY, int locZ)
+    {
+        int neighborCount = 0;
+
+        for (int i = locX - 1; i <= locX + 1; i++)
+        {
+            for (int j = locY - 1; j <= locY + 1; j++)
+            {
+                for (int k = locZ - 1; k <= locZ + 1; k++)
+                {
+                    if (i == locX && j == locY && k == locZ) continue;
+
+                    if (_lastStateCaveGrid[i, j, k] > 0)
+                    {
+                        neighborCount++;
+                    }
+
+                    //if (neighborCount > 1) return 2;
+                }
+            }
+        }
+        return neighborCount;
+    }
+
     int GetNeighborCountVM(int locX, int locY, int locZ)
     {
         int neighborCount = 0;
@@ -121,6 +145,27 @@ public class CellularAutomata : MonoBehaviour
                         { caveGenerator.caveGrid[i, j, k] = 1f; }
                         else
                         { caveGenerator.caveGrid[i, j, k] = -1f; }
+                    }
+                }
+            }
+        }
+
+        CleanUp();
+    }
+
+    void CleanUp()
+    {
+        for (int i = 1; i < caveGenerator.width - 1; i++)
+        {
+            for (int j = 1; j < caveGenerator.height - 1; j++)
+            {
+                for (int k = 1; k < caveGenerator.depth - 1; k++)
+                {
+                    int neighborCount = GetNeighborCountQuick(i, j, k);
+
+                    if (neighborCount <= 4)
+                    {
+                        caveGenerator.caveGrid[i, j, k] = -1f;
                     }
                 }
             }

@@ -35,6 +35,12 @@ public class TunnelAgent : CaveAgent
                     }
                 }
             }
+
+            int randomNumber1 = Random.Range(0, 100);
+            if (randomNumber1 == 0)
+            {
+                CaveGenerator.Instance.orePoints.Add(currentPos);
+            }
         }
 
 

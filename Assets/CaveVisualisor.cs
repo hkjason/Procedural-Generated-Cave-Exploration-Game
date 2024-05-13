@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class CaveVisualisor : MonoBehaviour
 {
@@ -7,10 +9,14 @@ public class CaveVisualisor : MonoBehaviour
     List<int> triangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
 
+    Dictionary<Vector3Int, (int startIndex, int endIndex)> vertexMap = new Dictionary<Vector3Int, (int, int)>();
+    List<(int startIndex, int endIndex)> vertexMapInactive = new List<(int, int)>();
+
     [SerializeField] float terrainSurface;
     [SerializeField] bool smoothTerrain =true;
 
     MeshFilter meshFilter;
+    MeshCollider meshCollider;
 
     private int[,] edgeTable = new int[12, 2]
     {
@@ -310,6 +316,8 @@ public class CaveVisualisor : MonoBehaviour
         _depth = caveGenerator.depth;
 
         meshFilter = GetComponent<MeshFilter>();
+        meshCollider = GetComponent<MeshCollider>();
+        //transform.tag = "Terrain";
     }
 
     public void CreateMeshData()
@@ -358,11 +366,34 @@ public class CaveVisualisor : MonoBehaviour
                 }
             }
         }
+        BuildMeshQuick();
+    }
+
+    public void UpdateMeshData(Vector3Int position)
+    {
+        //(int startIndex, int endIndex) = vertexMap[position];
+
+        //vertexMapInactive.Add((startIndex, endIndex));
+
+        for (int x = -1; x < 2; x++)
+        {
+            for (int y = -1; y < 2; y++)
+            {
+                for (int z = -1; z < 2; z++)
+                {
+                    MarchingCube(new Vector3Int(position.x + x, position.y + y, position.z + z));
+                }
+            }
+        }
+
+        //MarchingCube(position);
+
         BuildMesh();
     }
 
     void MarchingCube(Vector3Int position)
     {
+        int startIdx = vertices.Count;
         float[] cube = new float[8];
         for (int i = 0; i < 8; i++)
         {
@@ -380,7 +411,18 @@ public class CaveVisualisor : MonoBehaviour
             {
                 int index = triangleTable[configIndex, edgeIndex];
 
-                if (index == -1) return;
+                if (index == -1)
+                {
+                    if (vertexMap.ContainsKey(position))
+                    {
+                        vertexMap[position] = (startIdx, vertices.Count - 1);
+                    }
+                    else
+                    {
+                        vertexMap.Add(position, (startIdx, vertices.Count - 1));
+                    }
+                    return;
+                } 
 
                 Vector3 vert1 = position + cornerTable[edgeTable[index, 0]];
                 Vector3 vert2 = position + cornerTable[edgeTable[index, 1]];
@@ -405,14 +447,52 @@ public class CaveVisualisor : MonoBehaviour
                     vertPosition = (vert1 + vert2) / 2f;
                 }
 
-                vertices.Add(vertPosition);
-                triangles.Add(vertices.Count - 1);
+                if (true)
+                {
+                    vertices.Add(vertPosition);
+                    triangles.Add(vertices.Count - 1);
+                }
+                else
+                {
+                    triangles.Add(VertForIndice(vertPosition));
+                }
+
                 uvs.Add(uvTable[edgeIndex % 6]);
 
                 edgeIndex++;
             }
         }
+
+        if (vertexMap.ContainsKey(position))
+        {
+            vertexMap[position] = (startIdx, vertices.Count - 1);
+        }
+        else
+        {
+            vertexMap.Add(position, (startIdx, vertices.Count - 1));
+        }
+
     }
+
+    int VertForIndice(Vector3 vert)
+    {
+
+        // Loop through all the vertices currently in the vertices list.
+        for (int i = 0; i < vertices.Count; i++)
+        {
+
+            // If we find a vert that matches ours, then simply return this index.
+            if (vertices[i] == vert)
+                return i;
+
+        }
+
+        // If we didn't find a match, add this vert to the list and return last index.
+        vertices.Add(vert);
+        return vertices.Count - 1;
+
+    }
+
 
     float GetPosition(Vector3Int point)
     {
@@ -437,12 +517,10 @@ public class CaveVisualisor : MonoBehaviour
         uvs.Clear();
     }
 
-    void BuildMesh()
+    void BuildMeshQuick()
     {
         Mesh mesh = new Mesh();
         mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-        Debug.Log("Vertices Count: " + vertices.Count);
-
 
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
@@ -451,7 +529,53 @@ public class CaveVisualisor : MonoBehaviour
 
         mesh.RecalculateNormals();
         meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
     }
+
+    void BuildMesh()
+    {
+        Mesh mesh = new Mesh();
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
+        List<Vector3> verticesList = new List<Vector3>();
+        List<int> trianglesList = new List<int>();
+        List<Vector2> uvsList = new List<Vector2>();
+
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            bool isInRange = false;
+
+            for (int j = 0; j < vertexMapInactive.Count; j++)
+            {
+                (int startIndex, int endIndex) = vertexMapInactive[j];
+                if (i >= startIndex && i <= endIndex)
+                {
+                    isInRange = true;
+                    break;
+                }
+            }
+
+            if (!isInRange)
+            {
+                verticesList.Add(vertices[i]);
+                trianglesList.Add(verticesList.Count - 1);
+                uvsList.Add(uvs[i]);
+            }
+        }
+
+        Debug.Log("vertices size:" + verticesList.Count);
+
+        mesh.vertices = verticesList.ToArray();
+        mesh.triangles = trianglesList.ToArray();
+        mesh.uv = uvsList.ToArray();
+
+
+        mesh.RecalculateNormals();
+        meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
+    }
+
+
 
     int GetNeighborCount(int locX, int locY, int locZ)
     {

@@ -9,8 +9,9 @@ public class SimplexNoise
 {
     private int _width, _height, _depth, _seed;
     private float magnitude = 1000f;
-    private float surfaceLevel = 0.5f;
     private CaveGenerator _caveGenerator;
+    FastNoiseLite fastNoise;
+    FastNoiseLite fastNoise1;
 
     public SimplexNoise(int width, int height, int depth, int seed)
     {
@@ -19,22 +20,23 @@ public class SimplexNoise
         _depth = depth;
         _seed = seed;
         _caveGenerator = CaveGenerator.Instance;
+
+        fastNoise = new FastNoiseLite();
+        fastNoise1 = new FastNoiseLite();
+        fastNoise.SetSeed(_seed);
+        fastNoise.SetSeed(_seed + 1);
     }
 
     public void GenerateNoise()
     {
         float[,,] noiseGrid = new float[_width, _height, _depth];
 
-        FastNoiseLite fastNoise = new FastNoiseLite();
-        FastNoiseLite fastNoise1 = new FastNoiseLite();
-        fastNoise.SetSeed(_seed);
-        fastNoise.SetSeed(_seed + 1);
 
-        for (int x = 0; x < 200; x++)
+        for (int x = 0; x < _width; x++)
         {
-            for (int y = 0; y < 200; y++)
+            for (int y = 0; y < _height; y++)
             {
-                for (int z = 0; z < 200; z++)
+                for (int z = 0; z < _depth; z++)
                 {
 
                     float noise = fastNoise.GetNoise((float)x * magnitude, (float)y * magnitude, (float)z * magnitude);
@@ -60,11 +62,24 @@ public class SimplexNoise
                         continue;
                     }
                     */
-
                 }
             }
         }
+    }
 
+    public float GetNoise(int x, int y, int z)
+    {
+        float noise = fastNoise.GetNoise((float)x * magnitude, (float)y * magnitude, (float)z * magnitude);
+        float noise1 = fastNoise1.GetNoise((float)x * magnitude, (float)y * magnitude, (float)z * magnitude);
+
+        //blend noise
+        float blendFactor = 0.5f;
+        float combinedNoise = Mathf.Lerp(noise, noise1, blendFactor);
+
+        combinedNoise += 1f;
+        combinedNoise /= 2f;
+
+        return combinedNoise;
     }
 }
 
