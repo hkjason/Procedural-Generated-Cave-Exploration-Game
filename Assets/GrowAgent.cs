@@ -23,7 +23,7 @@ public class GrowAgent : CaveAgent
 
                 direction = cornerTable[Random.Range(0, 6)];
             }
-            while (!WithinBounds(currentPos + (direction * weight)));
+            while (!WithinBounds(currentPos + (direction * weight) , weight/2));
 
             currentPos += (direction * weight);
 

@@ -6,9 +6,9 @@ public class CaveGenerator : MonoBehaviour
 {
     public static CaveGenerator Instance { get; private set; }
 
-    [SerializeField] public int width = 100;
-    [SerializeField] public int height = 100;
-    [SerializeField] public int depth = 100;
+    [SerializeField] public int width = 106;
+    [SerializeField] public int height = 106;
+    [SerializeField] public int depth = 106;
 
     [SerializeField] private int _seed;
     public bool randomSeed;
@@ -22,6 +22,7 @@ public class CaveGenerator : MonoBehaviour
 
     [SerializeField] private CellularAutomata cellularAutomata;
     [SerializeField] private CaveVisualisor caveVisualisor;
+    [SerializeField] private ChunkManager chunkManager;
 
     public GameObject prefab;
 
@@ -86,21 +87,20 @@ public class CaveGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             CaveGeneration();
-            //caveVisualisor.CreateMeshData();
             Debug.Log("Base Cave");
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             cellularAutomata.RunCellularAutomata();
-            caveVisualisor.CreateMeshData();
             Debug.Log("CA");
         }
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
             simplexNoise = new SimplexNoise(width, height, depth, _seed);
             simplexNoise.GenerateNoise();
-            caveVisualisor.CreateMeshData();
+
+            chunkManager.CreateChunks(width, height, depth);
             Debug.Log("SimplexNoise");
         }
 
@@ -108,25 +108,6 @@ public class CaveGenerator : MonoBehaviour
         {
             OreSpawn();
             Debug.Log("OreSpawn");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha5))
-        {
-            caveGrid[44, 39, 40] = 1f;
-            caveVisualisor.CreateMeshData();
-            Debug.Log("Test");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha9))
-        {
-            for (int i = 10; i < 90; i++)
-            {
-                for (int j = 10; j < 90; j++)
-                {
-                    caveGrid[i, 50, j] = -1f;
-                }
-            }
-            caveVisualisor.CreateMeshData();
         }
     }
 
@@ -140,7 +121,7 @@ public class CaveGenerator : MonoBehaviour
 
         startingPt = new Vector3Int(width / 2, height / 2, depth / 2);
 
-        GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 500, 3);
+        GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 200, 3);
         mainTunnelAgent.Walk();
 
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
@@ -171,14 +152,7 @@ public class CaveGenerator : MonoBehaviour
     }
 
 
-    public void DigCave(Vector3Int position)
-    {
-        caveGrid[position.x, position.y, position.z] = 1f;
-        caveVisualisor.UpdateMeshData(position);
-        Debug.Log("Dig");
-    }
-
-    public void DigCaveTest(Ray ray, RaycastHit hit)
+    public void DigCave(Ray ray, RaycastHit hit)
     {
         Debug.Log("Hit: " + hit.point);
         Debug.Log("ray: " + ray.direction);
@@ -255,13 +229,17 @@ public class CaveGenerator : MonoBehaviour
             }
         }
 
+        List<Vector3Int> updatedPoint = new List<Vector3Int>();
+
         for (int i = 0; i < Math.Min(5, neighbourList.Count); i++)
         {
             Vector3Int point = neighbourList[i].Key;
-            caveGrid[point.x, point.y, point.z] = 1f * simplexNoise.GetNoise(point.x, point.y, point.z);  
+            caveGrid[point.x, point.y, point.z] = 1f * simplexNoise.GetNoise(point.x, point.y, point.z); 
+
+            updatedPoint.Add(point);
         }
 
-        caveVisualisor.CreateMeshData();
+        chunkManager.UpdateChunks(updatedPoint);
     }
 
 }

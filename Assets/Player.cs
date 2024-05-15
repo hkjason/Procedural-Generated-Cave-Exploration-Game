@@ -172,7 +172,7 @@ public class Player : MonoBehaviour
         {
             if (hit.transform.gameObject.layer == groundLayerIndex)
             {
-                CaveGenerator.Instance.DigCaveTest(ray, hit);
+                CaveGenerator.Instance.DigCave(ray, hit);
             }
         }
     }
