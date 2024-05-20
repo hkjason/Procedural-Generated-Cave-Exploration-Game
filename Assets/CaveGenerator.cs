@@ -18,13 +18,17 @@ public class CaveGenerator : MonoBehaviour
     public float[,,] caveGrid;
 
     public List<Vector3> orePoints;
-    public List<Vector3> hitPoints;
+    public List<Vector3> oreHitPoints;
+
+    public List<Vector3> flowerPoints;
+    public List<Vector3> flowerHitPoints;
+    public List<Vector3> normalPoints;
+
+    public List<GameObject> flowerPrefab;
 
     [SerializeField] private CellularAutomata cellularAutomata;
     [SerializeField] private CaveVisualisor caveVisualisor;
     [SerializeField] private ChunkManager chunkManager;
-
-    public GameObject prefab;
 
     public LayerMask groundLayer;
 
@@ -44,11 +48,31 @@ public class CaveGenerator : MonoBehaviour
 
         Gizmos.color = Color.cyan;
 
-        if (hitPoints.Count > 0)
+        if (oreHitPoints.Count > 0)
         {
-            foreach (var hitPoint in hitPoints)
+            foreach (var hitPoint in oreHitPoints)
             {
                 Gizmos.DrawWireSphere(hitPoint, 1f);
+            }
+        }
+
+        Gizmos.color = Color.red;
+
+        if (flowerHitPoints.Count > 0)
+        {
+            for (int i = 0; i < flowerHitPoints.Count; i++)
+            {
+                Gizmos.DrawLine(flowerPoints[i], flowerHitPoints[i]);
+            }
+        }
+
+        Gizmos.color = Color.white;
+
+        if (flowerHitPoints.Count > 0)
+        {
+            for (int i = 0; i < flowerHitPoints.Count; i++)
+            {
+                Gizmos.DrawLine(flowerHitPoints[i], normalPoints[i]);
             }
         }
     }
@@ -84,34 +108,16 @@ public class CaveGenerator : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            CaveGeneration();
-            Debug.Log("Base Cave");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            cellularAutomata.RunCellularAutomata();
-            Debug.Log("CA");
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            simplexNoise = new SimplexNoise(width, height, depth, _seed);
-            simplexNoise.GenerateNoise();
-
-            chunkManager.CreateChunks(width, height, depth);
-            Debug.Log("SimplexNoise");
-        }
-
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             OreSpawn();
             Debug.Log("OreSpawn");
+            FlowerSpawn();
+            Debug.Log("FlowerSpawn");
         }
     }
 
-    void CaveGeneration() 
+    public void CaveGeneration() 
     {
         if (randomSeed)
         {
@@ -126,6 +132,18 @@ public class CaveGenerator : MonoBehaviour
 
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
         mainCaveAgent.Walk();
+
+        Debug.Log("BaseCave");
+
+        cellularAutomata.RunCellularAutomata();
+
+        Debug.Log("CellularAutomata");
+
+        simplexNoise = new SimplexNoise(width, height, depth, _seed);
+        simplexNoise.GenerateNoise();
+
+        chunkManager.CreateChunks(width, height, depth);
+        Debug.Log("SimplexNoise");
     }
 
 
@@ -144,7 +162,39 @@ public class CaveGenerator : MonoBehaviour
                 Debug.DrawRay(raycastOrigin, raycastDirection * 4f, Color.red);
                 if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, groundLayer))
                 {
-                    hitPoints.Add(hit.point);
+                    oreHitPoints.Add(hit.point);
+                    break;
+                }
+            }
+        }
+    }
+
+    void FlowerSpawn()
+    { 
+        foreach (Vector3 flowerPoint in flowerPoints)
+        {
+            for (int i = 0; i < 10; i++)
+            { 
+                Vector3 raycastOrigin = flowerPoint;
+
+                Vector3 raycastDirection = UnityEngine.Random.insideUnitSphere * 10f;
+
+                RaycastHit hit;
+
+                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, groundLayer))
+                {
+                    int randomIdx = UnityEngine.Random.Range(0, flowerPrefab.Count);
+
+                    Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
+    
+
+                    //Quaternion rotation = Quaternion.FromToRotation(hit.point, hit.normal);
+
+                    Instantiate(flowerPrefab[randomIdx], hit.point, rotation);
+
+                    flowerHitPoints.Add(hit.point);
+                    normalPoints.Add(hit.point + hit.normal);
+
                     break;
                 }
             }

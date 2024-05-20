@@ -41,6 +41,10 @@ public class TunnelAgent : CaveAgent
             {
                 CaveGenerator.Instance.orePoints.Add(currentPos);
             }
+            if (randomNumber1 >= 1 && randomNumber1 <= 5)
+            {
+                CaveGenerator.Instance.flowerPoints.Add(currentPos);
+            }
         }
 
 

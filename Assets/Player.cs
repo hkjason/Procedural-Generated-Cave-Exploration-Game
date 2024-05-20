@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Transactions;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -30,11 +31,20 @@ public class Player : MonoBehaviour
 
     float _gravity = -9.81f;
 
+    //Equipment
+    Equipment currentEquipment;
+    public Pickaxe pickaxe;
+    public Flaregun flaregun;
+
+
     // Start is called before the first frame update
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         groundLayerIndex = LayerMask.NameToLayer("Terrain");
+
+        currentEquipment = pickaxe;
+        pickaxe.Equip();
     }
 
     // Update is called once per frame
@@ -144,7 +154,24 @@ public class Player : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1))
         {
-            Dig();
+            Debug.Log("current equip" + currentEquipment);
+            currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            if (currentEquipment == pickaxe) return;
+
+            currentEquipment.Unequip();
+            currentEquipment = pickaxe;
+            currentEquipment.Equip();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            if (currentEquipment == flaregun) return;
+            currentEquipment.Unequip();
+            currentEquipment = flaregun;
+            currentEquipment.Equip();
         }
     }
 
@@ -159,22 +186,6 @@ public class Player : MonoBehaviour
         }
 
         return slopeAngle;
-    }
-
-    void Dig()
-    {
-        Debug.Log("Dig");
-        Ray ray = _camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray.origin, ray.direction, out hit, 2f))
-        {
-            if (hit.transform.gameObject.layer == groundLayerIndex)
-            {
-                CaveGenerator.Instance.DigCave(ray, hit);
-            }
-        }
     }
 
     public void Spawn(int x, int y, int z)
