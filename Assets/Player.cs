@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Transactions;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class Player : MonoBehaviour
 {
@@ -173,6 +174,11 @@ public class Player : MonoBehaviour
             currentEquipment = flaregun;
             currentEquipment.Equip();
         }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            SpawnFlare();
+        }
     }
 
     float CheckSlope()
@@ -191,5 +197,10 @@ public class Player : MonoBehaviour
     public void Spawn(int x, int y, int z)
     {
         transform.position = new Vector3Int(x, y, z);
+    }
+
+    void SpawnFlare()
+    { 
+    
     }
 }

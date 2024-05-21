@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour
@@ -25,6 +26,7 @@ public class CaveGenerator : MonoBehaviour
     public List<Vector3> normalPoints;
 
     public List<GameObject> flowerPrefab;
+    public List<GameObject> plantPrefab;
 
     [SerializeField] private CellularAutomata cellularAutomata;
     [SerializeField] private CaveVisualisor caveVisualisor;
@@ -36,7 +38,7 @@ public class CaveGenerator : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.white;
+        Gizmos.color = UnityEngine.Color.white;
 
         if (orePoints.Count > 0)
         {
@@ -46,17 +48,48 @@ public class CaveGenerator : MonoBehaviour
             }
         }
 
-        Gizmos.color = Color.cyan;
+        Gizmos.color = UnityEngine.Color.cyan;
 
         if (oreHitPoints.Count > 0)
         {
             foreach (var hitPoint in oreHitPoints)
             {
-                Gizmos.DrawWireSphere(hitPoint, 1f);
+                Gizmos.DrawWireSphere(hitPoint, 0.2f);
             }
         }
 
-        Gizmos.color = Color.red;
+        /*
+        Gizmos.color = UnityEngine.Color.green;
+
+        if (oreHitPoints.Count > 0)
+        {
+            foreach (var hitPoint in oreHitPoints)
+            {
+                Debug.Log(hitPoint);
+
+                float xDown = Mathf.Floor(hitPoint.x);
+                float xUp = Mathf.Ceil(hitPoint.x);
+                float yDown = Mathf.Floor(hitPoint.y);
+                float yUp = Mathf.Ceil(hitPoint.y);
+                float zDown = Mathf.Floor(hitPoint.z);
+                float zUp = Mathf.Ceil(hitPoint.z);
+
+                Gizmos.DrawWireSphere(new Vector3(xDown, yDown, zDown), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xDown, yDown, zUp), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xDown, yUp, zDown), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xDown, yUp, zUp), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xUp, yDown, zDown), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xUp, yDown, zUp), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xUp, yUp, zDown), 0.3f);
+                Gizmos.DrawWireSphere(new Vector3(xUp, yUp, zUp), 0.3f);
+
+                break;
+            }
+        }
+        */
+
+        /*
+        Gizmos.color = UnityEngine.Color.red;
 
         if (flowerHitPoints.Count > 0)
         {
@@ -66,7 +99,7 @@ public class CaveGenerator : MonoBehaviour
             }
         }
 
-        Gizmos.color = Color.white;
+        Gizmos.color = UnityEngine.Color.white;
 
         if (flowerHitPoints.Count > 0)
         {
@@ -75,6 +108,7 @@ public class CaveGenerator : MonoBehaviour
                 Gizmos.DrawLine(flowerHitPoints[i], normalPoints[i]);
             }
         }
+        */
     }
 
     private void Awake()
@@ -159,7 +193,7 @@ public class CaveGenerator : MonoBehaviour
 
                 RaycastHit hit;
 
-                Debug.DrawRay(raycastOrigin, raycastDirection * 4f, Color.red);
+                Debug.DrawRay(raycastOrigin, raycastDirection * 4f, UnityEngine.Color.red);
                 if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, groundLayer))
                 {
                     oreHitPoints.Add(hit.point);
@@ -183,18 +217,22 @@ public class CaveGenerator : MonoBehaviour
 
                 if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, groundLayer))
                 {
-                    int randomIdx = UnityEngine.Random.Range(0, flowerPrefab.Count);
-
                     Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
-    
 
                     //Quaternion rotation = Quaternion.FromToRotation(hit.point, hit.normal);
-
-                    Instantiate(flowerPrefab[randomIdx], hit.point, rotation);
+                    if (hit.normal.y > 0)
+                    {
+                        int randomIdx = UnityEngine.Random.Range(0, flowerPrefab.Count);
+                        Instantiate(flowerPrefab[randomIdx], hit.point - hit.normal * 0.05f, rotation);
+                    }
+                    else
+                    {
+                        int randomIdx = UnityEngine.Random.Range(0, plantPrefab.Count);
+                        Instantiate(plantPrefab[randomIdx], hit.point - hit.normal * 0.05f, rotation);
+                    }
 
                     flowerHitPoints.Add(hit.point);
                     normalPoints.Add(hit.point + hit.normal);
-
                     break;
                 }
             }

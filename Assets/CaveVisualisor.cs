@@ -327,6 +327,29 @@ public class CaveVisualisor : MonoBehaviour
         return BuildMesh(chunkPos);
     }
 
+    public Mesh CreateOreMesh(float[,,] oreArray)
+    {
+        ClearMeshData();
+
+        for (int x = 0; x < oreArray.GetLength(0); x++)
+        {
+            for (int y = 0; y < oreArray.GetLength(1); y++)
+            {
+                for (int z = 0; z < oreArray.GetLength(2); z++)
+                { 
+                    
+                }
+            }
+        }
+
+        //vertices.Add(vertPosition);
+        //triangles.Add(vertices.Count - 1);
+
+        //uvs.Add(uvTable[edgeIndex % 6]);
+
+        return BuildOre();
+    }
+
     public void UpdateMeshData(Chunk chunk)
     {
         ClearMeshData();
@@ -347,7 +370,6 @@ public class CaveVisualisor : MonoBehaviour
 
     void MarchingCube(Vector3Int position)
     {
-        int startIdx = vertices.Count;
         float[] cube = new float[8];
         for (int i = 0; i < 8; i++)
         {
@@ -405,8 +427,81 @@ public class CaveVisualisor : MonoBehaviour
                 edgeIndex++;
             }
         }
-
     }
+
+    public Mesh TurboMarchingCube(Vector3Int position)
+    {
+        Mesh meshToReturn = new Mesh();
+        List<Vector3> verticesList = new List<Vector3>();
+        List<int> trianglesList = new List<int>();
+
+        float[] cube = new float[8];
+        for (int i = 0; i < 8; i++)
+        {
+            cube[i] = GetPosition(position + cornerTable[i]);
+        }
+
+        int configIndex = GetCubeConfiguration(cube);
+
+        if (configIndex == 0 || configIndex == 255) return meshToReturn;
+
+        int edgeIndex = 0;
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                int index = triangleTable[configIndex, edgeIndex];
+
+                if (index == -1)
+                {
+                    meshToReturn.vertices = verticesList.ToArray();
+                    meshToReturn.triangles = trianglesList.ToArray();
+
+                    meshToReturn.RecalculateNormals();
+                    meshToReturn.RecalculateTangents();
+
+                    return meshToReturn; 
+                }
+
+                Vector3 vert1 = position + cornerTable[edgeTable[index, 0]];
+                Vector3 vert2 = position + cornerTable[edgeTable[index, 1]];
+                Vector3 vertPosition;
+
+                if (smoothTerrain)
+                {
+                    float vert1Sample = cube[edgeTable[index, 0]];
+                    float vert2Sample = cube[edgeTable[index, 1]];
+
+                    float difference = vert2Sample - vert1Sample;
+
+                    if (difference == 0)
+                        difference = terrainSurface;
+                    else
+                        difference = (terrainSurface - vert1Sample) / difference;
+
+                    vertPosition = vert1 + ((vert2 - vert1) * difference);
+                }
+                else
+                {
+                    vertPosition = (vert1 + vert2) / 2f;
+                }
+
+                verticesList.Add(vertPosition);
+                trianglesList.Add(verticesList.Count - 1);
+
+                edgeIndex++;
+            }
+        }
+
+        meshToReturn.vertices = verticesList.ToArray();
+        meshToReturn.triangles = trianglesList.ToArray();
+
+        meshToReturn.RecalculateNormals();
+        meshToReturn.RecalculateTangents();
+
+        return meshToReturn;
+    }
+
 
     int VertForIndice(Vector3 vert)
     {
@@ -479,5 +574,20 @@ public class CaveVisualisor : MonoBehaviour
         mesh.RecalculateTangents();
 
         chunk.UpdateChunk(mesh);
+    }
+
+    Mesh BuildOre()
+    {
+        Mesh mesh = new Mesh();
+        //mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.uv = uvs.ToArray();
+
+        mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
+
+        return mesh;
     }
 }

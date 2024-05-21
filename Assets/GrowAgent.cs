@@ -54,7 +54,7 @@ public class GrowAgent : CaveAgent
             {
                 CaveGenerator.Instance.orePoints.Add(currentPos);
             }
-            if (randomNumber1 >= 1 && randomNumber1 <= 5)
+            if (randomNumber1 >= 1 && randomNumber1 <= 10)
             { 
                 CaveGenerator.Instance.flowerPoints.Add(currentPos);
             }
