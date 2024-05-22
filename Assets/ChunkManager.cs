@@ -5,10 +5,24 @@ using UnityEngine;
 
 public class ChunkManager : MonoBehaviour
 {
+    public static ChunkManager Instance { get; private set; }
+
     public CaveVisualisor caveVisualisor;
     public Dictionary<Vector3Int, Chunk> chunkDic = new Dictionary<Vector3Int, Chunk>();
 
     public int chunkSize = 8;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
 
     public void CreateChunks(int xSize, int ySize, int zSize)
     {
@@ -21,7 +35,7 @@ public class ChunkManager : MonoBehaviour
                     Vector3Int chunkPos = new Vector3Int(i + 4, j + 4, k + 4);
 
                     Chunk chunk = caveVisualisor.CreateMeshData(chunkPos);
-
+                    
                     chunkDic.Add(chunkPos, chunk);
                 }
             }
@@ -238,38 +252,5 @@ public class ChunkManager : MonoBehaviour
         }
 
         return pos;
-    }
-}
-
-public class Chunk
-{
-    public GameObject chunkObject;
-    MeshFilter meshFilter;
-    MeshCollider meshCollider;
-    MeshRenderer meshRenderer;
-
-    public Vector3Int chunkPosition;
-
-    public Chunk(Vector3Int pos, Mesh mesh)
-    {
-        chunkObject = new GameObject();
-        meshFilter = chunkObject.AddComponent<MeshFilter>();
-        meshCollider = chunkObject.AddComponent<MeshCollider>();
-        meshRenderer = chunkObject.AddComponent<MeshRenderer>();
-
-        chunkPosition = pos;
-        this.meshFilter.mesh = mesh;
-        this.meshCollider.sharedMesh = mesh;
-
-        meshRenderer.material = Resources.Load<Material>("Materials/ForTesting");
-        chunkObject.layer = LayerMask.NameToLayer("Terrain");
-
-        //chunkObject.transform.position = pos;
-    }
-
-    public void UpdateChunk(Mesh mesh)
-    {
-        this.meshFilter.mesh = mesh;
-        this.meshCollider.sharedMesh = mesh;
     }
 }

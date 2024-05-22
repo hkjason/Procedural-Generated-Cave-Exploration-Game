@@ -1,12 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UI;
 
 namespace GK
 {
-    public class ConvexHullTest : MonoBehaviour
+    public class ConvexHull : MonoBehaviour
     {
         public GameObject RockPrefab;
         public CaveVisualisor caveVisualisor;
@@ -17,8 +22,27 @@ namespace GK
         public List<Vector3> tempList;
         public List<Vector3> tempList2;
         public List<Vector3> tempList3;
+        public List<Vector3> orePt;
+
+
+        public List<Vector3Int> oreVisitList;
+        public List<Mesh> meshVisitList;
 
         public LayerMask groundLayerMask;
+
+        public int totalOreCount = 0;
+        public int oreCountInGame = 400;
+
+        Vector3Int[] neighbourTable = new Vector3Int[6]
+        {
+            new Vector3Int(1, 0, 0),
+            new Vector3Int(-1, 0, 0),
+            new Vector3Int(0, 1, 0),
+            new Vector3Int(0, -1, 0),
+            new Vector3Int(0, 0, 1),
+            new Vector3Int(0, 0, -1),
+
+        };
 
         private void OnDrawGizmos()
         {
@@ -28,7 +52,7 @@ namespace GK
             {
                 foreach (var pt in tempList)
                 {
-                    Gizmos.DrawWireSphere(pt, 0.05f);
+                    Gizmos.DrawWireSphere(pt, 0.1f);
                 }
             }
 
@@ -41,39 +65,147 @@ namespace GK
                 }
             }
 
-            /*
-            Gizmos.color = UnityEngine.Color.white;
-            if (tempList2.Count > 0)
+            Gizmos.color = UnityEngine.Color.green;
+
+            if (orePt.Count > 0)
             {
-                for (int i = 0; i < tempList2.Count; i++)
+                foreach (var hitPoint in orePt)
                 {
-                    Gizmos.DrawRay(tempList[i], tempList2[i] - tempList[i]);
+
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 0, 0), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 0, 0), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 1, 0), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 1, 0), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 0, 1), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 0, 1), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 1, 1), 0.1f);
+                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 1, 1), 0.1f);
+
+                    break;
                 }
             }
-            */
         }
 
         private void Start()
         {
             tempList = new List<Vector3> ();
+            tempList2 = new List<Vector3>();
         }
 
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Alpha5))
             {
-                ConvexHulling();
+                int oreAdded = 0;
+
+                while (oreAdded < oreCountInGame && CaveGenerator.Instance.oreHitPoints.Count > 0)
+                { 
+                    int randomIndex = UnityEngine.Random.Range(0, CaveGenerator.Instance.oreHitPoints.Count);
+
+                    oreVisitList = new List<Vector3Int>();
+                    meshVisitList = new List<Mesh>();
+                    totalOreCount = UnityEngine.Random.Range(8, 61);
+                    oreAdded += totalOreCount;
+
+                    meshFilters = new List<MeshFilter>();
+                    int posx = Mathf.FloorToInt(CaveGenerator.Instance.oreHitPoints[randomIndex].x);
+                    int posy = Mathf.FloorToInt(CaveGenerator.Instance.oreHitPoints[randomIndex].y);
+                    int posz = Mathf.FloorToInt(CaveGenerator.Instance.oreHitPoints[randomIndex].z);
+
+                    ConvexHulling(new Vector3Int(posx, posy, posz), false);
+                    CombineOre(meshFilters);
+
+                    CaveGenerator.Instance.oreHitPoints.RemoveAt(randomIndex);
+                }
             }
         }
 
-        void ConvexHulling()
+        bool ConvexHulling(Vector3Int pointForOre, bool isGrow, Mesh originalMesh = default)
         {
-            meshFilters = new List<MeshFilter>();
+            if (totalOreCount == 0)
+            {
+                Debug.Log("OC == 0");
+                return false;
+            }
 
-            Mesh caveMesh = caveVisualisor.TurboMarchingCube(new Vector3Int(39, 47, 20));
+            Vector3Int growPoint;
+            Mesh caveMesh;
+            Vector3 firstPoint = new Vector3();
+            Vector3 secondPoint = new Vector3();
+
+            if (isGrow)
+            {
+                int maxTry = 0;
+                bool connected = false;
+                do
+                {
+                    growPoint = RandomNeightbour(pointForOre);
+
+                    if (oreVisitList.Contains(growPoint))
+                    {
+                        Debug.Log("Dup Pos");
+                        return false;
+                    }
+
+                    caveMesh = caveVisualisor.TurboMarchingCube(growPoint);
+
+                    Vector3[] originalMeshVerts = originalMesh.vertices;
+                    Vector3[] newMeshVerts = caveMesh.vertices;
+                    int count = 0;
+                    //Check connected mesh
+                    for (int i = 0; i < newMeshVerts.Length; i++)
+                    {
+                        Debug.Log("nmv" + newMeshVerts[i]);
+                        if (originalMeshVerts.Contains(newMeshVerts[i]))
+                        {
+                            count++;
+                            if (count == 1)
+                            {
+                                firstPoint = newMeshVerts[i];
+                            }
+                            if (count == 2)
+                            {
+                                secondPoint = newMeshVerts[i];
+                            }
+
+
+                            tempList2.Add(newMeshVerts[i]);
+                            Debug.Log("same nmv" + newMeshVerts[i]);
+                            if (count >= 2)
+                            {
+                                connected = true;
+                                Debug.Log("c" + count);
+                                break;
+                            }
+                        }
+                    }
+
+                    maxTry++;
+
+                } while (!connected && maxTry < 6);
+
+                if (!connected) 
+                {
+                    Debug.Log("Not connected");
+                    return false; 
+                }
+
+                GenerateMidPointOre(firstPoint, secondPoint);
+            }
+            else
+            {
+                growPoint = pointForOre;
+                caveMesh = caveVisualisor.TurboMarchingCube(growPoint);
+            }
+            Debug.Log(growPoint);
+            orePt.Clear();
+            orePt.Add(growPoint);
 
             List<Vector3> randomCentres;
-            randomCentres = GetRandomPointsOnMesh(caveMesh, 5);
+
+            int numOfOre = RandomOreCount(8,11);
+            randomCentres = GetRandomPointsOnMesh(caveMesh, numOfOre);
+
 
             for (int x = 0; x < randomCentres.Count; x++)
             {
@@ -86,22 +218,32 @@ namespace GK
                 points.Clear();
 
 
-                
-                List<Vector3> randomPointsOnPlane = GetRandomPointsOnMesh(caveMesh, 20, randomCentres[x], UnityEngine.Random.Range(0.1f, 0.4f), UnityEngine.Random.Range(0.1f, 0.4f));
+                List<Vector3> randomPointsOnPlane = GetRandomPointsOnMesh(caveMesh, 20, randomCentres[x], UnityEngine.Random.Range(0.05f, 0.2f), UnityEngine.Random.Range(0.05f, 0.2f),UnityEngine.Random.Range(0.05f, 0.2f));
                 List<Vector3> randomPointsNormal = GetNormalsAtRandomPoints(caveMesh, randomPointsOnPlane);
                 List<Vector3> randomPoints = GetRandomPointsAroundNormal(randomPointsOnPlane, randomPointsNormal, 0.1f, 0.3f, 0, 50);
 
                 points.AddRange(randomPointsOnPlane);
                 points.AddRange(randomPoints);
-                //points.AddRange(randomPoints);
-                tempList = randomPointsOnPlane;
-                tempList2 = randomPoints;
-                //(39.46, 47.17, 20.22)
 
-                //Debug.Log("rpopc" + randomPointsOnPlane.Count);
-                Debug.Log("rpc" + randomPoints.Count);
+                for (int pointIdx = 0; pointIdx < points.Count; pointIdx++)
+                {
+                    Vector3 tem = points[pointIdx];
+                    tem.x = Mathf.Round(tem.x * 100f) / 100f;
+                    tem.y = Mathf.Round(tem.y * 100f) / 100f;
+                    tem.z = Mathf.Round(tem.z * 100f) / 100f;
+                    points[pointIdx] = tem;
+                }
 
 
+                if (points.Count < 4)
+                {
+                    Debug.Log("Points < 4");
+                    return false; //Generation fail
+                }
+
+                verts.Clear();
+                tris.Clear();
+                normals.Clear();
                 calc.GenerateHull(points, true, ref verts, ref tris, ref normals);
 
                 var rock = Instantiate(RockPrefab);
@@ -121,10 +263,29 @@ namespace GK
                 mf.sharedMesh = mesh;
                 meshFilters.Add(mf);
 
-                //rock.GetComponent<MeshCollider>().sharedMesh = mesh;
+                oreVisitList.Add(growPoint);
+                meshVisitList.Add(caveMesh);
             }
 
-            
+            bool doneGrow = false;
+            int maxTryGrow = 0;
+            while(totalOreCount > 0 && !doneGrow && maxTryGrow < 20)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, oreVisitList.Count);
+                Vector3Int pointForGrow = oreVisitList[randomIndex];
+                Mesh meshForGrow = meshVisitList[randomIndex];
+
+                doneGrow = ConvexHulling(pointForGrow, true, meshForGrow);
+
+                Debug.Log("doneGrow:" + doneGrow);
+                maxTryGrow++;
+            }
+
+            return true;
+        }
+
+        void CombineOre(List<MeshFilter> meshFilters)
+        {
             combine = new CombineInstance[meshFilters.Count];
 
             for (int i = 0; i < meshFilters.Count; i++)
@@ -144,7 +305,6 @@ namespace GK
             combinedRock.transform.localScale = Vector3.one;
 
             combinedRock.GetComponent<MeshFilter>().sharedMesh = combineMesh;
-            
         }
 
         List<Vector3> GetRandomPointsOnMesh(Mesh mesh, int count)
@@ -176,7 +336,7 @@ namespace GK
             return points;
         }
 
-        List<Vector3> GetRandomPointsOnMesh(Mesh mesh, int count, Vector3 center, float radiusX, float radiusZ)
+        List<Vector3> GetRandomPointsOnMesh(Mesh mesh, int count, Vector3 center, float radiusX, float radiusY, float radiusZ)
         {
             List<Vector3> points = new List<Vector3>();
             Vector3[] vertices = mesh.vertices;
@@ -201,19 +361,26 @@ namespace GK
             {
                 Vector3 randomPoint;
                 int maxTry = 0;
+                bool found = false;
                 do
                 {
                     randomPoint = GetRandomPointOnMesh(vertices, triangles, areas, totalArea);
                     maxTry++;
-                } while (!IsPointInOval(randomPoint, center, radiusX, radiusZ) && maxTry < 20);
+                    if (IsPointInEllipsoid(randomPoint, center, radiusX, radiusY, radiusZ))
+                    {
+                        found = true;
+                    }
 
-                points.Add(randomPoint);
+                } while (!found && maxTry < 50);
+
+                if (found)
+                {
+                    points.Add(randomPoint);
+                }
             }
 
             return points;
         }
-
-
 
         Vector3 GetRandomPointOnMesh(Vector3[] vertices, int[] triangles, float[] areas, float totalArea)
         {
@@ -244,9 +411,9 @@ namespace GK
             float r2 = UnityEngine.Random.value;
 
             Vector3 randomPoint = (1 - r1) * v0 + (r1 * (1 - r2)) * v1 + (r1 * r2) * v2;
+
             return randomPoint;
         }
-
 
         List<Vector3> GetNormalsAtRandomPoints(Mesh mesh, List<Vector3> points)
         {
@@ -271,6 +438,7 @@ namespace GK
                         Vector3 n2 = meshNormals[triangles[i + 2]];
 
                         Vector3 normal = InterpolateNormal(point, v0, v1, v2, n0, n1, n2);
+
                         normals.Add(normal);
                         break;
                     }
@@ -279,7 +447,6 @@ namespace GK
 
             return normals;
         }
-
 
         Vector3 InterpolateNormal(Vector3 p, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 n0, Vector3 n1, Vector3 n2)
         {
@@ -346,6 +513,76 @@ namespace GK
             return point + offset;
         }
 
+        void GenerateMidPointOre(Vector3 point1, Vector3 point2)
+        {
+            int numberOfMidPoints = RandomOreCount(2, 4);
+
+            for (int i = 0; i < numberOfMidPoints; i++)
+            {
+                float t = UnityEngine.Random.Range(0f, 1f);
+                Vector3 randomPoint = Vector3.Lerp(point1, point2, t);
+                var calc = new ConvexHullCalculator();
+                var verts = new List<Vector3>();
+                var tris = new List<int>();
+                var normals = new List<Vector3>();
+                var points = new List<Vector3>();
+
+                for (int pointCount = 0; pointCount < 7; pointCount++)
+                {
+                    float distance = UnityEngine.Random.Range(0.05f, 0.3f);
+                    Vector3 randomDirection = UnityEngine.Random.onUnitSphere * distance;
+
+                    points.Add(randomPoint + randomDirection);
+                }
+
+
+                calc.GenerateHull(points, true, ref verts, ref tris, ref normals);
+
+                var rock = Instantiate(RockPrefab);
+
+                rock.transform.SetParent(transform, false);
+                rock.transform.localPosition = Vector3.zero;
+                rock.transform.localRotation = Quaternion.identity;
+                rock.transform.localScale = Vector3.one;
+                rock.name = "BTW";
+
+                var mesh = new Mesh();
+
+                mesh.SetVertices(verts);
+                mesh.SetTriangles(tris, 0);
+                mesh.SetNormals(normals);
+
+                MeshFilter mf = rock.GetComponent<MeshFilter>();
+                mf.sharedMesh = mesh;
+                meshFilters.Add(mf);
+
+            }
+        }
+
+        int RandomOreCount(int min, int max)
+        {
+            int count = 0;
+            int numOfOre = UnityEngine.Random.Range(min, max);
+            if (numOfOre < totalOreCount)
+            {
+                count = numOfOre;
+                totalOreCount -= numOfOre;
+            }
+            else
+            {
+                count = totalOreCount;
+                totalOreCount = 0;
+            }
+            return count;
+        }
+
+        Vector3Int RandomNeightbour(Vector3Int location)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, neighbourTable.Length);
+            Vector3Int offset = neighbourTable[randomIndex];
+
+            return location + offset;
+        }
 
         bool IsPointInTriangle(Vector3 p, Vector3 v0, Vector3 v1, Vector3 v2)
         {
@@ -367,13 +604,14 @@ namespace GK
             return (u >= 0) && (v >= 0) && (w >= 0);
         }
 
-        bool IsPointInOval(Vector3 point, Vector3 center, float radiusX, float radiusZ)
+        bool IsPointInEllipsoid(Vector3 point, Vector3 center, float radiusX, float radiusY, float radiusZ)
         {
             float dx = point.x - center.x;
+            float dy = point.y - center.y;
             float dz = point.z - center.z;
 
-            // Equation of an ellipse: (x^2 / radiusX^2) + (z^2 / radiusZ^2) <= 1
-            return (dx * dx) / (radiusX * radiusX) + (dz * dz) / (radiusZ * radiusZ) <= 1f;
+            // Equation of an ellipsoid: (x^2 / rx^2) + (y^2 / ry^2) + (z^2 / rz^2) <= 1
+            return (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY) + (dz * dz) / (radiusZ * radiusZ) <= 1f;
         }
     }
 }

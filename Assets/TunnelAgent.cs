@@ -37,11 +37,11 @@ public class TunnelAgent : CaveAgent
             }
 
             int randomNumber1 = Random.Range(0, 100);
-            if (randomNumber1 == 0)
+            if (randomNumber1 <= 1)
             {
                 CaveGenerator.Instance.orePoints.Add(currentPos);
             }
-            if (randomNumber1 >= 1 && randomNumber1 <= 10)
+            if (randomNumber1 >= 90 && randomNumber1 <= 99)
             {
                 CaveGenerator.Instance.flowerPoints.Add(currentPos);
             }

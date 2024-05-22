@@ -5,6 +5,7 @@ using UnityEngine;
 public class GrowAgent : CaveAgent
 {
     List<TunnelAgent> tunnelAgentList;
+    int lastAdd;
 
     public GrowAgent(Vector3Int agentStartPt, int tokens, int weight) : base(agentStartPt, tokens, weight)
     {
@@ -13,7 +14,10 @@ public class GrowAgent : CaveAgent
 
     public override void Walk()
     {
-        for (int i = 0; i < tokens; i++)
+        int i = 0;
+        lastAdd = 10;
+
+        while (i < tokens)
         {
 
             Vector3Int direction;
@@ -27,6 +31,13 @@ public class GrowAgent : CaveAgent
 
             currentPos += (direction * weight);
 
+            if (CaveGenerator.Instance.caveGrid[currentPos.x, currentPos.y, currentPos.z] != -1f)
+            {
+                //Not Visited
+                i++;
+                RandomSpawn(i);
+            }
+
             for (int x = -(weight / 2); x <= (weight / 2); x++)
             {
                 for (int y = -(weight / 2); y <= (weight / 2); y++)
@@ -37,27 +48,6 @@ public class GrowAgent : CaveAgent
                     }
                 }
             }
-
-            //Probability to spawn a smaller agent
-            //int randomNumber = Random.Range(0, tokens);
-            int randomNumber = Random.Range(0, 100);
-
-            if (randomNumber == 0)
-            {
-                TunnelAgent tunnelAgent = new TunnelAgent(currentPos, Random.Range(tokens / 4 - tokens / 8, tokens / 4 + tokens / 8), weight / 2);
-                tunnelAgentList.Add(tunnelAgent);
-                Debug.Log("Spawn");
-            }
-
-            int randomNumber1 = Random.Range(0, 100);
-            if (randomNumber1 == 0)
-            {
-                CaveGenerator.Instance.orePoints.Add(currentPos);
-            }
-            if (randomNumber1 >= 1 && randomNumber1 <= 10)
-            { 
-                CaveGenerator.Instance.flowerPoints.Add(currentPos);
-            }
         }
 
         foreach (TunnelAgent tunnelAgent in tunnelAgentList)
@@ -66,6 +56,36 @@ public class GrowAgent : CaveAgent
         }
 
     }
+
+    private void RandomSpawn(int i)
+    {
+        //Probability to spawn a smaller agent
+        //int randomNumber = Random.Range(0, tokens);
+        int randomNumber = Random.Range(0, 100);
+
+        if (randomNumber == 0)
+        {
+            TunnelAgent tunnelAgent = new TunnelAgent(currentPos, Random.Range(tokens / 4 - tokens / 8, tokens / 4 + tokens / 8), weight / 2);
+            tunnelAgentList.Add(tunnelAgent);
+            Debug.Log("Spawn");
+        }
+
+        int randomNumber1 = Random.Range(0, 100);
+        if (i > 10)
+        {
+            if ( randomNumber1 <= 3 + (i - lastAdd) )
+            {
+                lastAdd = i;
+                CaveGenerator.Instance.orePoints.Add(currentPos);
+            }
+        }
+
+        if (randomNumber1 >= 90 && randomNumber1 <= 99)
+        {
+            CaveGenerator.Instance.flowerPoints.Add(currentPos);
+        }
+    }
+
 
     Vector3Int[] cornerTable = new Vector3Int[6] {
         Vector3Int.up,
