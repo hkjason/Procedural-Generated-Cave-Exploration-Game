@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Threading;
@@ -19,19 +20,18 @@ namespace GK
         public List<MeshFilter> meshFilters;
         public CombineInstance[] combine;
 
-        public List<Vector3> tempList;
-        public List<Vector3> tempList2;
-        public List<Vector3> tempList3;
-        public List<Vector3> orePt;
-
 
         public List<Vector3Int> oreVisitList;
         public List<Mesh> meshVisitList;
+
+        public List<Ore> currentOreList;
 
         public LayerMask groundLayerMask;
 
         public int totalOreCount = 0;
         public int oreCountInGame = 400;
+
+        public List<OreGroup> oreGroups;
 
         Vector3Int[] neighbourTable = new Vector3Int[6]
         {
@@ -44,63 +44,20 @@ namespace GK
 
         };
 
-        private void OnDrawGizmos()
-        {
-            Gizmos.color = UnityEngine.Color.red;
 
-            if (tempList.Count > 0)
-            {
-                foreach (var pt in tempList)
-                {
-                    Gizmos.DrawWireSphere(pt, 0.1f);
-                }
-            }
-
-            Gizmos.color = UnityEngine.Color.blue;
-            if (tempList2.Count > 0)
-            {
-                foreach (var pt in tempList2)
-                {
-                    Gizmos.DrawWireSphere(pt, 0.05f);
-                }
-            }
-
-            Gizmos.color = UnityEngine.Color.green;
-
-            if (orePt.Count > 0)
-            {
-                foreach (var hitPoint in orePt)
-                {
-
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 0, 0), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 0, 0), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 1, 0), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 1, 0), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 0, 1), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 0, 1), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(1, 1, 1), 0.1f);
-                    Gizmos.DrawWireSphere(hitPoint + new Vector3Int(0, 1, 1), 0.1f);
-
-                    break;
-                }
-            }
-        }
-
-        private void Start()
-        {
-            tempList = new List<Vector3> ();
-            tempList2 = new List<Vector3>();
-        }
 
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Alpha5))
             {
+                Debug.Log("5");
                 int oreAdded = 0;
+                oreGroups = new List<OreGroup>();
 
                 while (oreAdded < oreCountInGame && CaveGenerator.Instance.oreHitPoints.Count > 0)
-                { 
+                {
                     int randomIndex = UnityEngine.Random.Range(0, CaveGenerator.Instance.oreHitPoints.Count);
+                    currentOreList = new List<Ore>();
 
                     oreVisitList = new List<Vector3Int>();
                     meshVisitList = new List<Mesh>();
@@ -155,7 +112,6 @@ namespace GK
                     //Check connected mesh
                     for (int i = 0; i < newMeshVerts.Length; i++)
                     {
-                        Debug.Log("nmv" + newMeshVerts[i]);
                         if (originalMeshVerts.Contains(newMeshVerts[i]))
                         {
                             count++;
@@ -169,12 +125,9 @@ namespace GK
                             }
 
 
-                            tempList2.Add(newMeshVerts[i]);
-                            Debug.Log("same nmv" + newMeshVerts[i]);
                             if (count >= 2)
                             {
                                 connected = true;
-                                Debug.Log("c" + count);
                                 break;
                             }
                         }
@@ -184,10 +137,10 @@ namespace GK
 
                 } while (!connected && maxTry < 6);
 
-                if (!connected) 
+                if (!connected)
                 {
                     Debug.Log("Not connected");
-                    return false; 
+                    return false;
                 }
 
                 GenerateMidPointOre(firstPoint, secondPoint);
@@ -197,13 +150,12 @@ namespace GK
                 growPoint = pointForOre;
                 caveMesh = caveVisualisor.TurboMarchingCube(growPoint);
             }
-            Debug.Log(growPoint);
-            orePt.Clear();
-            orePt.Add(growPoint);
+
+
 
             List<Vector3> randomCentres;
 
-            int numOfOre = RandomOreCount(8,11);
+            int numOfOre = RandomOreCount(8, 11);
             randomCentres = GetRandomPointsOnMesh(caveMesh, numOfOre);
 
 
@@ -218,7 +170,7 @@ namespace GK
                 points.Clear();
 
 
-                List<Vector3> randomPointsOnPlane = GetRandomPointsOnMesh(caveMesh, 20, randomCentres[x], UnityEngine.Random.Range(0.05f, 0.2f), UnityEngine.Random.Range(0.05f, 0.2f),UnityEngine.Random.Range(0.05f, 0.2f));
+                List<Vector3> randomPointsOnPlane = GetRandomPointsOnMesh(caveMesh, 20, randomCentres[x], UnityEngine.Random.Range(0.05f, 0.2f), UnityEngine.Random.Range(0.05f, 0.2f), UnityEngine.Random.Range(0.05f, 0.2f));
                 List<Vector3> randomPointsNormal = GetNormalsAtRandomPoints(caveMesh, randomPointsOnPlane);
                 List<Vector3> randomPoints = GetRandomPointsAroundNormal(randomPointsOnPlane, randomPointsNormal, 0.1f, 0.3f, 0, 50);
 
@@ -241,14 +193,10 @@ namespace GK
                     return false; //Generation fail
                 }
 
-                verts.Clear();
-                tris.Clear();
-                normals.Clear();
                 calc.GenerateHull(points, true, ref verts, ref tris, ref normals);
 
                 var rock = Instantiate(RockPrefab);
 
-                rock.transform.SetParent(transform, false);
                 rock.transform.localPosition = Vector3.zero;
                 rock.transform.localRotation = Quaternion.identity;
                 rock.transform.localScale = Vector3.one;
@@ -265,11 +213,21 @@ namespace GK
 
                 oreVisitList.Add(growPoint);
                 meshVisitList.Add(caveMesh);
+
+                Vector3 midPoint = Vector3.zero;
+                foreach (Vector3 vertPoints in verts)
+                {
+                    midPoint += vertPoints;
+                }
+                midPoint /= verts.Count;
+
+                Ore generatedOre = new Ore(mf, midPoint);
+                currentOreList.Add(generatedOre);
             }
 
             bool doneGrow = false;
             int maxTryGrow = 0;
-            while(totalOreCount > 0 && !doneGrow && maxTryGrow < 20)
+            while (totalOreCount > 0 && !doneGrow && maxTryGrow < 20)
             {
                 int randomIndex = UnityEngine.Random.Range(0, oreVisitList.Count);
                 Vector3Int pointForGrow = oreVisitList[randomIndex];
@@ -277,7 +235,6 @@ namespace GK
 
                 doneGrow = ConvexHulling(pointForGrow, true, meshForGrow);
 
-                Debug.Log("doneGrow:" + doneGrow);
                 maxTryGrow++;
             }
 
@@ -304,7 +261,90 @@ namespace GK
             combinedRock.transform.localRotation = Quaternion.identity;
             combinedRock.transform.localScale = Vector3.one;
 
-            combinedRock.GetComponent<MeshFilter>().sharedMesh = combineMesh;
+            MeshFilter combinedRockMf = combinedRock.GetComponent<MeshFilter>();
+            combinedRockMf.sharedMesh = combineMesh;
+
+            MeshCollider combinedRockMc = combinedRock.GetComponent<MeshCollider>();
+            combinedRockMc.sharedMesh = combineMesh;
+
+            foreach (MeshFilter mf in meshFilters)
+            {
+                mf.transform.SetParent(combinedRock.transform, false);
+                mf.gameObject.SetActive(false);
+            }
+
+            OreGroup oreGroup = combinedRock.AddComponent<OreGroup>(); 
+            oreGroup.SetOreGroup(oreVisitList, currentOreList, combinedRockMf, combinedRockMc);
+            oreGroups.Add(oreGroup);
+        }
+
+        public void UpdateOre(Vector3 hitPoint)
+        {
+            Vector3Int hitPointToInt = new Vector3Int(Mathf.FloorToInt(hitPoint.x), Mathf.FloorToInt(hitPoint.y), Mathf.FloorToInt(hitPoint.z));
+            
+            for (int i = 0; i < oreGroups.Count; i++)
+            {
+                if (oreGroups[i].oreGroupLocations.Contains(hitPointToInt))
+                {
+                    float radius = UnityEngine.Random.Range(0.7f, 1.0f);
+
+                    List<Ore> oresWithinRadius = new List<Ore>();
+
+                    for (int oreIdx = 0; oreIdx < oreGroups[i].ores.Count; oreIdx++)
+                    {
+                        Ore ore = oreGroups[i].ores[oreIdx];
+                        if (Vector3.Distance(hitPoint, ore.oreLocation) <= radius)
+                        {
+                            oresWithinRadius.Add(ore);
+                        }
+                    }
+
+                    // Random destruction magnitude from 7 to 10
+                    int destructionMagnitude = UnityEngine.Random.Range(7, 11);
+
+                    // Destroy points based on the magnitude
+                    if (oresWithinRadius.Count <= destructionMagnitude)
+                    {
+                        // Destroy all ores within the radius
+                        foreach (Ore ore in oresWithinRadius)
+                        {
+                            Destroy(ore.meshFilter.gameObject);
+                            oreGroups[i].ores.Remove(ore);
+                        }
+                    }
+                    else
+                    {
+                        // Destroy a number of ores closest to the hitPoint
+                        oresWithinRadius.Sort((a, b) => Vector3.Distance(hitPoint, a.oreLocation).CompareTo(Vector3.Distance(hitPoint, b.oreLocation)));
+                        for (int j = 0; j < destructionMagnitude; j++)
+                        {
+                            Destroy(oresWithinRadius[j].meshFilter.gameObject);
+                            oreGroups[i].ores.Remove(oresWithinRadius[j]);
+                        }
+                    }
+
+                    RebuildOre(oreGroups[i]);
+
+                    return;
+                }
+            }
+        }
+
+        void RebuildOre(OreGroup oreGroup)
+        {
+
+            combine = new CombineInstance[oreGroup.ores.Count];
+
+            for (int i = 0; i < oreGroup.ores.Count; i++)
+            {
+                combine[i].mesh = oreGroup.ores[i].meshFilter.sharedMesh;
+                combine[i].transform = oreGroup.ores[i].meshFilter.transform.localToWorldMatrix;
+            }
+
+            Mesh combineMesh = new Mesh();
+            combineMesh.CombineMeshes(combine);
+            oreGroup.oreGroupMf.sharedMesh = combineMesh;
+            oreGroup.oreGroupMc.sharedMesh = combineMesh;
         }
 
         List<Vector3> GetRandomPointsOnMesh(Mesh mesh, int count)
@@ -540,11 +580,9 @@ namespace GK
 
                 var rock = Instantiate(RockPrefab);
 
-                rock.transform.SetParent(transform, false);
                 rock.transform.localPosition = Vector3.zero;
                 rock.transform.localRotation = Quaternion.identity;
                 rock.transform.localScale = Vector3.one;
-                rock.name = "BTW";
 
                 var mesh = new Mesh();
 
@@ -556,6 +594,15 @@ namespace GK
                 mf.sharedMesh = mesh;
                 meshFilters.Add(mf);
 
+                Vector3 midPoint = Vector3.zero;
+                foreach (Vector3 vertPoints in verts)
+                {
+                    midPoint += vertPoints;
+                }
+                midPoint /= verts.Count;
+
+                Ore generatedOre = new Ore(mf, midPoint);
+                currentOreList.Add(generatedOre);
             }
         }
 

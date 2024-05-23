@@ -1,10 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 public class Pickaxe : Equipment
 {
     public LayerMask terrainLayer;
+    public LayerMask oreLayer;
+    private int terrainLayerIndex;
+    private int oreLayerIndex;
 
     public Vector3 idlePos;
     public Vector3 digPos;
@@ -21,8 +25,11 @@ public class Pickaxe : Equipment
         digRotation = Quaternion.Euler(new Vector3(0f, 249.3f, 327.2f));
 
 
-    transform.localPosition = idlePos;
+        transform.localPosition = idlePos;
         transform.localRotation = idleRotation;
+
+        terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(terrainLayer.value, 2));
+        oreLayerIndex = Mathf.RoundToInt(Mathf.Log(oreLayer.value, 2));
     }
 
     public override void Use(Ray ray)
@@ -54,9 +61,7 @@ public class Pickaxe : Equipment
         transform.localPosition = digPos;
         transform.localRotation = digRotation;
 
-
         Dig();
-
 
         duration = 0.5f;
         elapsed = 0f;
@@ -82,7 +87,13 @@ public class Pickaxe : Equipment
 
         if (Physics.Raycast(ray.origin, ray.direction, out hit, 2f))
         {
-            if (hit.transform.gameObject.layer == terrainLayer)
+            Debug.Log("Hit:" + hit.point);
+
+            if (hit.transform.gameObject.layer == oreLayerIndex)
+            {
+                CaveGenerator.Instance.DigOre(ray, hit);
+            }
+            else if (hit.transform.gameObject.layer == terrainLayerIndex)
             {
                 CaveGenerator.Instance.DigCave(ray, hit);
             }

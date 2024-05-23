@@ -1,3 +1,4 @@
+using GK;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -31,8 +32,9 @@ public class CaveGenerator : MonoBehaviour
     [SerializeField] private CellularAutomata cellularAutomata;
     [SerializeField] private CaveVisualisor caveVisualisor;
     [SerializeField] private ChunkManager chunkManager;
+    [SerializeField] private ConvexHull convexHull;
 
-    public LayerMask groundLayer;
+    public LayerMask terrainLayer;
 
     SimplexNoise simplexNoise;
 
@@ -194,7 +196,7 @@ public class CaveGenerator : MonoBehaviour
                 RaycastHit hit;
 
                 Debug.DrawRay(raycastOrigin, raycastDirection * 4f, UnityEngine.Color.red);
-                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, groundLayer))
+                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, terrainLayer))
                 {
                     oreHitPoints.Add(hit.point);
                     break;
@@ -215,7 +217,7 @@ public class CaveGenerator : MonoBehaviour
 
                 RaycastHit hit;
 
-                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, groundLayer))
+                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, terrainLayer))
                 {
                     Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
 
@@ -330,4 +332,11 @@ public class CaveGenerator : MonoBehaviour
         chunkManager.UpdateChunks(updatedPoint);
     }
 
+
+    public void DigOre(Ray ray, RaycastHit hit)
+    {
+        Debug.Log("DigOre");
+
+        convexHull.UpdateOre(hit.point);
+    }
 }

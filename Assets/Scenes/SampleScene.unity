@@ -629,7 +629,8 @@ MonoBehaviour:
   cellularAutomata: {fileID: 926529047}
   caveVisualisor: {fileID: 1656487381}
   chunkManager: {fileID: 1407054967}
-  groundLayer:
+  convexHull: {fileID: 1086119043}
+  terrainLayer:
     serializedVersion: 2
     m_Bits: 64
 --- !u!1 &1086119042
@@ -664,10 +665,6 @@ MonoBehaviour:
   RockPrefab: {fileID: 4448073629227605062, guid: a8abbe26095c59f4fabaceaca7ef7d18, type: 3}
   caveVisualisor: {fileID: 1656487381}
   meshFilters: []
-  tempList: []
-  tempList2: []
-  tempList3: []
-  orePt: []
   oreVisitList: []
   meshVisitList: []
   groundLayerMask:
@@ -675,6 +672,7 @@ MonoBehaviour:
     m_Bits: 64
   totalOreCount: 0
   oreCountInGame: 400
+  oreGroups: []
 --- !u!4 &1086119044
 Transform:
   m_ObjectHideFlags: 0
@@ -822,6 +820,9 @@ MonoBehaviour:
   terrainLayer:
     serializedVersion: 2
     m_Bits: 64
+  oreLayer:
+    serializedVersion: 2
+    m_Bits: 128
   idlePos: {x: 0, y: 0, z: 0}
   digPos: {x: 0, y: 0, z: 0}
   idleRotation: {x: 0, y: 0, z: 0, w: 0.7064338}

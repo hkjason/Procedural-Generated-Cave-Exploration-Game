@@ -25,7 +25,7 @@ public class Player : MonoBehaviour
     [SerializeField] float _groundDistance;
     [SerializeField] float _jumpVelocity;
     [SerializeField] float _jumpHeight;
-    int groundLayerIndex;
+    LayerMask terrainLayer;
     bool _isJumping = false;
     float _airTime;
     float _lastDisplacement;
@@ -42,7 +42,6 @@ public class Player : MonoBehaviour
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        groundLayerIndex = LayerMask.NameToLayer("Terrain");
 
         currentEquipment = pickaxe;
         pickaxe.Equip();
@@ -140,7 +139,7 @@ public class Player : MonoBehaviour
 
         if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, _groundDistance))
         {
-            if (hit.transform.gameObject.layer == groundLayerIndex)
+            if (hit.transform.gameObject.layer == terrainLayer)
             {
                 _isJumping = false;
                 return true;
