@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class Player : MonoBehaviour
 {
@@ -6,28 +8,43 @@ public class Player : MonoBehaviour
     [SerializeField] Camera _camera;
     [SerializeField] float _hSensitivity;
     [SerializeField] float _vSensitivity;
-    [SerializeField] Transform _player;
-
-    float xRotation = 0f, yRotation = 0f;
+    float _xRotation = 0f, _yRotation = 0f;
 
     //PlayerMovement
     float _speed;
     [SerializeField] float _walkspeed;
     [SerializeField] float _runSpeed;
     [SerializeField] Rigidbody _playerRb;
-
     Vector3 _movement;
 
     //IsGround
-    [SerializeField] float _groundDistance;
-    [SerializeField] float _jumpVelocity;
-    [SerializeField] float _jumpHeight;
+    float _groundDistance = 0.3f;
+    [SerializeField]
     LayerMask terrainLayer;
-    bool _isJumping = false;
-    float _airTime;
-    float _lastDisplacement;
+    int terrainLayerIndex;
+    [SerializeField]
+    LayerMask defaultLayer;
+    int defaultLayerIndex;
 
+    RaycastHit hit;
+
+    //Jump
     float _gravity = -9.81f;
+    bool _isJumping = false;
+    bool _jumpCooldown = false;
+
+    float _gravityStartTime;
+
+    [SerializeField]
+    float _jumpVelocity;
+
+    //IsGrounded
+    bool _isGrounded = false;
+    [SerializeField]
+    Transform groundCheck;
+    [SerializeField]
+    float checkRadius;
+
 
     //Equipment
     Equipment currentEquipment;
@@ -40,15 +57,24 @@ public class Player : MonoBehaviour
     public float throwPower;
 
 
-    // Start is called before the first frame update
+    void OnDrawGizmos()
+    {
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.red; // Set the color for the Gizmos
+            Gizmos.DrawWireSphere(groundCheck.position, checkRadius); // Draw a wireframe circle
+        }
+    }
+
+
     void Start()
     {
+        terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(terrainLayer.value, 2));
+        defaultLayerIndex = Mathf.RoundToInt(Mathf.Log(defaultLayer.value, 2));
         Cursor.lockState = CursorLockMode.Locked;
-
         currentEquipment = pickaxe;
     }
 
-    // Update is called once per frame
     void Update()
     {
         CameraMovement();
@@ -59,6 +85,7 @@ public class Player : MonoBehaviour
     void FixedUpdate()
     {
         PlayerMovement();
+        _playerRb.AddForce(Vector3.down * 4f, ForceMode.Force);
     }
 
     void CameraMovement()
@@ -66,90 +93,86 @@ public class Player : MonoBehaviour
         float x = Input.GetAxis("Mouse X") * _hSensitivity * Time.deltaTime;
         float y = Input.GetAxis("Mouse Y") * _vSensitivity * Time.deltaTime;
 
-        xRotation -= y;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        yRotation += x;
+        _xRotation -= y;
+        _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
+        _yRotation += x;
 
-        _player.localRotation = Quaternion.Euler(0f, yRotation, 0f);
-        _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-
+        transform.localRotation = Quaternion.Euler(0f, _yRotation, 0f);
+        _camera.transform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
     }
 
     void GetPlayerMovement()
     {
-        float x = Input.GetAxis("Horizontal");
+        float x = Input.GetAxisRaw("Horizontal");
         bool y = Input.GetKey(KeyCode.Space);
-        float z = Input.GetAxis("Vertical");
+        float z = Input.GetAxisRaw("Vertical");
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
-
         _speed = isRunning ? _runSpeed : _walkspeed;
 
-        if (IsGrounded() && y)
+        _movement = (transform.right * x + transform.forward * z).normalized;
+
+        if (y && _isJumping == false)
         {
-            _airTime = Time.fixedTime;
-            _lastDisplacement = 0f;
             _isJumping = true;
         }
-
-        _movement = _player.right * x + _player.forward * z;
     }
 
     void PlayerMovement()
     {
-        float displacement = 0f;
+        if (_isGrounded && _movement.magnitude == 0)
+        {
+            _playerRb.velocity = Vector3.zero;
+        }
+
         Vector3 direction = Vector3.zero;
-        if (_isJumping)
+        if (_isGrounded)
         {
-            float timeDiff = Time.fixedTime - _airTime;
-            displacement = _jumpVelocity * timeDiff + 0.5f * _gravity * timeDiff * timeDiff - _lastDisplacement;
-            _lastDisplacement = displacement;
-            //Jump
-            direction += (_player.up * displacement * _jumpHeight * Time.fixedDeltaTime);
-        }
-        //Move
-        direction += (_movement * _speed * Time.fixedDeltaTime);
-
-        _playerRb.MovePosition(_player.position + direction);
-
-        if (_movement.magnitude == 0)
-        {
-            Vector3 velocity = _playerRb.velocity;
-            velocity.x = 0f;
-            //velocity.y = 0f;
-            velocity.z = 0f;
-            _playerRb.velocity = velocity;
-        }
-
-        if (CheckSlope() <= 50)
-        {
-            _playerRb.useGravity = false;
+            _isGrounded = IsGrounded();
+            if (!_isGrounded)
+            {
+                _gravityStartTime = Time.fixedTime;
+                direction += ApplyGravity();
+            }
         }
         else
         {
-            _playerRb.useGravity = true;
+            _isGrounded = IsGrounded();
+            direction += ApplyGravity();
         }
-    }
 
-    bool IsGrounded()
-    {
-        Vector3 raycastOrigin = _player.position - new Vector3(0f,1f,0f) + Vector3.up * 0.1f;
 
-        Vector3 raycastDirection = Vector3.down;
-
-        RaycastHit hit;
-
-        if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, _groundDistance))
+        //Move
+        if (CheckSlope() <= 50)
         {
-            if (hit.transform.gameObject.layer == terrainLayer)
-            {
-                _isJumping = false;
-                return true;
-            }
+            direction += Vector3.ProjectOnPlane(_movement, hit.normal).normalized * _speed * Time.fixedDeltaTime;
+        }
+        else
+        {
+            direction += (_movement * _speed * Time.fixedDeltaTime);
         }
 
-        return false;
+        if (_isJumping)
+        {
+            direction += transform.up * _jumpVelocity * Time.fixedDeltaTime;
+        }
+
+        if (_isGrounded)
+        {
+            _isJumping = false;
+        }
+        Debug.Log(direction);
+
+        //Vector3 currVelocity = _playerRb.velocity;
+        //currVelocity = new Vector3(direction.x, direction.y, direction.z);
+        _playerRb.velocity = direction;
     }
 
+    Vector3 ApplyGravity()
+    {
+        float timeDiff = Time.fixedTime - _gravityStartTime;
+        float yVelocity = _gravity * timeDiff;
+        return (transform.up * yVelocity); //* Time.fixedDeltaTime);
+    }
 
     void GetPlayerAction()
     {
@@ -188,17 +211,23 @@ public class Player : MonoBehaviour
         }
     }
 
+    //This is to checkslope or isground
     float CheckSlope()
     {
-        RaycastHit hit;
-        float slopeAngle = 0f;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit))
+        float slopeAngle = 180f;
+        //if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out hit, _groundDistance))
+        if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out hit, 1f))
         {
-            // Calculate the angle between the ground normal and the up direction
-            slopeAngle = Vector3.Angle(hit.normal, Vector3.up);
+            if (hit.transform.gameObject.layer == terrainLayerIndex)
+                slopeAngle = Vector3.Angle(hit.normal, Vector3.up);
         }
-
         return slopeAngle;
+    }
+
+    bool IsGrounded()
+    {
+        Debug.Log(Physics.CheckSphere(groundCheck.position, checkRadius, terrainLayer));
+        return Physics.CheckSphere(groundCheck.position, checkRadius, terrainLayer);
     }
 
     public void Spawn(int x, int y, int z)
