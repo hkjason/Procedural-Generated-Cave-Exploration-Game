@@ -160,7 +160,6 @@ public class Player : MonoBehaviour
         {
             _isJumping = false;
         }
-        Debug.Log(direction);
 
         //Vector3 currVelocity = _playerRb.velocity;
         //currVelocity = new Vector3(direction.x, direction.y, direction.z);
@@ -226,7 +225,6 @@ public class Player : MonoBehaviour
 
     bool IsGrounded()
     {
-        Debug.Log(Physics.CheckSphere(groundCheck.position, checkRadius, terrainLayer));
         return Physics.CheckSphere(groundCheck.position, checkRadius, terrainLayer);
     }
 
