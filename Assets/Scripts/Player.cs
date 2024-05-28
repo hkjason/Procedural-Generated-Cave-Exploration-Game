@@ -1,78 +1,55 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class Player : MonoBehaviour
 {
-    //CameraMovement
-    [SerializeField] Camera _camera;
-    [SerializeField] float _hSensitivity;
-    [SerializeField] float _vSensitivity;
-    float _xRotation = 0f, _yRotation = 0f;
+    [Header("CameraMovement")]
+    [SerializeField] private Camera _camera;
+    [SerializeField] private float _hSensitivity;
+    [SerializeField] private float _vSensitivity;
+    private float _xRotation = 0f;
+    private float _yRotation = 0f;
 
-    //PlayerMovement
-    float _speed;
-    [SerializeField] float _walkspeed;
+    [Header("PlayerMovement")]
+    [SerializeField] float _walkSpeed;
     [SerializeField] float _runSpeed;
     [SerializeField] Rigidbody _playerRb;
+    float _speed;
     Vector3 _movement;
 
-    //IsGround
-    float _groundDistance = 0.3f;
-    [SerializeField]
-    LayerMask terrainLayer;
-    int terrainLayerIndex;
-    [SerializeField]
-    LayerMask defaultLayer;
-    int defaultLayerIndex;
+    [Header("GroundCheck")]
+    [SerializeField] private Transform _groundCheck;
+    [SerializeField] private float _checkRadius;
+    [SerializeField] private LayerMask _terrainLayer;
+    private int _terrainLayerIndex;
+    private RaycastHit _hit;
+    private float _gravity = -9.81f;
+    private float _gravityStartTime;
+    private bool _isGrounded = false;
 
-    RaycastHit hit;
+    [Header("Jump")]
+    [SerializeField] private float _jumpVelocity;
+    private bool _isJumping = false;
 
-    //Jump
-    float _gravity = -9.81f;
-    bool _isJumping = false;
-    bool _jumpCooldown = false;
+    [Header("Equipment")]
+    [SerializeField] private Pickaxe _pickaxe;
+    [SerializeField] private Flaregun _flaregun;
+    private Equipment _currentEquipment;
 
-    float _gravityStartTime;
-
-    [SerializeField]
-    float _jumpVelocity;
-
-    //IsGrounded
-    bool _isGrounded = false;
-    [SerializeField]
-    Transform groundCheck;
-    [SerializeField]
-    float checkRadius;
-
-
-    //Equipment
-    Equipment currentEquipment;
-    public Pickaxe pickaxe;
-    public Flaregun flaregun;
-
-    public Rigidbody flare;
-    public Transform flareSpawnPoint;
-    public Transform flareThrowPoint;
-    public float throwPower;
-
-
-    void OnDrawGizmos()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.red; // Set the color for the Gizmos
-            Gizmos.DrawWireSphere(groundCheck.position, checkRadius); // Draw a wireframe circle
-        }
-    }
-
+    [Header("Flare")]
+    [SerializeField] private Rigidbody _flare;
+    [SerializeField] private Transform _flareSpawnPoint;
+    [SerializeField] private Transform _flareThrowPoint;
+    [SerializeField] private float _throwPower;
+    [SerializeField] private float _flareRegenTime;
+    private float _flareCount;
+    private float _flareSpawnTime;
 
     void Start()
     {
-        terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(terrainLayer.value, 2));
-        defaultLayerIndex = Mathf.RoundToInt(Mathf.Log(defaultLayer.value, 2));
+        _terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(_terrainLayer.value, 2));
         Cursor.lockState = CursorLockMode.Locked;
-        currentEquipment = pickaxe;
+        _currentEquipment = _pickaxe;
+        _flareCount = 4;
     }
 
     void Update()
@@ -80,12 +57,12 @@ public class Player : MonoBehaviour
         CameraMovement();
         GetPlayerMovement();
         GetPlayerAction();
+        RegenFlare();
     }
 
     void FixedUpdate()
     {
         PlayerMovement();
-        _playerRb.AddForce(Vector3.down * 4f, ForceMode.Force);
     }
 
     void CameraMovement()
@@ -107,7 +84,7 @@ public class Player : MonoBehaviour
         bool y = Input.GetKey(KeyCode.Space);
         float z = Input.GetAxisRaw("Vertical");
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
-        _speed = isRunning ? _runSpeed : _walkspeed;
+        _speed = isRunning ? _runSpeed : _walkSpeed;
 
         _movement = (transform.right * x + transform.forward * z).normalized;
 
@@ -144,7 +121,7 @@ public class Player : MonoBehaviour
         //Move
         if (CheckSlope() <= 50)
         {
-            direction += Vector3.ProjectOnPlane(_movement, hit.normal).normalized * _speed * Time.fixedDeltaTime;
+            direction += Vector3.ProjectOnPlane(_movement, _hit.normal).normalized * _speed * Time.fixedDeltaTime;
         }
         else
         {
@@ -161,8 +138,6 @@ public class Player : MonoBehaviour
             _isJumping = false;
         }
 
-        //Vector3 currVelocity = _playerRb.velocity;
-        //currVelocity = new Vector3(direction.x, direction.y, direction.z);
         _playerRb.velocity = direction;
     }
 
@@ -173,59 +148,57 @@ public class Player : MonoBehaviour
         return (transform.up * yVelocity); //* Time.fixedDeltaTime);
     }
 
-    void GetPlayerAction()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Debug.Log("current equip" + currentEquipment);
-            currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            if (currentEquipment == pickaxe) return;
-            if (currentEquipment.isAnimating) return;
-
-            currentEquipment.Unequip();
-            currentEquipment = pickaxe;
-            currentEquipment.Equip();
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            if (currentEquipment == flaregun) return;
-            if (currentEquipment.isAnimating) return;
-            currentEquipment.Unequip();
-            currentEquipment = flaregun;
-            currentEquipment.Equip();
-        }
-
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            currentEquipment.Reload();
-        }
-
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            SpawnFlare();
-        }
-    }
-
-    //This is to checkslope or isground
     float CheckSlope()
     {
         float slopeAngle = 180f;
-        //if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out hit, _groundDistance))
-        if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out hit, 1f))
+        if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out _hit, 1f))
         {
-            if (hit.transform.gameObject.layer == terrainLayerIndex)
-                slopeAngle = Vector3.Angle(hit.normal, Vector3.up);
+            if (_hit.transform.gameObject.layer == _terrainLayerIndex)
+                slopeAngle = Vector3.Angle(_hit.normal, Vector3.up);
         }
         return slopeAngle;
     }
 
     bool IsGrounded()
     {
-        return Physics.CheckSphere(groundCheck.position, checkRadius, terrainLayer);
+        return Physics.CheckSphere(_groundCheck.position, _checkRadius, _terrainLayer);
+    }
+
+    void GetPlayerAction()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Debug.Log("current equip" + _currentEquipment);
+            _currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            if (_currentEquipment == _pickaxe) return;
+            if (_currentEquipment.isAnimating) return;
+
+            _currentEquipment.Unequip();
+            _currentEquipment = _pickaxe;
+            _currentEquipment.Equip();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            if (_currentEquipment == _flaregun) return;
+            if (_currentEquipment.isAnimating) return;
+            _currentEquipment.Unequip();
+            _currentEquipment = _flaregun;
+            _currentEquipment.Equip();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            _currentEquipment.Reload();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            SpawnFlare();
+        }
     }
 
     public void Spawn(int x, int y, int z)
@@ -235,13 +208,36 @@ public class Player : MonoBehaviour
 
     void SpawnFlare()
     {
-        Rigidbody flareInstance;
-        flareInstance = Instantiate(flare, flareSpawnPoint.position, Quaternion.identity) as Rigidbody;
+        if (_flareCount <= 0)
+        {
+            return;
+        }
+        if (_flareCount == 4)
+        {
+            _flareSpawnTime = Time.time;
+        }
 
-        Vector3 heading = flareThrowPoint.position - flareSpawnPoint.position;
+        Rigidbody flareInstance;
+        flareInstance = Instantiate(_flare, _flareSpawnPoint.position, Quaternion.identity) as Rigidbody;
+
+        Vector3 heading = _flareThrowPoint.position - _flareSpawnPoint.position;
         float distance = heading.magnitude;
         Vector3 direction = heading / distance;
 
-        flareInstance.AddForce(direction * throwPower);
+        flareInstance.AddForce(direction * _throwPower);
+
+        _flareCount--;
+    }
+
+    void RegenFlare()
+    {
+        if (_flareCount < 4)
+        {
+            if (Time.time - _flareSpawnTime >= _flareRegenTime)
+            {
+                _flareCount++;
+                _flareSpawnTime = Time.time;
+            }
+        }
     }
 }

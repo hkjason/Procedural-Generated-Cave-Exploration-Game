@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 public class Pickaxe : Equipment
@@ -13,6 +11,10 @@ public class Pickaxe : Equipment
     public Vector3 digPos;
     public Quaternion digRotation;
 
+    public Vector3 startPos1;
+    public Quaternion startRotation1;
+    public Vector3 digPos1;
+    public Quaternion digRotation1;
 
     private Ray ray;
 
@@ -20,8 +22,8 @@ public class Pickaxe : Equipment
     {
         equipPos = new Vector3(0.3f, 0f, 0.6f);
         digPos = new Vector3(0.1f, -0.01f, 1f);
-        equipRotation = Quaternion.Euler(new Vector3(0f, 270f, 355f));
-        digRotation = Quaternion.Euler(new Vector3(0f, 249.3f, 327.2f));
+        equipRotation = Quaternion.Euler(new Vector3(0f, 270f, 360f));
+        digRotation = Quaternion.Euler(new Vector3(0f, 249.3f, 342.7f));
 
         unequipPos = new Vector3(0.3f, -1f, 0.6f);
         unequipRotation = Quaternion.Euler(new Vector3(0f, 270f, 175f));
@@ -31,17 +33,28 @@ public class Pickaxe : Equipment
 
         terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(terrainLayer.value, 2));
         oreLayerIndex = Mathf.RoundToInt(Mathf.Log(oreLayer.value, 2));
+
+        startPos1 = new Vector3(-0.13f, 0, 0.6f);
+        startRotation1 = Quaternion.Euler(new Vector3(29.2f, 295.2f, 355f));
+
+        digPos1 = new Vector3(-0.13f, 0, 0.78f);
+        digRotation1 = Quaternion.Euler(new Vector3(29.2f, 295.2f, 334f));
     }
 
     public override void Use(Ray ray)
     {
         if (isAnimating) return;
 
-        if (CheckCooldown())
-        {
-            this.ray = ray;
+        this.ray = ray;
 
+        int randomInt = Random.Range(0, 3);
+        if (randomInt < 2)
+        {
             StartCoroutine(MoveAxe());
+        }
+        else
+        {
+            StartCoroutine(MoveAxe1());
         }
     }
 
@@ -49,7 +62,7 @@ public class Pickaxe : Equipment
     {
         isAnimating = true;
 
-        float duration = 0.5f;
+        float duration = cooldown / 2;
         float elapsed = 0f;
 
         while (elapsed < duration) 
@@ -65,7 +78,7 @@ public class Pickaxe : Equipment
 
         Dig();
 
-        duration = 0.5f;
+        duration = cooldown / 2;
         elapsed = 0f;
 
         while (elapsed < duration)
@@ -75,6 +88,57 @@ public class Pickaxe : Equipment
 
             transform.localPosition = Vector3.Lerp(digPos, equipPos, t);
             transform.localRotation = Quaternion.Lerp(digRotation, equipRotation, t);
+
+            yield return null;
+        }
+
+        isAnimating = false;
+    }
+
+    IEnumerator MoveAxe1()
+    {
+        isAnimating = true;
+
+        float duration = cooldown / 3;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            transform.localPosition = Vector3.Lerp(equipPos, startPos1, t);
+            transform.localRotation = Quaternion.Lerp(equipRotation, startRotation1, t);
+
+            yield return null;
+        }
+
+        duration = cooldown / 3;
+        elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            transform.localPosition = Vector3.Lerp(startPos1, digPos1, t);
+            transform.localRotation = Quaternion.Lerp(startRotation1, digRotation1, t);
+
+            yield return null;
+        }
+
+        Dig();
+
+        duration = cooldown / 3;
+        elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            transform.localPosition = Vector3.Lerp(digPos1, equipPos, t);
+            transform.localRotation = Quaternion.Lerp(digRotation1, equipRotation, t);
 
             yield return null;
         }

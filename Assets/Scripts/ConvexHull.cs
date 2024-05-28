@@ -1,14 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UI;
 
 namespace GK
 {
@@ -30,6 +24,8 @@ namespace GK
 
         public int totalOreCount = 0;
         public int oreCountInGame = 400;
+
+        public int playerOreCount = 0;
 
         public List<OreGroup> oreGroups;
 
@@ -308,6 +304,7 @@ namespace GK
                         // Destroy all ores within the radius
                         foreach (Ore ore in oresWithinRadius)
                         {
+                            playerOreCount++;
                             Destroy(ore.meshFilter.gameObject);
                             oreGroups[i].ores.Remove(ore);
                         }
@@ -318,6 +315,7 @@ namespace GK
                         oresWithinRadius.Sort((a, b) => Vector3.Distance(hitPoint, a.oreLocation).CompareTo(Vector3.Distance(hitPoint, b.oreLocation)));
                         for (int j = 0; j < destructionMagnitude; j++)
                         {
+                            playerOreCount++;
                             Destroy(oresWithinRadius[j].meshFilter.gameObject);
                             oreGroups[i].ores.Remove(oresWithinRadius[j]);
                         }

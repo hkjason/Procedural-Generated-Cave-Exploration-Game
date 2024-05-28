@@ -1,7 +1,6 @@
 using GK;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour
@@ -37,81 +36,6 @@ public class CaveGenerator : MonoBehaviour
     public LayerMask terrainLayer;
 
     SimplexNoise simplexNoise;
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = UnityEngine.Color.white;
-
-        if (orePoints.Count > 0)
-        {
-            foreach (var orePoint in orePoints)
-            {
-                Gizmos.DrawWireSphere(orePoint, 1f);
-            }
-        }
-
-        Gizmos.color = UnityEngine.Color.cyan;
-
-        if (oreHitPoints.Count > 0)
-        {
-            foreach (var hitPoint in oreHitPoints)
-            {
-                Gizmos.DrawWireSphere(hitPoint, 0.2f);
-            }
-        }
-
-        /*
-        Gizmos.color = UnityEngine.Color.green;
-
-        if (oreHitPoints.Count > 0)
-        {
-            foreach (var hitPoint in oreHitPoints)
-            {
-                Debug.Log(hitPoint);
-
-                float xDown = Mathf.Floor(hitPoint.x);
-                float xUp = Mathf.Ceil(hitPoint.x);
-                float yDown = Mathf.Floor(hitPoint.y);
-                float yUp = Mathf.Ceil(hitPoint.y);
-                float zDown = Mathf.Floor(hitPoint.z);
-                float zUp = Mathf.Ceil(hitPoint.z);
-
-                Gizmos.DrawWireSphere(new Vector3(xDown, yDown, zDown), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xDown, yDown, zUp), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xDown, yUp, zDown), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xDown, yUp, zUp), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xUp, yDown, zDown), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xUp, yDown, zUp), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xUp, yUp, zDown), 0.3f);
-                Gizmos.DrawWireSphere(new Vector3(xUp, yUp, zUp), 0.3f);
-
-                break;
-            }
-        }
-        */
-
-        /*
-        Gizmos.color = UnityEngine.Color.red;
-
-        if (flowerHitPoints.Count > 0)
-        {
-            for (int i = 0; i < flowerHitPoints.Count; i++)
-            {
-                Gizmos.DrawLine(flowerPoints[i], flowerHitPoints[i]);
-            }
-        }
-
-        Gizmos.color = UnityEngine.Color.white;
-
-        if (flowerHitPoints.Count > 0)
-        {
-            for (int i = 0; i < flowerHitPoints.Count; i++)
-            {
-                Gizmos.DrawLine(flowerHitPoints[i], normalPoints[i]);
-            }
-        }
-        */
-    }
 
     private void Awake()
     {
