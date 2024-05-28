@@ -1,6 +1,7 @@
 using GK;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour
@@ -87,11 +88,22 @@ public class CaveGenerator : MonoBehaviour
 
         startingPt = new Vector3Int(width / 2, height / 2, depth / 2);
 
+        
         GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 200, 3);
         mainTunnelAgent.Walk();
 
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
         mainCaveAgent.Walk();
+        
+        /*
+        for (int x = 1; x <= width - 1; x++)
+        {
+            for (int z = 1; z <= depth - 1; z++)
+            {
+                caveGrid[x, 50, z] = -1f;
+            }
+        }
+        */
 
         Debug.Log("BaseCave");
 
@@ -99,8 +111,8 @@ public class CaveGenerator : MonoBehaviour
 
         Debug.Log("CellularAutomata");
 
-        simplexNoise = new SimplexNoise(width, height, depth, _seed);
-        simplexNoise.GenerateNoise();
+        //simplexNoise = new SimplexNoise(width, height, depth, _seed);
+        //simplexNoise.GenerateNoise();
 
         chunkManager.CreateChunks(width, height, depth);
         Debug.Log("SimplexNoise");
@@ -165,12 +177,25 @@ public class CaveGenerator : MonoBehaviour
         }
     }
 
+    public void DigCaveTest(Ray ray, RaycastHit hit)
+    {
+        Debug.Log("Hit: " + hit.point);
+        Debug.Log("ray: " + ray.direction);
+        Vector3Int point = new Vector3Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.y -2), Mathf.RoundToInt(hit.point.z));
+        Vector3Int point1 = new Vector3Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.y -1), Mathf.RoundToInt(hit.point.z));
 
+        caveGrid[point.x, point.y, point.z] = 1f;//* simplexNoise.GetNoise(point.x, point.y, point.z);
+        caveGrid[point1.x, point1.y, point1.z] = -1f;
+
+        List<Vector3Int> updatedPoint = new List<Vector3Int>();
+        updatedPoint.Add(point);
+        updatedPoint.Add(point1);
+        chunkManager.UpdateChunks(updatedPoint);
+    }
     public void DigCave(Ray ray, RaycastHit hit)
     {
         Debug.Log("Hit: " + hit.point);
         Debug.Log("ray: " + ray.direction);
-
         Vector3 hitPos = hit.point;
         float rayx = Mathf.Abs(ray.direction.x);
         float rayy = Mathf.Abs(ray.direction.y);
@@ -245,6 +270,7 @@ public class CaveGenerator : MonoBehaviour
 
         List<Vector3Int> updatedPoint = new List<Vector3Int>();
 
+
         for (int i = 0; i < Math.Min(5, neighbourList.Count); i++)
         {
             Vector3Int point = neighbourList[i].Key;
@@ -252,6 +278,8 @@ public class CaveGenerator : MonoBehaviour
 
             updatedPoint.Add(point);
         }
+        
+
 
         chunkManager.UpdateChunks(updatedPoint);
     }

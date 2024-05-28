@@ -4,16 +4,14 @@ using UnityEngine;
 
 public class CellularAutomata : MonoBehaviour
 {
-    [SerializeField] int iterations;
-
-    CaveGenerator caveGenerator;
-
+    [SerializeField] int _iterations;
+    private CaveGenerator _caveGenerator;
     private int[,,] _lastStateCaveGrid;
     private int[,,] _thisStateCaveGrid;
 
     void Start()
     {
-        caveGenerator = CaveGenerator.Instance;
+        _caveGenerator = CaveGenerator.Instance;
     }
 
     int GetNeighborCount(int locX, int locY, int locZ)
@@ -87,16 +85,16 @@ public class CellularAutomata : MonoBehaviour
     //https://softologyblog.wordpress.com/2019/12/28/3d-cellular-automata-3/
     public void RunCellularAutomata()
     {
-        _thisStateCaveGrid = new int[caveGenerator.width,caveGenerator.height,caveGenerator.depth];
+        _thisStateCaveGrid = new int[_caveGenerator.width,_caveGenerator.height,_caveGenerator.depth];
 
-        for (int i = 0; i < caveGenerator.width; i++)
+        for (int i = 0; i < _caveGenerator.width; i++)
         {
-            for (int j = 0; j < caveGenerator.height; j++)
+            for (int j = 0; j < _caveGenerator.height; j++)
             {
-                for (int k = 0; k < caveGenerator.depth; k++)
+                for (int k = 0; k < _caveGenerator.depth; k++)
                 {
                     //Works when 0, 4 print if ==0
-                    if (caveGenerator.caveGrid[i, j, k] > 0)
+                    if (_caveGenerator.caveGrid[i, j, k] > 0)
                     { _thisStateCaveGrid[i, j, k] = 0; }
                     else
                     { _thisStateCaveGrid[i, j, k] = 4; }
@@ -104,17 +102,17 @@ public class CellularAutomata : MonoBehaviour
             }
         }
 
-        for (int iter = 0; iter < iterations; iter++)
+        for (int iter = 0; iter < _iterations; iter++)
         {
 
             _lastStateCaveGrid = DeepClone(_thisStateCaveGrid);
 
             //Skip boundaries
-            for (int i = 1; i < caveGenerator.width -1; i++)
+            for (int i = 1; i < _caveGenerator.width -1; i++)
             {
-                for (int j = 1; j < caveGenerator.height -1 ; j++)
+                for (int j = 1; j < _caveGenerator.height -1 ; j++)
                 {
-                    for (int k = 1; k < caveGenerator.depth -1; k++)
+                    for (int k = 1; k < _caveGenerator.depth -1; k++)
                     {
 
                         int neighborCount = GetNeighborCount(i, j, k);
@@ -133,16 +131,16 @@ public class CellularAutomata : MonoBehaviour
                     }
                 }
             }
-            for (int i = 1; i < caveGenerator.width; i++)
+            for (int i = 1; i < _caveGenerator.width; i++)
             {
-                for (int j = 1; j < caveGenerator.height; j++)
+                for (int j = 1; j < _caveGenerator.height; j++)
                 {
-                    for (int k = 1; k < caveGenerator.depth; k++)
+                    for (int k = 1; k < _caveGenerator.depth; k++)
                     {
                         if (_thisStateCaveGrid[i, j, k] > 0)
-                        { caveGenerator.caveGrid[i, j, k] = 1f; }
+                        { _caveGenerator.caveGrid[i, j, k] = 1f; }
                         else
-                        { caveGenerator.caveGrid[i, j, k] = -1f; }
+                        { _caveGenerator.caveGrid[i, j, k] = -1f; }
                     }
                 }
             }
@@ -153,17 +151,17 @@ public class CellularAutomata : MonoBehaviour
 
     void CleanUp()
     {
-        for (int i = 1; i < caveGenerator.width - 1; i++)
+        for (int i = 1; i < _caveGenerator.width - 1; i++)
         {
-            for (int j = 1; j < caveGenerator.height - 1; j++)
+            for (int j = 1; j < _caveGenerator.height - 1; j++)
             {
-                for (int k = 1; k < caveGenerator.depth - 1; k++)
+                for (int k = 1; k < _caveGenerator.depth - 1; k++)
                 {
                     int neighborCount = GetNeighborCountQuick(i, j, k);
 
                     if (neighborCount <= 4)
                     {
-                        caveGenerator.caveGrid[i, j, k] = -1f;
+                        _caveGenerator.caveGrid[i, j, k] = -1f;
                     }
                 }
             }
