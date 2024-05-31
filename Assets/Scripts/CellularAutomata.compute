@@ -1,14 +1,90 @@
-// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSCA
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
+#define THREAD_NUM 8
 
-[numthreads(8,8,8)]
+RWStructuredBuffer<float> caveBuffer1;
+RWStructuredBuffer<float> caveBuffer2;
+
+bool use1;
+bool expand;
+int size;
+
+
+int GetPos(int x, int y, int z)
+{
+    return x * size * size + y * size + z;
+}
+
+int GetNeighborCount(int x, int y, int z)
+{
+    int neighborCount = 0;
+    
+    for (int i = x - 1; i <= x + 1; i++)
+    {
+        for (int j = y - 1; j <= y + 1; j++)
+        {
+            for (int k = z - 1; k <= z + 1; k++)
+            {
+                if (i == x && j == y && k == z)
+                    continue;
+
+                if (i < 0 || j < 0 || k < 0 || i >= size || j >= size || k >= size)
+                {
+                    continue;
+                }
+
+                if (use1 ? caveBuffer1[GetPos(i, j, k)] > 0 : caveBuffer2[GetPos(i, j, k)] > 0)
+                {
+                    neighborCount++;
+                }
+
+                if (neighborCount >= 13)
+                    return neighborCount;
+            }
+        }
+    }
+    return neighborCount;
+}
+
+[numthreads(THREAD_NUM, THREAD_NUM, THREAD_NUM)]
 void CSCA (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    
+    int pos = GetPos(id.x, id.y, id.z);
+    int neighborCount = GetNeighborCount(id.x, id.y, id.z);
+    
+    if (neighborCount >= 13)
+    {
+        if (use1)
+        {
+            caveBuffer2[pos] = 1;
+        }
+        else
+        {
+            caveBuffer1[pos] = 1;
+        }
+    }
+    else if (neighborCount >= 8 && expand)
+    {
+        if (use1)
+        {
+            caveBuffer2[pos] = 1;
+        }
+        else
+        {
+            caveBuffer1[pos] = 1;
+        }
+    }
+    else
+    {
+        if (use1)
+        {
+            caveBuffer2[pos] = -1;
+        }
+        else
+        {
+            caveBuffer1[pos] = -1;
+        }
+    }
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
 }

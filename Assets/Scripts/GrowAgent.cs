@@ -30,7 +30,7 @@ public class GrowAgent : CaveAgent
 
             currentPos += (direction * weight);
 
-            if (CaveGenerator.Instance.caveGrid[currentPos.x, currentPos.y, currentPos.z] != -1f)
+            if (CaveGenerator.Instance.caveGrid[currentPos.x, currentPos.y, currentPos.z] != 1f)
             {
                 //Not Visited
                 i++;
@@ -43,7 +43,7 @@ public class GrowAgent : CaveAgent
                 {
                     for (int z = -(weight / 2); z <= (weight / 2); z++)
                     {
-                        CaveGenerator.Instance.caveGrid[currentPos.x + x, currentPos.y + y, currentPos.z + z] = -1f;
+                        CaveGenerator.Instance.caveGrid[currentPos.x + x, currentPos.y + y, currentPos.z + z] = 1f;
                     }
                 }
             }

@@ -13,12 +13,10 @@ public class ChunkManager : MonoBehaviour
 
     public ComputeShader computeShader;
     private ComputeBuffer _vertexBuffer;
-    private ComputeBuffer _triangleBuffer;
     private ComputeBuffer _densityBuffer;
     private ComputeBuffer _countBuffer;
 
     private int _marchKernelIdx;
-
 
     private void Awake()
     {
@@ -73,8 +71,7 @@ public class ChunkManager : MonoBehaviour
                             }
                         }
                     }
-                    if (chunkPos == new Vector3Int(0, 0, 0)) ;
-                        BuildChunks(chunk);
+                    BuildChunks(chunk);
                     chunkDic.Add(chunkPos, chunk);
                 }
             }
@@ -83,12 +80,9 @@ public class ChunkManager : MonoBehaviour
 
     public void BuildChunks(Chunk chunk)
     {
-
-        _vertexBuffer = new ComputeBuffer(512, sizeof(float) * 9, ComputeBufferType.Append);
+        _vertexBuffer = new ComputeBuffer(512 * 15, sizeof(float) * 9, ComputeBufferType.Append);
         _densityBuffer = new ComputeBuffer(729, sizeof(float));
         _countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-        ComputeBuffer _debugBuffer = new ComputeBuffer(1, sizeof(float) * 3);
-        computeShader.SetBuffer(_marchKernelIdx, "debugBuffer", _debugBuffer);
 
         _densityBuffer.SetData(chunk.density);
         _vertexBuffer.SetCounterValue(0);
@@ -100,31 +94,6 @@ public class ChunkManager : MonoBehaviour
         computeShader.SetFloat("terrain_surface", 0f);
 
         computeShader.Dispatch(_marchKernelIdx, 1, 1, 1);
-
-
-        if (vec == new Vector3(0, 0, 0))
-        {
-            var debugArray = new float[3];
-            _debugBuffer.GetData(debugArray);
-
-            for (int i = 0; i < 8; i++)
-            {
-                int bot = 0 * 81 + 0 * 9 + i;
-                Debug.Log("bot num: " + chunk.density[bot]);
-                int top = 0 * 81 + 1 * 9 + i;
-                Debug.Log("top num: " + chunk.density[top]);
-            }
-        }
-
-        /*
-        foreach (var variable in debugArray)
-        {
-            Debug.Log("var" + variable);
-        }
-        */
-
-        _debugBuffer.Release();
-
 
         ComputeBuffer.CopyCount(_vertexBuffer, _countBuffer, 0);
         int[] totalCountArr = new int[1];
@@ -149,7 +118,6 @@ public class ChunkManager : MonoBehaviour
             triangles[idx + 1] = idx + 1;
             triangles[idx + 2] = idx + 2;
         }
-
        
         Mesh mesh = new Mesh();
         mesh.vertices = vertices;
@@ -165,13 +133,21 @@ public class ChunkManager : MonoBehaviour
     }
     private void OnDestroy()
     {
-        _densityBuffer.Release();
-        _vertexBuffer.Release();
-        _countBuffer.Release();
-        if (_densityBuffer != null) _densityBuffer.Dispose();
-        if (_vertexBuffer != null) _vertexBuffer.Dispose();
-        if (_triangleBuffer != null) _triangleBuffer.Dispose();
-        if (_countBuffer != null) _countBuffer.Dispose();
+        if (_densityBuffer != null)
+        {
+            _densityBuffer.Release();
+            _densityBuffer = null;
+        }
+        if (_vertexBuffer != null)
+        {
+            _vertexBuffer.Release();
+            _vertexBuffer = null;
+        }
+        if (_countBuffer != null)
+        {
+            _countBuffer.Release();
+            _countBuffer = null;
+        }
     }
 
     public void UpdateChunks(List<Vector3Int> positionList)

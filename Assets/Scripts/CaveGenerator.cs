@@ -58,7 +58,7 @@ public class CaveGenerator : MonoBehaviour
             {
                 for (int k = 0; k < depth; k++) 
                 {
-                    caveGrid[i, j, k] = 1f;
+                    caveGrid[i, j, k] = -1f;
                 }
             }
         }
@@ -100,7 +100,7 @@ public class CaveGenerator : MonoBehaviour
         
         float curTimeCA = Time.realtimeSinceStartup;
         Debug.Log("curTimeCA" + curTimeCA);
-        _cellularAutomata.RunCellularAutomata();
+        _cellularAutomata.RunCSCA();
         Debug.Log("nowTimeCA" + Time.realtimeSinceStartup);
         Debug.Log("CA time" + (Time.realtimeSinceStartup - curTimeCA));
         Debug.Log("CellularAutomata");
@@ -116,6 +116,7 @@ public class CaveGenerator : MonoBehaviour
         Debug.Log(Time.realtimeSinceStartup - curTime);
 
         Debug.Log("CreateChunks");
+
 
         Array.Clear(caveGrid, 0, caveGrid.Length);
     }

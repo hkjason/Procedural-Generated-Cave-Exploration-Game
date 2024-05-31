@@ -1,4 +1,3 @@
-// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMarchingCube
 #include "./Tables.compute"
 
@@ -14,9 +13,7 @@ struct Triangle
 AppendStructuredBuffer<Triangle> vertexBuffer;
 AppendStructuredBuffer<int> triangleBuffer;
 
-RWStructuredBuffer<float> densityBuffer;
-
-RWStructuredBuffer<float> debugBuffer;
+StructuredBuffer<float> densityBuffer;
 
 float3 pos;
 float terrain_surface;
@@ -123,11 +120,6 @@ void CSMarchingCube (uint3 id : SV_DispatchThreadID)
         vertPosition1 = vert3 + ((vert4 - vert3) * difference1);
         vertPosition2 = vert5 + ((vert6 - vert5) * difference2);
         
-        
-        vertPosition = (vert1 + vert2) / 2;
-        vertPosition1 = (vert3 + vert4) / 2;
-        vertPosition2 = (vert5 + vert6) / 2;
-        
         Triangle tris;
         
         tris.vertA = vertPosition;
@@ -137,22 +129,6 @@ void CSMarchingCube (uint3 id : SV_DispatchThreadID)
         vertexBuffer.Append(tris);
         
     }
-    
-    
-    int indexA = triangleTable[configIndex][0];
-    
-    
-    if (id.x == 7 && id.y == 0 && id.z == 7)
-    {
-        
-
-        //float3 vertA = cubePos + cornerTable[edgeTable[indexA][0]];
-        debugBuffer[0] = indexA;
-        debugBuffer[1] = id.y;
-        debugBuffer[2] = id.z;
-        
-    }
-
 }
 
 

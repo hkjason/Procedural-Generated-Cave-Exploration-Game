@@ -1853,7 +1853,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c22e44ee5f6f0334a90b428c6d77c6ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _iterations: 10
+  _iterations: 4
+  computeShader: {fileID: 0}
 --- !u!4 &926529048
 Transform:
   m_ObjectHideFlags: 0
@@ -2751,9 +2752,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b470d29dd4dbb4c849a2ce2374e616, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 106
-  height: 106
-  depth: 106
+  width: 105
+  height: 105
+  depth: 105
   _seed: 1
   _randomSeed: 0
   _terrainLayer:
