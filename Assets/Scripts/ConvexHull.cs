@@ -50,9 +50,9 @@ namespace GK
                 int oreAdded = 0;
                 oreGroups = new List<OreGroup>();
 
-                while (oreAdded < oreCountInGame && CaveGenerator.Instance.oreHitPoints.Count > 0)
+                while (oreAdded < oreCountInGame && CaveGenerator.Instance.orePoints.Count > 0)
                 {
-                    int randomIndex = UnityEngine.Random.Range(0, CaveGenerator.Instance.oreHitPoints.Count);
+                    int randomIndex = UnityEngine.Random.Range(0, CaveGenerator.Instance.orePoints.Count);
                     currentOreList = new List<Ore>();
 
                     oreVisitList = new List<Vector3Int>();
@@ -61,14 +61,14 @@ namespace GK
                     oreAdded += totalOreCount;
 
                     meshFilters = new List<MeshFilter>();
-                    int posx = Mathf.FloorToInt(CaveGenerator.Instance.oreHitPoints[randomIndex].x);
-                    int posy = Mathf.FloorToInt(CaveGenerator.Instance.oreHitPoints[randomIndex].y);
-                    int posz = Mathf.FloorToInt(CaveGenerator.Instance.oreHitPoints[randomIndex].z);
+                    int posx = Mathf.FloorToInt(CaveGenerator.Instance.orePoints[randomIndex].x);
+                    int posy = Mathf.FloorToInt(CaveGenerator.Instance.orePoints[randomIndex].y);
+                    int posz = Mathf.FloorToInt(CaveGenerator.Instance.orePoints[randomIndex].z);
 
                     ConvexHulling(new Vector3Int(posx, posy, posz), false);
                     CombineOre(meshFilters);
 
-                    CaveGenerator.Instance.oreHitPoints.RemoveAt(randomIndex);
+                    CaveGenerator.Instance.orePoints.RemoveAt(randomIndex);
                 }
             }
         }

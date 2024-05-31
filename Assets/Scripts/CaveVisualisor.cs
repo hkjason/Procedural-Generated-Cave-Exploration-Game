@@ -308,15 +308,15 @@ public class CaveVisualisor : MonoBehaviour
         meshCollider = GetComponent<MeshCollider>();
     }
 
-    public Chunk CreateMeshData(Vector3Int chunkPos)
+    public Mesh CreateMeshData(Vector3Int chunkPos)
     {
         ClearMeshData();
 
-        for (int x = -4; x < 4; x++)
+        for (int x = 0; x < 8; x++)
         {
-            for (int y = -4; y < 4; y++)
+            for (int y = 0; y < 8; y++)
             {
-                for (int z = -4; z < 4; z++)
+                for (int z = 0; z < 8; z++)
                 {
                     MarchingCube(new Vector3Int(x + chunkPos.x, y + chunkPos.y, z + chunkPos.z));
                 }
@@ -410,15 +410,8 @@ public class CaveVisualisor : MonoBehaviour
                     vertPosition = (vert1 + vert2) / 2f;
                 }
 
-                if (true)
-                {
-                    vertices.Add(vertPosition);
-                    triangles.Add(vertices.Count - 1);
-                }
-                else
-                {
-                    triangles.Add(VertForIndice(vertPosition));
-                }
+                vertices.Add(vertPosition);
+                triangles.Add(vertices.Count - 1);
 
                 uvs.Add(uvTable[edgeIndex % 6]);
 
@@ -543,7 +536,7 @@ public class CaveVisualisor : MonoBehaviour
         uvs.Clear();
     }
 
-    Chunk BuildMesh(Vector3Int chunkPos)
+    Mesh BuildMesh(Vector3Int chunkPos)
     {
         Mesh mesh = new Mesh();
         //mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -555,8 +548,7 @@ public class CaveVisualisor : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
 
-        Chunk chunk = new Chunk(chunkPos, mesh);
-        return chunk;
+        return mesh;
     }
 
     void RebuildMesh(Chunk chunk)

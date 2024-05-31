@@ -9,7 +9,12 @@ public class Chunk
 
         public Vector3Int chunkPosition;
 
-        public Chunk(Vector3Int pos, Mesh mesh)
+        //Chunk Size 8x8x8
+        //Point store 10x10x10 for marching cubes
+        public float[] density;
+        const int pointArrSize = 729;
+
+        public Chunk(Vector3Int pos)
         {
             chunkObject = new GameObject();
             meshFilter = chunkObject.AddComponent<MeshFilter>();
@@ -17,15 +22,20 @@ public class Chunk
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
 
             chunkPosition = pos;
-            this.meshFilter.mesh = mesh;
-            this.meshCollider.sharedMesh = mesh;
 
             chunkObject.transform.SetParent(ChunkManager.Instance.transform);
 
-            meshRenderer.material = Resources.Load<Material>("Materials/ForTesting");
             chunkObject.layer = LayerMask.NameToLayer("Terrain");
 
-            //chunkObject.transform.position = pos;
+            density = new float[pointArrSize];
+        }
+
+        public void BuildChunk(Mesh mesh)
+        {
+            this.meshFilter.mesh = mesh;
+            this.meshCollider.sharedMesh = mesh;
+
+            meshRenderer.material = Resources.Load<Material>("Materials/ForTesting");
         }
 
         public void UpdateChunk(Mesh mesh)

@@ -2755,28 +2755,25 @@ MonoBehaviour:
   height: 106
   depth: 106
   _seed: 1
-  randomSeed: 0
-  startingPt: {x: 0, y: 0, z: 0}
-  orePoints: []
-  oreHitPoints: []
-  flowerPoints: []
-  flowerHitPoints: []
-  normalPoints: []
-  flowerPrefab:
+  _randomSeed: 0
+  _terrainLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  _flowerPrefab:
   - {fileID: 7570405467501425085, guid: 0ab22827d0f3f0b40a97e9430d684283, type: 3}
   - {fileID: 8954726919292774957, guid: eae42a57b046b1a42a79ae6319bccca3, type: 3}
   - {fileID: 7749838506462483410, guid: d354c41a99993964baca0254487708d1, type: 3}
   - {fileID: 3318689441606926373, guid: d3ee913ed32937344b0587e70dc777a2, type: 3}
-  plantPrefab:
+  _plantPrefab:
   - {fileID: 122892, guid: 20002ad77119e9849a8815f85c128ba3, type: 3}
   - {fileID: 147436, guid: c7a5c2b51e6ab424fb46547daf81a610, type: 3}
-  cellularAutomata: {fileID: 926529047}
-  caveVisualisor: {fileID: 1656487381}
-  chunkManager: {fileID: 1407054967}
-  convexHull: {fileID: 1086119043}
-  terrainLayer:
-    serializedVersion: 2
-    m_Bits: 64
+  _cellularAutomata: {fileID: 926529047}
+  _caveVisualisor: {fileID: 1656487381}
+  _chunkManager: {fileID: 1407054967}
+  _convexHull: {fileID: 1086119043}
+  startingPt: {x: 0, y: 0, z: 0}
+  orePoints: []
+  flowerPoints: []
 --- !u!1 &1086119042
 GameObject:
   m_ObjectHideFlags: 0
@@ -3942,7 +3939,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   caveVisualisor: {fileID: 1656487381}
-  chunkSize: 8
+  computeShader: {fileID: 7200000, guid: e22b7c4976864c74388b895c088e2fb3, type: 3}
 --- !u!4 &1407054968
 Transform:
   m_ObjectHideFlags: 0
