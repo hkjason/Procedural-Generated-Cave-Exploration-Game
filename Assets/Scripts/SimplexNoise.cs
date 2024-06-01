@@ -42,7 +42,7 @@ public class SimplexNoise
                     combinedNoise += 1f;
                     combinedNoise /= 2f;
 
-                    _caveGenerator.caveGrid[x, y, z] *= combinedNoise;
+                    _caveGenerator.MultiplyCave(x, y, z, combinedNoise);
                 }
             }
         }

@@ -1,0 +1,132 @@
+#pragma kernel CSMarchingCubeAll
+#include "./Tables.compute"
+
+#define THREAD_NUM 8
+
+struct TriangleWithPos
+{
+    float3 vertA;
+    float3 vertB;
+    float3 vertC;
+    uint3 triPos;
+};
+
+AppendStructuredBuffer<TriangleWithPos> vertexBuffer;
+AppendStructuredBuffer<int> triangleBuffer;
+
+StructuredBuffer<float> densityBuffer;
+
+float3 pos;
+float terrain_surface;
+
+int GetDensityIdx(int x, int y, int z)
+{
+    return x * 41 * 41 + y * 41 + z;
+}
+
+[numthreads(8, 8, 8)]
+void CSMarchingCubeAll(uint3 id : SV_DispatchThreadID, uint3 gid : SV_GroupID)
+{
+    float3 cubePos = float3(pos.x + id.x, pos.y + id.y, pos.z + id.z);
+    
+    float cube[8] =
+    {
+        float(densityBuffer[GetDensityIdx(id.x, id.y, id.z)]),
+        float(densityBuffer[GetDensityIdx(id.x + 1, id.y, id.z)]),
+        float(densityBuffer[GetDensityIdx(id.x + 1, id.y + 1, id.z)]),
+        float(densityBuffer[GetDensityIdx(id.x, id.y + 1, id.z)]),
+        float(densityBuffer[GetDensityIdx(id.x, id.y, id.z + 1)]),
+        float(densityBuffer[GetDensityIdx(id.x + 1, id.y, id.z + 1)]),
+        float(densityBuffer[GetDensityIdx(id.x + 1, id.y + 1, id.z + 1)]),
+        float(densityBuffer[GetDensityIdx(id.x, id.y + 1, id.z + 1)])
+    };
+    
+    int configIndex = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        if (cube[i] > terrain_surface)
+            configIndex |= 1 << i;
+    }
+    
+    int edgeIndex = 0;
+    for (int ii = 0; ii < 5; ii++)
+    {
+        int index = triangleTable[configIndex][edgeIndex++];
+        if (index == -1)
+            break;
+        
+        int index1 = triangleTable[configIndex][edgeIndex++];
+        int index2 = triangleTable[configIndex][edgeIndex++];
+        
+        float3 vert1 = cubePos + cornerTable[edgeTable[index][0]];
+        float3 vert2 = cubePos + cornerTable[edgeTable[index][1]];
+        
+        float3 vert3 = cubePos + cornerTable[edgeTable[index1][0]];
+        float3 vert4 = cubePos + cornerTable[edgeTable[index1][1]];
+        
+        float3 vert5 = cubePos + cornerTable[edgeTable[index2][0]];
+        float3 vert6 = cubePos + cornerTable[edgeTable[index2][1]];
+        
+        float3 vertPosition;
+        float3 vertPosition1;
+        float3 vertPosition2;
+            
+        float vert1Sample = cube[edgeTable[index][0]];
+        float vert2Sample = cube[edgeTable[index][1]];
+        
+        float vert3Sample = cube[edgeTable[index1][0]];
+        float vert4Sample = cube[edgeTable[index1][1]];
+        
+        float vert5Sample = cube[edgeTable[index2][0]];
+        float vert6Sample = cube[edgeTable[index2][1]];
+            
+        float difference = vert2Sample - vert1Sample;
+        float difference1 = vert4Sample - vert3Sample;
+        float difference2 = vert6Sample - vert5Sample;
+        
+        if (difference == 0)
+        {
+            difference = terrain_surface;
+        }
+        else
+        {
+            difference = (terrain_surface - vert1Sample) / difference;
+        }
+        
+        if (difference1 == 0)
+        {
+            difference1 = terrain_surface;
+        }
+        else
+        {
+            difference1 = (terrain_surface - vert3Sample) / difference1;
+        }
+        
+        if (difference2 == 0)
+        {
+            difference2 = terrain_surface;
+        }
+        else
+        {
+            difference2 = (terrain_surface - vert5Sample) / difference2;
+        }
+        
+        vertPosition = vert1 + ((vert2 - vert1) * difference);
+        vertPosition1 = vert3 + ((vert4 - vert3) * difference1);
+        vertPosition2 = vert5 + ((vert6 - vert5) * difference2);
+        
+        TriangleWithPos tris;
+        
+        tris.vertA = vertPosition;
+        tris.vertB = vertPosition1;
+        tris.vertC = vertPosition2;
+        tris.triPos = gid;
+        
+        vertexBuffer.Append(tris);
+        
+    }
+}
+
+
+
+

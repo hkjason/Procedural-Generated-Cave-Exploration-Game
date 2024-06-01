@@ -1853,8 +1853,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c22e44ee5f6f0334a90b428c6d77c6ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _iterations: 4
-  computeShader: {fileID: 0}
+  _iterations: 1
+  computeShader: {fileID: 7200000, guid: 119552e460eca74488882aa5b7354ba6, type: 3}
 --- !u!4 &926529048
 Transform:
   m_ObjectHideFlags: 0
@@ -2752,9 +2752,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b470d29dd4dbb4c849a2ce2374e616, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 105
-  height: 105
-  depth: 105
+  width: 400
+  height: 400
+  depth: 400
   _seed: 1
   _randomSeed: 0
   _terrainLayer:
@@ -3941,6 +3941,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   caveVisualisor: {fileID: 1656487381}
   computeShader: {fileID: 7200000, guid: e22b7c4976864c74388b895c088e2fb3, type: 3}
+  computeShaderMarchAll: {fileID: 7200000, guid: 6991da0e5d863b5449761714e0a17824, type: 3}
 --- !u!4 &1407054968
 Transform:
   m_ObjectHideFlags: 0

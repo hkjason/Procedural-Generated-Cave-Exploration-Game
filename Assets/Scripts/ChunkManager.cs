@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 public class ChunkManager : MonoBehaviour
 {
@@ -13,10 +14,15 @@ public class ChunkManager : MonoBehaviour
 
     public ComputeShader computeShader;
     private ComputeBuffer _vertexBuffer;
-    private ComputeBuffer _densityBuffer;
+    private ComputeBuffer _densityBufferAll;
     private ComputeBuffer _countBuffer;
 
+    public ComputeShader computeShaderMarchAll;
+
     private int _marchKernelIdx;
+    private int _marchAllKernelIdx;
+
+    int GlobalCount;
 
     private void Awake()
     {
@@ -33,6 +39,8 @@ public class ChunkManager : MonoBehaviour
     private void Start()
     {
         _marchKernelIdx = computeShader.FindKernel("CSMarchingCube");
+        _marchAllKernelIdx = computeShaderMarchAll.FindKernel("CSMarchingCubeAll");
+        GlobalCount = 0;
     }
 
     public void CreateChunks(int xSize, int ySize, int zSize)
@@ -40,11 +48,11 @@ public class ChunkManager : MonoBehaviour
         _width = xSize;
         _height = ySize;
         _depth = zSize;
-        for (int i = 0; i < xSize - CHUNKSIZE ; i += CHUNKSIZE)
+        for (int i = 0; i < xSize  ; i += CHUNKSIZE)
         {
-            for (int j = 0; j < ySize - CHUNKSIZE; j += CHUNKSIZE)
+            for (int j = 0; j < ySize ; j += CHUNKSIZE)
             {
-                for (int k = 0; k < zSize - CHUNKSIZE; k += CHUNKSIZE)
+                for (int k = 0; k < zSize ; k += CHUNKSIZE)
                 {
                     /*
                     Vector3Int chunkPos = new Vector3Int(i, j, k);
@@ -67,26 +75,30 @@ public class ChunkManager : MonoBehaviour
                             for (int z = 0; z <= CHUNKSIZE; z++)
                             {
                                 int idx = x * 81 + y * 9 + z;
-                                chunk.density[idx] = CaveGenerator.Instance.caveGrid[x + i, y + j, z + k];
+                                chunk.density[idx] = CaveGenerator.Instance.GetCave(x + i, y + j, z + k);
                             }
                         }
                     }
-                    BuildChunks(chunk);
+                    //BuildChunks(chunk);
                     chunkDic.Add(chunkPos, chunk);
                 }
             }
         }
+
+
+        MarchAll();
+        Debug.Log("GCount: " + GlobalCount);
     }
 
     public void BuildChunks(Chunk chunk)
     {
-        _vertexBuffer = new ComputeBuffer(512 * 15, sizeof(float) * 9, ComputeBufferType.Append);
-        _densityBuffer = new ComputeBuffer(729, sizeof(float));
+        _vertexBuffer = new ComputeBuffer(512 * 5, sizeof(float) * 9, ComputeBufferType.Append);
+        _densityBufferAll = new ComputeBuffer(729, sizeof(float));
         _countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
 
-        _densityBuffer.SetData(chunk.density);
+        _densityBufferAll.SetData(chunk.density);
         _vertexBuffer.SetCounterValue(0);
-        computeShader.SetBuffer(_marchKernelIdx, "densityBuffer", _densityBuffer);
+        computeShader.SetBuffer(_marchKernelIdx, "densityBuffer", _densityBufferAll);
         computeShader.SetBuffer(_marchKernelIdx, "vertexBuffer", _vertexBuffer);
 
         Vector3 vec = new Vector3(chunk.chunkPosition.x, chunk.chunkPosition.y, chunk.chunkPosition.z);
@@ -99,6 +111,7 @@ public class ChunkManager : MonoBehaviour
         int[] totalCountArr = new int[1];
         _countBuffer.GetData(totalCountArr);
         int totalCount = totalCountArr[0];
+
         Triangle[] trianglesData = new Triangle[totalCount];
         
         _vertexBuffer.GetData(trianglesData);
@@ -127,16 +140,127 @@ public class ChunkManager : MonoBehaviour
 
         chunk.BuildChunk(mesh);
 
-        _densityBuffer.Release();
+        _densityBufferAll.Release();
         _vertexBuffer.Release();
         _countBuffer.Release();
     }
+
+    public void MarchAll()
+    {
+        int size = 40; //5 each
+
+        for (int iterX = 0; iterX < _width; iterX += size)
+        {
+            for (int iterY = 0; iterY < _height; iterY += size)
+            {
+                for (int iterZ = 0; iterZ < _depth; iterZ += size)
+                {
+                    int vSize = size * size * size;
+                    int expandSize = (size + 1) * (size + 1) * (size + 1);
+                    int locIdx = iterX * _height * _depth + iterY * _depth + iterZ;
+
+                    ComputeBuffer _vertexBufferAll = new ComputeBuffer(vSize * 5, sizeof(float) * 12, ComputeBufferType.Append);
+                    ComputeBuffer _densityBufferAll = new ComputeBuffer(expandSize, sizeof(float));
+                    ComputeBuffer _countBufferAll = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+
+                    float[] dens = new float[expandSize];
+                    for (int i = 0; i < size + 1; i++)
+                    {
+                        for (int j = 0; j < size + 1; j++)
+                        { 
+                            for (int k = 0; k < size + 1; k++)
+                            {
+                                dens[i * (size + 1) * (size + 1) + j * (size + 1) + k] = CaveGenerator.Instance.GetCave(iterX + i, iterY + j, iterZ + k);
+                            }
+                        }
+                    }
+
+                    _densityBufferAll.SetData(dens);
+                    //_densityBufferAll.SetData(CaveGenerator.Instance.caveGrid, locIdx, 0, 41 * 41 * 41);
+                    _vertexBufferAll.SetCounterValue(0);
+                    computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "densityBuffer", _densityBufferAll);
+                    computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "vertexBuffer", _vertexBufferAll);
+
+                    Vector3 vec = new Vector3(iterX, iterY, iterZ);
+                    computeShaderMarchAll.SetVector("pos", vec);
+                    computeShaderMarchAll.SetFloat("terrain_surface", 0f);
+
+                    computeShaderMarchAll.Dispatch(_marchAllKernelIdx, size / 8, size / 8, size / 8);
+
+                    ComputeBuffer.CopyCount(_vertexBufferAll, _countBufferAll, 0);
+                    int[] totalCountArr = new int[1];
+                    _countBufferAll.GetData(totalCountArr);
+                    int totalCount = totalCountArr[0];
+
+                    //GlobalCount += totalCount;
+
+                    TriangleWithPos[] trianglesData = new TriangleWithPos[totalCount];
+
+                    _vertexBufferAll.GetData(trianglesData);
+                    ////Vertex count above is correct, 12920.
+                    ////Vertex added below incorrect.
+                    for (int i = 0; i < 5; i++)
+                    {
+                        for (int j = 0; j < 5; j++)
+                        {
+                            for (int k = 0; k < 5; k++)
+                            {
+                                List<int> idxList = new List<int>();
+                                Vector3 currPos = new Vector3(i, j, k);
+
+                                for (int ii = 0; ii < totalCount; ii++)
+                                {
+                                    if (trianglesData[ii].triPos == currPos)
+                                    {
+                                        idxList.Add(ii);
+                                    }
+                                }
+
+                                Vector3[] vertices = new Vector3[idxList.Count * 3];
+                                int[] triangles = new int[idxList.Count * 3];
+
+                                for (int jj = 0; jj < idxList.Count; jj++)
+                                {
+                                    int idx = jj * 3;
+
+                                    vertices[idx] = trianglesData[jj].vertA;
+                                    vertices[idx + 1] = trianglesData[jj].vertB;
+                                    vertices[idx + 2] = trianglesData[jj].vertC;
+
+                                    triangles[idx] = idx;
+                                    triangles[idx + 1] = idx + 1;
+                                    triangles[idx + 2] = idx + 2;
+
+                                    GlobalCount += 3;
+                                }
+
+                                Mesh mesh = new Mesh();
+                                mesh.vertices = vertices;
+                                mesh.triangles = triangles;
+                                mesh.RecalculateTangents();
+                                mesh.RecalculateNormals();
+
+                                Vector3Int chunkLoc = new Vector3Int(iterX + i * 8, iterY + j * 8, iterZ + k * 8);
+                                Chunk chunk = chunkDic[chunkLoc];
+                                chunk.BuildChunk(mesh);
+                            }
+                        }
+                    }
+                    _densityBufferAll.Release();
+                    _vertexBufferAll.Release();
+                    _countBufferAll.Release();
+                }
+            }
+        }
+    }
+
+
     private void OnDestroy()
     {
-        if (_densityBuffer != null)
+        if (_densityBufferAll != null)
         {
-            _densityBuffer.Release();
-            _densityBuffer = null;
+            _densityBufferAll.Release();
+            _densityBufferAll = null;
         }
         if (_vertexBuffer != null)
         {
@@ -367,5 +491,13 @@ public class ChunkManager : MonoBehaviour
         public Vector3 vertA;
         public Vector3 vertB;
         public Vector3 vertC;
+    }
+
+    struct TriangleWithPos
+    {
+        public Vector3 vertA;
+        public Vector3 vertB;
+        public Vector3 vertC;
+        public Vector3 triPos;
     }
 }

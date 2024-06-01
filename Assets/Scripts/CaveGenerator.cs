@@ -8,10 +8,11 @@ public class CaveGenerator : MonoBehaviour
 {
     public static CaveGenerator Instance { get; private set; }
 
+    //Multiple of 8
     [Header("Size")]
-    public int width = 106;
-    public int height = 106;
-    public int depth = 106;
+    public int width = 512;
+    public int height = 512;
+    public int depth = 512;
 
     [Header("Seed")]
     [SerializeField] private int _seed;
@@ -33,7 +34,7 @@ public class CaveGenerator : MonoBehaviour
 
     [Header("Cave Data")]
     public Vector3Int startingPt;
-    public float[,,] caveGrid;
+    [System.NonSerialized] public float[] caveGrid;
     public List<Vector3> orePoints;
     public List<Vector3> flowerPoints;
 
@@ -51,17 +52,18 @@ public class CaveGenerator : MonoBehaviour
 
     void Start()
     {
-        caveGrid = new float[width, height, depth];
-        for (int i = 0; i < width; i++)
+        caveGrid = new float[(width + 1) * (height + 1) * (depth + 1)];
+        for (int x = 0; x < width + 1; x++)
         {
-            for (int j = 0; j < height; j++)
+            for (int y = 0; y < height + 1; y++)
             {
-                for (int k = 0; k < depth; k++) 
+                for (int z = 0; z < depth + 1; z++) 
                 {
-                    caveGrid[i, j, k] = -1f;
+                    SetCave(x,y,z,-1f);
                 }
             }
         }
+        
 
         orePoints = new List<Vector3>();
         flowerPoints = new List<Vector3>();
@@ -88,35 +90,28 @@ public class CaveGenerator : MonoBehaviour
 
         startingPt = new Vector3Int(width / 2, height / 2, depth / 2);
 
+        Debug.Log("RAM: " + SystemInfo.systemMemorySize);
+        Debug.Log("VRAM: " + SystemInfo.graphicsMemorySize);
+
+        float curTimeBase = Time.realtimeSinceStartup;
         GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 200, 3);
         mainTunnelAgent.Walk();
-
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
         mainCaveAgent.Walk();
-
-        Debug.Log("BaseCave");
-
-        
+        Debug.Log("BaseCave time: " + (Time.realtimeSinceStartup - curTimeBase));
         
         float curTimeCA = Time.realtimeSinceStartup;
-        Debug.Log("curTimeCA" + curTimeCA);
-        _cellularAutomata.RunCSCA();
-        Debug.Log("nowTimeCA" + Time.realtimeSinceStartup);
-        Debug.Log("CA time" + (Time.realtimeSinceStartup - curTimeCA));
-        Debug.Log("CellularAutomata");
+        _cellularAutomata.RunCSCA(width, height, depth);
+        Debug.Log("CA time: " + (Time.realtimeSinceStartup - curTimeCA));
 
+        float curTimeNoise = Time.realtimeSinceStartup;
         _simplexNoise = new SimplexNoise(width, height, depth, _seed);
         _simplexNoise.GenerateNoise();
+        Debug.Log("SimplexNoise time: " + (Time.realtimeSinceStartup - curTimeNoise));
 
-        Debug.Log("SimplexNoise");
-        float curTime = Time.realtimeSinceStartup;
-        Debug.Log("CurrentTime" + Time.realtimeSinceStartup);
+        float curTimeMarch = Time.realtimeSinceStartup;
         _chunkManager.CreateChunks(width, height, depth);
-        Debug.Log("NowTime" + Time.realtimeSinceStartup);
-        Debug.Log(Time.realtimeSinceStartup - curTime);
-
-        Debug.Log("CreateChunks");
-
+        Debug.Log("MarchTime: " + (Time.realtimeSinceStartup - curTimeMarch));
 
         Array.Clear(caveGrid, 0, caveGrid.Length);
     }
@@ -244,7 +239,7 @@ public class CaveGenerator : MonoBehaviour
             {
                 for (int k = -1; k < 2; k++)
                 {
-                    if (caveGrid[x + i, y + j, z + k] < 0)
+                    if (GetCave(x + i, y + j, z + k) < 0)
                     {
                         Vector3Int neighbourSpot = new Vector3Int(x + i, y + j, z + k);
                         float distance = Vector3.Distance(digSpot, neighbourSpot);
@@ -261,7 +256,7 @@ public class CaveGenerator : MonoBehaviour
         for (int i = 0; i < Math.Min(5, neighbourList.Count); i++)
         {
             Vector3Int point = neighbourList[i].Key;
-            caveGrid[point.x, point.y, point.z] = 1f * _simplexNoise.GetNoise(point.x, point.y, point.z); 
+            SetCave(point.x, point.y, point.z, 1f * _simplexNoise.GetNoise(point.x, point.y, point.z)); 
 
             updatedPoint.Add(point);
         }
@@ -269,11 +264,25 @@ public class CaveGenerator : MonoBehaviour
         _chunkManager.UpdateChunks(updatedPoint);
     }
 
-
     public void DigOre(Ray ray, RaycastHit hit)
     {
         Debug.Log("DigOre");
 
         _convexHull.UpdateOre(hit.point);
+    }
+
+    public void SetCave(int x, int y, int z, float val)
+    {
+        caveGrid[x * height * depth + y * depth + z] = val;
+    }
+
+    public float GetCave(int x, int y, int z)
+    {
+        return caveGrid[x * height * depth + y * depth + z];
+    }
+
+    public void MultiplyCave(int x, int y, int z, float scale)
+    {
+        caveGrid[x * height * depth + y * depth + z] *= scale;
     }
 }

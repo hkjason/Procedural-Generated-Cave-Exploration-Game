@@ -89,7 +89,7 @@ public class CellularAutomata : MonoBehaviour
                 for (int k = 0; k < _caveGenerator.depth; k++)
                 {
                     //Works when 0, 4 print if ==0
-                    if (_caveGenerator.caveGrid[i, j, k] > 0)
+                    if (_caveGenerator.GetCave(i, j, k) > 0)
                     { _thisStateCaveGrid[i, j, k] = 1; }
                     else
                     { _thisStateCaveGrid[i, j, k] = 0; }
@@ -145,9 +145,9 @@ public class CellularAutomata : MonoBehaviour
                     for (int k = 0; k < _caveGenerator.depth; k++)
                     {
                         if (_thisStateCaveGrid[i, j, k] > 0)
-                        { _caveGenerator.caveGrid[i, j, k] = 1f; }
+                        { _caveGenerator.SetCave(i, j, k, 1f); }
                         else
-                        { _caveGenerator.caveGrid[i, j, k] = -1f; }
+                        { _caveGenerator.SetCave(i, j, k, -1f); }
                     }
                 }
             }
@@ -155,44 +155,34 @@ public class CellularAutomata : MonoBehaviour
     }
 
 
-    public void RunCSCA()
+    public void RunCSCA(int sizeX, int sizeY, int sizeZ)
     {
-        ComputeBuffer _caveBuffer1 = new ComputeBuffer(104 * 104 * 104, sizeof(float));
-        ComputeBuffer _caveBuffer2 = new ComputeBuffer(104 * 104 * 104, sizeof(float));
+        ComputeBuffer _caveBuffer1 = new ComputeBuffer((_caveGenerator.width + 1) * (_caveGenerator.depth + 1) * (_caveGenerator.height + 1), sizeof(float));
+        ComputeBuffer _caveBuffer2 = new ComputeBuffer((_caveGenerator.width + 1) * (_caveGenerator.depth + 1) * (_caveGenerator.height + 1), sizeof(float));
 
-        float[] flattenArray = new float[104 * 104 * 104];
+        //float[] flattenArray = new float[104 * 104 * 104];
 
-        for (int i = 0; i < 104; i++)
-        {
-            for (int j = 0; j < 104; j++)
-            {
-                for (int k = 0; k < 104; k++)
-                {
-                    flattenArray[i * 104 * 104 + j * 104 + k] = CaveGenerator.Instance.caveGrid[i, j, k];
-                }
-            }
-        }
-
-        _caveBuffer1.SetData(flattenArray);
+        _caveBuffer1.SetData(CaveGenerator.Instance.caveGrid);
         
         computeShader.SetBuffer(_CAKernelIdx, "caveBuffer1", _caveBuffer1);
         computeShader.SetBuffer(_CAKernelIdx, "caveBuffer2", _caveBuffer2);
-        computeShader.SetInt("size", 104);
+        computeShader.SetInt("size", _caveGenerator.width);
 
         computeShader.SetBool("expand", true);
         computeShader.SetBool("use1", true);
-        computeShader.Dispatch(_CAKernelIdx, 13, 13, 13);
+        computeShader.Dispatch(_CAKernelIdx, sizeX / 8, sizeY / 8, sizeZ / 8);
         computeShader.SetBool("use1", false);
-        computeShader.Dispatch(_CAKernelIdx, 13, 13, 13);
+        computeShader.Dispatch(_CAKernelIdx, sizeX / 8, sizeY / 8, sizeZ / 8);
 
         computeShader.SetBool("expand", false);
         computeShader.SetBool("use1", true);
-        computeShader.Dispatch(_CAKernelIdx, 13, 13, 13);
+        computeShader.Dispatch(_CAKernelIdx, sizeX / 8, sizeY / 8, sizeZ / 8);
         computeShader.SetBool("use1", false);
-        computeShader.Dispatch(_CAKernelIdx, 13, 13, 13);
+        computeShader.Dispatch(_CAKernelIdx, sizeX / 8, sizeY / 8, sizeZ / 8);
 
-        _caveBuffer1.GetData(flattenArray);
+        _caveBuffer1.GetData(CaveGenerator.Instance.caveGrid);
 
+        /*
         for (int i = 0; i < 104; i++)
         {
             for (int j = 0; j < 104; j++)
@@ -202,23 +192,15 @@ public class CellularAutomata : MonoBehaviour
                     CaveGenerator.Instance.caveGrid[i, j, k] = flattenArray[i * 104 * 104 + j * 104 + k];
                 }
             }
-        }
-
-        for (int i = 0; i < 104; i++)
-        {
-            Debug.Log(flattenArray[i * 104 * 104 + 50 * 104 + 50]);
-            Debug.Log("i5050:" + CaveGenerator.Instance.caveGrid[i, 50, 50]);
-        }
+        }*/
 
         if (_caveBuffer1 != null)
         {              
             _caveBuffer1.Release();
-            _caveBuffer1 = null;
         }
         if (_caveBuffer2 != null)
         {              
             _caveBuffer2.Release();
-            _caveBuffer2 = null;
         }
     }
 

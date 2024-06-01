@@ -515,7 +515,7 @@ public class CaveVisualisor : MonoBehaviour
 
     float GetPosition(Vector3Int point)
     {
-        return caveGenerator.caveGrid[point.x, point.y, point.z];
+        return caveGenerator.GetCave(point.x, point.y, point.z);
     }
 
     int GetCubeConfiguration(float[] cube)
