@@ -49,6 +49,8 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine;
+
 
 // Switch between using floats or doubles for input position
 using FNLfloat = System.Single;
@@ -1154,10 +1156,10 @@ public class FastNoiseLite
          * FNfloat r = (x + y + z) * R3; // Rotation, not skew
          * x = r - x; y = r - y; z = r - z;
         */
-
         int i = FastRound(x);
         int j = FastRound(y);
         int k = FastRound(z);
+
         float x0 = (float)(x - i);
         float y0 = (float)(y - j);
         float z0 = (float)(z - k);
@@ -1176,14 +1178,14 @@ public class FastNoiseLite
 
         float value = 0;
         float a = (0.6f - x0 * x0) - (y0 * y0 + z0 * z0);
-
         for (int l = 0; ; l++)
         {
+
             if (a > 0)
             {
                 value += (a * a) * (a * a) * GradCoord(seed, i, j, k, x0, y0, z0);
             }
-
+            
             if (ax0 >= ay0 && ax0 >= az0)
             {
                 float b = a + ax0 + ax0;
@@ -1193,6 +1195,8 @@ public class FastNoiseLite
                     value += (b * b) * (b * b) * GradCoord(seed, i - xNSign * PrimeX, j, k, x0 + xNSign, y0, z0);
                 }
             }
+
+
             else if (ay0 > ax0 && ay0 >= az0)
             {
                 float b = a + ay0 + ay0;

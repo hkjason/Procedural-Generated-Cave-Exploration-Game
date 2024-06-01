@@ -2752,10 +2752,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b470d29dd4dbb4c849a2ce2374e616, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 400
-  height: 400
-  depth: 400
-  _seed: 1
+  width: 200
+  height: 200
+  depth: 200
+  _seed: 2
   _randomSeed: 0
   _terrainLayer:
     serializedVersion: 2
@@ -2775,6 +2775,7 @@ MonoBehaviour:
   startingPt: {x: 0, y: 0, z: 0}
   orePoints: []
   flowerPoints: []
+  noiseComputeShader: {fileID: 7200000, guid: 53110ef2c320e9944b0127712aedb459, type: 3}
 --- !u!1 &1086119042
 GameObject:
   m_ObjectHideFlags: 0
@@ -3940,6 +3941,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   caveVisualisor: {fileID: 1656487381}
+  scale: 0
   computeShader: {fileID: 7200000, guid: e22b7c4976864c74388b895c088e2fb3, type: 3}
   computeShaderMarchAll: {fileID: 7200000, guid: 6991da0e5d863b5449761714e0a17824, type: 3}
 --- !u!4 &1407054968

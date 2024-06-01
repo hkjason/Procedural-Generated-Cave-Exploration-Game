@@ -11,6 +11,7 @@ public class ChunkManager : MonoBehaviour
     public Dictionary<Vector3Int, Chunk> chunkDic = new Dictionary<Vector3Int, Chunk>();
     const int CHUNKSIZE = 8;
     private int _width, _height, _depth;
+    public float scale;
 
     public ComputeShader computeShader;
     private ComputeBuffer _vertexBuffer;
@@ -104,6 +105,7 @@ public class ChunkManager : MonoBehaviour
         Vector3 vec = new Vector3(chunk.chunkPosition.x, chunk.chunkPosition.y, chunk.chunkPosition.z);
         computeShader.SetVector("pos", vec);
         computeShader.SetFloat("terrain_surface", 0f);
+        computeShader.SetFloat("scale", scale);
 
         computeShader.Dispatch(_marchKernelIdx, 1, 1, 1);
 
@@ -184,6 +186,7 @@ public class ChunkManager : MonoBehaviour
                     Vector3 vec = new Vector3(iterX, iterY, iterZ);
                     computeShaderMarchAll.SetVector("pos", vec);
                     computeShaderMarchAll.SetFloat("terrain_surface", 0f);
+                    computeShaderMarchAll.SetFloat("scale", scale);
 
                     computeShaderMarchAll.Dispatch(_marchAllKernelIdx, size / 8, size / 8, size / 8);
 

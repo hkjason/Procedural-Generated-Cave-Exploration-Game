@@ -17,6 +17,7 @@ StructuredBuffer<float> densityBuffer;
 
 float3 pos;
 float terrain_surface;
+float scale;
 
 int GetDensityIdx(int x, int y, int z)
 {
@@ -122,9 +123,9 @@ void CSMarchingCube (uint3 id : SV_DispatchThreadID)
         
         Triangle tris;
         
-        tris.vertA = vertPosition;
-        tris.vertB = vertPosition1;
-        tris.vertC = vertPosition2;
+        tris.vertA = vertPosition / scale;
+        tris.vertB = vertPosition1 / scale;
+        tris.vertC = vertPosition2 / scale;
 
         vertexBuffer.Append(tris);
         

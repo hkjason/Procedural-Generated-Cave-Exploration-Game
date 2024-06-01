@@ -1,7 +1,6 @@
 using GK;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour
@@ -37,6 +36,25 @@ public class CaveGenerator : MonoBehaviour
     [System.NonSerialized] public float[] caveGrid;
     public List<Vector3> orePoints;
     public List<Vector3> flowerPoints;
+
+    public ComputeShader noiseComputeShader;
+
+
+    void OnDrawGizmosSelected()
+    {
+        // Draw a yellow sphere at the transform's position
+        Gizmos.color = Color.red;
+
+        Gizmos.DrawSphere(new Vector3(0,0,0), 1);
+        Gizmos.DrawSphere(new Vector3(0, 0, height), 1);
+        Gizmos.DrawSphere(new Vector3(0, depth, 0), 1);
+        Gizmos.DrawSphere(new Vector3(0, depth, height), 1);
+        Gizmos.DrawSphere(new Vector3(width, 0, 0), 1);
+        Gizmos.DrawSphere(new Vector3(width, 0, height), 1);
+        Gizmos.DrawSphere(new Vector3(width, depth, 0), 1);
+        Gizmos.DrawSphere(new Vector3(width, depth, height), 1);
+    }
+
 
     void Awake()
     {
@@ -94,7 +112,7 @@ public class CaveGenerator : MonoBehaviour
         Debug.Log("VRAM: " + SystemInfo.graphicsMemorySize);
 
         float curTimeBase = Time.realtimeSinceStartup;
-        GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 200, 3);
+        GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 1000, 5);
         mainTunnelAgent.Walk();
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
         mainCaveAgent.Walk();
@@ -105,8 +123,12 @@ public class CaveGenerator : MonoBehaviour
         Debug.Log("CA time: " + (Time.realtimeSinceStartup - curTimeCA));
 
         float curTimeNoise = Time.realtimeSinceStartup;
-        _simplexNoise = new SimplexNoise(width, height, depth, _seed);
+        _simplexNoise = new SimplexNoise(width, height, depth, _seed, noiseComputeShader);
+        Debug.Log("var0" + CaveGenerator.Instance.caveGrid[80]);
         _simplexNoise.GenerateNoise();
+        //_simplexNoise.GenerateNoiseNoCS();
+        Debug.Log("getnoise" + _simplexNoise.GetNoise(0, 0, 80));
+        Debug.Log("var0new" + CaveGenerator.Instance.caveGrid[80]);
         Debug.Log("SimplexNoise time: " + (Time.realtimeSinceStartup - curTimeNoise));
 
         float curTimeMarch = Time.realtimeSinceStartup;
