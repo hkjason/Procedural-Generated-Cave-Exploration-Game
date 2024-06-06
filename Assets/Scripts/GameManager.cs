@@ -21,8 +21,8 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
-            player.Spawn(24, 44, 46);
-            //player.Spawn(CaveGenerator.Instance.startingPt.x, CaveGenerator.Instance.startingPt.y, CaveGenerator.Instance.startingPt.z);
+            //player.Spawn(24, 44, 46);
+            player.Spawn(CaveGenerator.Instance.startingPt.x / 4, CaveGenerator.Instance.startingPt.y / 4, CaveGenerator.Instance.startingPt.z / 4);
         }
     }
 }

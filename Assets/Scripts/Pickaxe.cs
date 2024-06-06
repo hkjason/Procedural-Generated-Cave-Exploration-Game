@@ -160,7 +160,9 @@ public class Pickaxe : Equipment
             }
             else if (hit.transform.gameObject.layer == terrainLayerIndex)
             {
+                float curTime = Time.realtimeSinceStartup;
                 CaveGenerator.Instance.DigCave(ray, hit);
+                Debug.Log("DigTime" + (Time.realtimeSinceStartup - curTime));
             }
         }
     }

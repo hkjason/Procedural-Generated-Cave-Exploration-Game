@@ -75,13 +75,12 @@ public class CaveGenerator : MonoBehaviour
         {
             for (int y = 0; y < height + 1; y++)
             {
-                for (int z = 0; z < depth + 1; z++) 
+                for (int z = 0; z < depth + 1; z++)
                 {
-                    SetCave(x,y,z,-1f);
+                    SetCave(x, y, z, -1f);
                 }
             }
         }
-        
 
         orePoints = new List<Vector3>();
         flowerPoints = new List<Vector3>();
@@ -100,6 +99,8 @@ public class CaveGenerator : MonoBehaviour
 
     public void CaveGeneration() 
     {
+        float curTimeOri = Time.realtimeSinceStartup;
+
         if (_randomSeed)
         {
             _seed = UnityEngine.Random.Range(1, 100000);
@@ -119,7 +120,7 @@ public class CaveGenerator : MonoBehaviour
         Debug.Log("BaseCave time: " + (Time.realtimeSinceStartup - curTimeBase));
         
         float curTimeCA = Time.realtimeSinceStartup;
-        _cellularAutomata.RunCSCA(width, height, depth);
+        //_cellularAutomata.RunCSCA(width, height, depth);
         Debug.Log("CA time: " + (Time.realtimeSinceStartup - curTimeCA));
 
         float curTimeNoise = Time.realtimeSinceStartup;
@@ -127,15 +128,15 @@ public class CaveGenerator : MonoBehaviour
         Debug.Log("var0" + CaveGenerator.Instance.caveGrid[80]);
         _simplexNoise.GenerateNoise();
         //_simplexNoise.GenerateNoiseNoCS();
-        Debug.Log("getnoise" + _simplexNoise.GetNoise(0, 0, 80));
-        Debug.Log("var0new" + CaveGenerator.Instance.caveGrid[80]);
         Debug.Log("SimplexNoise time: " + (Time.realtimeSinceStartup - curTimeNoise));
 
         float curTimeMarch = Time.realtimeSinceStartup;
         _chunkManager.CreateChunks(width, height, depth);
         Debug.Log("MarchTime: " + (Time.realtimeSinceStartup - curTimeMarch));
 
-        Array.Clear(caveGrid, 0, caveGrid.Length);
+        //Array.Clear(caveGrid, 0, caveGrid.Length);
+
+        Debug.Log("TotalTime: " + (Time.realtimeSinceStartup - curTimeOri));
     }
 
     void OreSpawn()
@@ -196,11 +197,18 @@ public class CaveGenerator : MonoBehaviour
         }
     }
 
+    public void DigOre(Ray ray, RaycastHit hit)
+    {
+        Debug.Log("DigOre");
+
+        _convexHull.UpdateOre(hit.point);
+    }
+
     public void DigCave(Ray ray, RaycastHit hit)
     {
-        Debug.Log("Hit: " + hit.point);
+        Debug.Log("Hit: " + hit.point * 4);
         Debug.Log("ray: " + ray.direction);
-        Vector3 hitPos = hit.point;
+        Vector3 hitPos = hit.point * 4;
         float rayx = Mathf.Abs(ray.direction.x);
         float rayy = Mathf.Abs(ray.direction.y);
         float rayz = Mathf.Abs(ray.direction.z);
@@ -253,44 +261,101 @@ public class CaveGenerator : MonoBehaviour
 
         Debug.Log("DigInt:" + digSpot);
 
-        List<KeyValuePair<Vector3Int, float>> neighbourList = new List<KeyValuePair<Vector3Int, float>>();
-
-        for (int i = -1; i < 2; i++)
+        List<Vector3Int> updatedPoint = new List<Vector3Int>();
+        for (int i = -1; i <= 1; i++)
         {
-            for (int j = -1; j < 2; j++)
+            for (int j = -1; j <= 1; j++)
             {
-                for (int k = -1; k < 2; k++)
+                for (int k = -1; k <= 1; k++)
                 {
+                    if (x + i < 0 || x + j < 0 || x + k < 0 || x + i > width -1 || x + j > height - 1 || x + k > depth -1)
+                    { continue; }
+
                     if (GetCave(x + i, y + j, z + k) < 0)
                     {
-                        Vector3Int neighbourSpot = new Vector3Int(x + i, y + j, z + k);
-                        float distance = Vector3.Distance(digSpot, neighbourSpot);
-
-                        neighbourList.Add(new KeyValuePair<Vector3Int, float>(neighbourSpot, distance));
+                        Vector3Int point = new Vector3Int(x + i, y + j, z + k);
+                        SetCave(point.x, point.y, point.z, 1f);
+                        updatedPoint.Add(point);
                     }
                 }
             }
         }
-
-        List<Vector3Int> updatedPoint = new List<Vector3Int>();
-
-
-        for (int i = 0; i < Math.Min(5, neighbourList.Count); i++)
-        {
-            Vector3Int point = neighbourList[i].Key;
-            SetCave(point.x, point.y, point.z, 1f * _simplexNoise.GetNoise(point.x, point.y, point.z)); 
-
-            updatedPoint.Add(point);
-        }
-        
         _chunkManager.UpdateChunks(updatedPoint);
     }
 
-    public void DigOre(Ray ray, RaycastHit hit)
+    public void DigCaveNew(Ray ray, RaycastHit hit)
     {
-        Debug.Log("DigOre");
+        Debug.Log("Hit: " + hit.point * 4);
+        Debug.Log("ray: " + ray.direction);
+        Vector3 hitPos = hit.point * 4;
+        float rayx = Mathf.Abs(ray.direction.x);
+        float rayy = Mathf.Abs(ray.direction.y);
+        float rayz = Mathf.Abs(ray.direction.z);
 
-        _convexHull.UpdateOre(hit.point);
+        if (rayx > rayy && rayx > rayz)
+        {
+            if (ray.direction.x > 0)
+            {
+                hitPos.x = Mathf.Ceil(hitPos.x);
+            }
+            else
+            {
+                hitPos.x = Mathf.Floor(hitPos.x);
+            }
+        }
+        else if (rayy > rayx && rayy > rayz)
+        {
+            if (ray.direction.y > 0)
+            {
+                hitPos.y = Mathf.Ceil(hitPos.y);
+            }
+            else
+            {
+                hitPos.y = Mathf.Floor(hitPos.y);
+            }
+        }
+        else if (rayz > rayx && rayz > rayy)
+        {
+            if (ray.direction.z > 0)
+            {
+                hitPos.z = Mathf.Ceil(hitPos.z);
+            }
+            else
+            {
+                hitPos.z = Mathf.Floor(hitPos.z);
+            }
+        }
+        else
+        {
+            Debug.Log("No match");
+        }
+
+
+        Debug.Log("Dig:" + hitPos);
+
+        int x = Mathf.RoundToInt(hitPos.x);
+        int y = Mathf.RoundToInt(hitPos.y);
+        int z = Mathf.RoundToInt(hitPos.z);
+        Vector3 digSpot = new Vector3(x, y, z);
+
+        Debug.Log("DigInt:" + digSpot);
+
+        List<Vector3Int> updatedPoint = new List<Vector3Int>();
+        for (int i = -2; i <= 2; i++)
+        {
+            for (int j = -2; j <= 2; j++)
+            {
+                for (int k = -2; k <= 2; k++)
+                {
+                    if (x + i < 0 || x + j < 0 || x + k < 0 || x + i > width - 1 || x + j > height - 1 || x + k > depth - 1)
+                    { continue; }
+
+                    Vector3Int point = new Vector3Int(x + i, y + j, z + k);
+                    updatedPoint.Add(point);
+                }
+            }
+        }
+        _chunkManager.DigCS(updatedPoint);
     }
 
     public void SetCave(int x, int y, int z, float val)

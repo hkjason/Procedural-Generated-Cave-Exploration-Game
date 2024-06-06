@@ -352,11 +352,11 @@ public class CaveVisualisor : MonoBehaviour
     {
         ClearMeshData();
 
-        for (int x = -4; x < 4; x++)
+        for (int x = 0; x < 8; x++)
         {
-            for (int y = -4; y < 4; y++)
+            for (int y = 0; y < 8; y++)
             {
-                for (int z = -4; z < 4; z++)
+                for (int z = 0; z < 8; z++)
                 {
                     MarchingCube(new Vector3Int(x + chunk.chunkPosition.x, y + chunk.chunkPosition.y, z + chunk.chunkPosition.z));
                 }
@@ -391,24 +391,19 @@ public class CaveVisualisor : MonoBehaviour
                 Vector3 vert2 = position + cornerTable[edgeTable[index, 1]];
                 Vector3 vertPosition;
 
-                if (smoothTerrain)
-                {
-                    float vert1Sample = cube[edgeTable[index, 0]];
-                    float vert2Sample = cube[edgeTable[index, 1]];
+                float vert1Sample = cube[edgeTable[index, 0]];
+                float vert2Sample = cube[edgeTable[index, 1]];
 
-                    float difference = vert2Sample - vert1Sample;
+                float difference = vert2Sample - vert1Sample;
                     
-                    if (difference == 0)
-                        difference = terrainSurface;
-                    else
-                        difference = (terrainSurface - vert1Sample) / difference;
-
-                    vertPosition = vert1 + ((vert2 - vert1) * difference);
-                }
+                if (difference == 0)
+                    difference = terrainSurface;
                 else
-                {
-                    vertPosition = (vert1 + vert2) / 2f;
-                }
+                    difference = (terrainSurface - vert1Sample) / difference;
+
+                vertPosition = vert1 + ((vert2 - vert1) * difference);
+
+                vertPosition /= 4f;
 
                 vertices.Add(vertPosition);
                 triangles.Add(vertices.Count - 1);

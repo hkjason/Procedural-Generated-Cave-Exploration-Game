@@ -133,6 +133,7 @@ public class SimplexNoise
         combinedNoise += 1f;
         combinedNoise /= 2f;
 
+        Debug.Log("combinedNoise: " + combinedNoise);
         return combinedNoise;
     }
 }

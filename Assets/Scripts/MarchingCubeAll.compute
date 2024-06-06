@@ -8,7 +8,7 @@ struct TriangleWithPos
     float3 vertA;
     float3 vertB;
     float3 vertC;
-    uint3 triPos;
+    float3 triPos;
 };
 
 AppendStructuredBuffer<TriangleWithPos> vertexBuffer;
@@ -121,7 +121,8 @@ void CSMarchingCubeAll(uint3 id : SV_DispatchThreadID, uint3 gid : SV_GroupID)
         tris.vertA = vertPosition / scale;
         tris.vertB = vertPosition1 / scale;
         tris.vertC = vertPosition2 / scale;
-        tris.triPos = gid;
+        //tris.triPos = gid;
+        tris.triPos = float3(gid.x, gid.y, gid.z);
         
         vertexBuffer.Append(tris);
         

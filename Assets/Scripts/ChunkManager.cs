@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Drawing;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static UnityEditor.Progress;
 
 public class ChunkManager : MonoBehaviour
@@ -80,7 +82,6 @@ public class ChunkManager : MonoBehaviour
                             }
                         }
                     }
-                    //BuildChunks(chunk);
                     chunkDic.Add(chunkPos, chunk);
                 }
             }
@@ -159,7 +160,6 @@ public class ChunkManager : MonoBehaviour
                 {
                     int vSize = size * size * size;
                     int expandSize = (size + 1) * (size + 1) * (size + 1);
-                    int locIdx = iterX * _height * _depth + iterY * _depth + iterZ;
 
                     ComputeBuffer _vertexBufferAll = new ComputeBuffer(vSize * 5, sizeof(float) * 12, ComputeBufferType.Append);
                     ComputeBuffer _densityBufferAll = new ComputeBuffer(expandSize, sizeof(float));
@@ -226,9 +226,9 @@ public class ChunkManager : MonoBehaviour
                                 {
                                     int idx = jj * 3;
 
-                                    vertices[idx] = trianglesData[jj].vertA;
-                                    vertices[idx + 1] = trianglesData[jj].vertB;
-                                    vertices[idx + 2] = trianglesData[jj].vertC;
+                                    vertices[idx] = trianglesData[idxList[jj]].vertA;
+                                    vertices[idx + 1] = trianglesData[idxList[jj]].vertB;
+                                    vertices[idx + 2] = trianglesData[idxList[jj]].vertC;
 
                                     triangles[idx] = idx;
                                     triangles[idx + 1] = idx + 1;
@@ -252,6 +252,7 @@ public class ChunkManager : MonoBehaviour
                     _densityBufferAll.Release();
                     _vertexBufferAll.Release();
                     _countBufferAll.Release();
+
                 }
             }
         }
@@ -283,7 +284,7 @@ public class ChunkManager : MonoBehaviour
 
         foreach (Vector3Int pos in positionList)
         {
-            List<Vector3Int> chunkList = GetChunkPos(pos);
+            List<Vector3Int> chunkList = GetChunkPosNew(pos);
 
             foreach (Vector3Int chunkPos in chunkList)
             {
@@ -296,7 +297,33 @@ public class ChunkManager : MonoBehaviour
 
         foreach (Vector3Int chunks in chunksToUpdate)
         {
+            Debug.Log("name" + chunkDic[chunks].chunkObject.name);
             caveVisualisor.UpdateMeshData(chunkDic[chunks]);
+        }
+    }
+
+    public void DigCS(List<Vector3Int> positionList)
+    {
+        List<Vector3Int> chunksToUpdate = new List<Vector3Int>();
+
+        foreach (Vector3Int pos in positionList)
+        {
+            List<Vector3Int> chunkList = GetChunkPosNew(pos);
+
+            foreach (Vector3Int chunkPos in chunkList)
+            {
+                if (!chunksToUpdate.Contains(chunkPos))
+                {
+                    chunksToUpdate.Add(chunkPos);
+                }
+            }
+        }
+
+        foreach (Vector3Int chunks in chunksToUpdate)
+        {
+            chunkDic[chunks].UpdateDensity();
+            Debug.Log("name" + chunkDic[chunks].chunkObject.name);
+            BuildChunks(chunkDic[chunks]);
         }
     }
 
@@ -474,8 +501,9 @@ public class ChunkManager : MonoBehaviour
     private int GetUpdatePos(int updatePos)
     {
         int pos;
-        int mod = updatePos % 8;
+        //int mod = updatePos % 8;
 
+        /*
         if (mod != 0)
         {
             pos = (updatePos / 8) * 8 + 5;
@@ -484,8 +512,107 @@ public class ChunkManager : MonoBehaviour
         {
             pos = ((updatePos / 8) - 1) * 8 + 5;
         }
+        */
+        pos = (updatePos / 8) * 8;
+
 
         return pos;
+    }
+
+
+    private List<Vector3Int> GetChunkPosNew(Vector3Int updatePos)
+    {
+        List<Vector3Int> chunkList = new List<Vector3Int>();
+        int xPos, yPos, zPos;
+
+        int modX = updatePos.x % 8;
+        int modY = updatePos.y % 8;
+        int modZ = updatePos.z % 8;
+
+        if (modX != 0 && modY != 0 && modZ != 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            yPos = GetUpdatePos(updatePos.y);
+            zPos = GetUpdatePos(updatePos.z);
+
+            chunkList.Add(new Vector3Int(xPos, yPos, zPos));
+        }
+        else if (modX == 0 && modY == 0 && modZ == 0)
+        {
+            for (int i = -1; i < 1; i ++)
+            {
+                for (int j = -1; j < 1; j ++)
+                {
+                    for (int k = -1; k < 1; k++)
+                    {
+
+                        chunkList.Add(new Vector3Int(updatePos.x + i * 8, updatePos.y + j * 8, updatePos.z + k * 8));
+                    }
+                }
+            }
+        }
+        else if (modX == 0 && modY == 0)
+        {
+            zPos = GetUpdatePos(updatePos.z);
+            for (int i = -1; i < 1; i ++)
+            {
+                for (int j = -1; j < 1; j ++)
+                {
+                    chunkList.Add(new Vector3Int(updatePos.x + i * 8, updatePos.y + j * 8, zPos));
+                }
+            }
+        }
+        else if (modX == 0 && modZ == 0)
+        {
+            yPos = GetUpdatePos(updatePos.y);
+            for (int i = -1; i < 1; i++)
+            {
+                for (int k = -1; k < 1; k ++)
+                {
+                    chunkList.Add(new Vector3Int(updatePos.x + i * 8, yPos, updatePos.z + k * 8));
+                }
+            }
+        }
+        else if (modY == 0 && modZ == 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            for (int j = -1; j < 1; j ++)
+            {
+                for (int k = -1; k < 1; k ++)
+                {
+                    chunkList.Add(new Vector3Int(xPos, updatePos.y + j * 8, updatePos.z + k * 8));
+                }
+            }
+        }
+        else if (modX == 0)
+        {
+            yPos = GetUpdatePos(updatePos.y);
+            zPos = GetUpdatePos(updatePos.z);
+            for (int i = -1; i < 1; i ++)
+            {
+                chunkList.Add(new Vector3Int(updatePos.x + i * 8, yPos, zPos));
+            }
+        }
+        else if (modY == 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            zPos = GetUpdatePos(updatePos.z);
+            for (int j = -1; j < 1; j ++)
+            {
+                chunkList.Add(new Vector3Int(xPos, updatePos.y + j * 8, zPos));
+            }
+        }
+        else if (modZ == 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            yPos = GetUpdatePos(updatePos.y);
+            for (int k = -1; k < 1; k ++)
+            {
+                chunkList.Add(new Vector3Int(xPos, yPos, updatePos.z + k * 8));
+            }
+        }
+
+        return chunkList;
     }
 
 
