@@ -24,7 +24,8 @@ public class Player : MonoBehaviour
     private RaycastHit _hit;
     private float _gravity = -9.81f;
     private float _gravityStartTime;
-    private bool _isGrounded = false;
+    public bool _isGrounded = false;
+    public Vector3 playerVelo;
 
     [Header("Jump")]
     [SerializeField] private float _jumpVelocity;
@@ -43,6 +44,14 @@ public class Player : MonoBehaviour
     [SerializeField] private float _flareRegenTime;
     private float _flareCount;
     private float _flareSpawnTime;
+
+    
+    void OnDrawGizmosSelected()
+    {
+        // Draw a yellow sphere at the transform's position
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(_groundCheck.position, _checkRadius);
+    }
 
     void Start()
     {
@@ -96,7 +105,7 @@ public class Player : MonoBehaviour
 
     void PlayerMovement()
     {
-        if (_isGrounded && _movement.magnitude == 0)
+        if (_movement.magnitude == 0)
         {
             _playerRb.velocity = Vector3.zero;
         }
@@ -145,7 +154,7 @@ public class Player : MonoBehaviour
     {
         float timeDiff = Time.fixedTime - _gravityStartTime;
         float yVelocity = _gravity * timeDiff;
-        return (transform.up * yVelocity); //* Time.fixedDeltaTime);
+        return (transform.up * yVelocity);
     }
 
     float CheckSlope()
