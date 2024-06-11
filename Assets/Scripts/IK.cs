@@ -17,17 +17,30 @@ public class IK : MonoBehaviour
 
     public Vector3 legPoint;
 
+    public Transform testPoint;
+
+    Vector3 a;
+    Vector3 b;
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(a, 0.1f);
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(b, 0.1f);
+    }
 
     void Start()
     {
         spiderLeg.Setup();
         legPoint = spiderLeg.legPoints[3].position;
-
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
+        
+
         //LegOne raycast
         Vector3 hitPos = RayCastToGround();
         rayCastBackPoint.position = hitPos;
@@ -38,11 +51,26 @@ public class IK : MonoBehaviour
             //CalculateIK(spiderLeg.legPoints[0], spiderLeg.legPoints[1], spiderLeg.distance[0], point2, false);
             legPoint = hitPos;
         }
+        
 
-        Vector3 point = CalculateIK(spiderLeg.legPoints[2], spiderLeg.legPoints[3], spiderLeg.distance[2], destination.position, false, 2);
+        InitializePositions();
+        
+        Vector3 point = CalculateIK(spiderLeg.legPoints[2], spiderLeg.legPoints[3], spiderLeg.distance[2], legPoint, false, 2);
         Vector3 point2 = CalculateIK(spiderLeg.legPoints[1], spiderLeg.legPoints[2], spiderLeg.distance[1], point, false, 1);
         CalculateIK(spiderLeg.legPoints[0], spiderLeg.legPoints[1], spiderLeg.distance[0], point2, false, 0);
         
+    }
+
+    void InitializePositions()
+    {
+        spiderLeg.legPoints[2].localRotation = spiderLeg.originalQuaternion[2];
+        spiderLeg.legPoints[1].localRotation = spiderLeg.originalQuaternion[1];
+        spiderLeg.legPoints[0].localRotation = spiderLeg.originalQuaternion[0];
+
+        Vector3 initPosPoint2 = legPoint - spiderLeg.direction[0] * spiderLeg.distance[2];
+        Vector3 initPosPoint1 = initPosPoint2 - spiderLeg.direction[1] * spiderLeg.distance[1];
+
+        CalculateIKHalf(spiderLeg.legPoints[0], spiderLeg.legPoints[1], spiderLeg.distance[0], initPosPoint1, false, 0);
     }
 
 
@@ -63,37 +91,37 @@ public class IK : MonoBehaviour
         {
             Vector3 rotationAxis = Vector3.Cross(directionAB, directionToTarget).normalized;
 
-            Quaternion desiredRotation = Quaternion.AngleAxis(angle, rotationAxis) * legPointA.localRotation;
+            Quaternion desiredRotation = Quaternion.AngleAxis(angle, rotationAxis) * legPointA.rotation;
 
-            legPointA.localRotation = desiredRotation;
+            legPointA.rotation = desiredRotation;
 
         }
 
-        directionToTarget = legPointA.transform.up;
-
-        Vector3 newPosition = position - directionToTarget.normalized * distance;
+        Vector3 newPosition = position - legPointA.transform.up * distance;
         return newPosition;
     }
 
-    Quaternion LimitRotation(Quaternion targetRotation, Vector3 minRotation, Vector3 maxRotation)
+    void CalculateIKHalf(Transform legPointA, Transform legPointB, float distance, Vector3 position, bool limitAngle, int index)
     {
-        
-        targetRotation.Normalize();
+        if (Vector3.Distance(position, legPointB.position) < 0.1f)
+        {
+            return;
+        }
 
-        Vector3 targetEulerAngles = targetRotation.normalized.eulerAngles;
-        Debug.Log("TEA: " + targetEulerAngles);
-        Debug.Log("MIN: " + minRotation);
-        Debug.Log("MAX: " + maxRotation);
-        targetEulerAngles.x = Mathf.Clamp(targetEulerAngles.x, minRotation.x, maxRotation.x);
-        targetEulerAngles.y = Mathf.Clamp(targetEulerAngles.y, minRotation.y, maxRotation.y);
-        targetEulerAngles.z = Mathf.Clamp(targetEulerAngles.z, minRotation.z, maxRotation.z);
+        Vector3 directionToTarget = position - legPointA.position;
 
-        
-        Quaternion clampedRotation = Quaternion.Euler(targetEulerAngles);
+        Vector3 directionAB = legPointB.position - legPointA.position;
 
-        return clampedRotation;
-        
+        float angle = Vector3.Angle(directionAB, directionToTarget) / 2f;
 
+        if (Mathf.Abs(angle) > 0.001f)
+        {
+            Vector3 rotationAxis = Vector3.Cross(directionAB, directionToTarget).normalized;
+
+            Quaternion desiredRotation = Quaternion.AngleAxis(angle, rotationAxis) * legPointA.rotation;
+
+            legPointA.rotation = desiredRotation;
+        }
     }
 
     Vector3 RayCastToGround()
@@ -119,61 +147,42 @@ public class SpiderLeg
 {
     public Transform[] legPoints;
     public float[] distance;
-    public Vector3[] rotationMin;
-    public Vector3[] rotationMax;
-
-    public Vector3[] originalVector;
+    public Vector3[] direction;
+    public Vector3[] originalPos;
     public Quaternion[] originalQuaternion;
 
     public void Setup()
     {
         CalculateDistance();
+        CalculateDirection();
         CalculateRotationLimit();
     }
 
     private void CalculateDistance()
     {
         distance = new float[3];
-        distance[0] = Vector3.Distance(legPoints[0].position,legPoints[1].position);
+        distance[0] = Vector3.Distance(legPoints[0].position, legPoints[1].position);
         distance[1] = Vector3.Distance(legPoints[1].position, legPoints[2].position);
         distance[2] = Vector3.Distance(legPoints[2].position, legPoints[3].position);
     }
 
-    private void CalculateRotationLimit()
+    private void CalculateDirection()
     {
-        originalVector = new Vector3[3];
-        originalVector[2] = legPoints[3].position - legPoints[2].position;
-        originalVector[1] = legPoints[2].position - legPoints[1].position;
-        originalVector[0] = legPoints[1].position - legPoints[0].position;
-
-        originalQuaternion = new Quaternion[3];
-        originalQuaternion[2] = legPoints[2].rotation;
-        originalQuaternion[1] = legPoints[1].rotation;
-        originalQuaternion[0] = legPoints[0].rotation;
-
-        rotationMin = new Vector3[2];
-        rotationMax = new Vector3[2];
-
-        for (int i = 0; i < 2; i++)
-        {
-            Vector3 originalRotation = legPoints[i + 1].localRotation.eulerAngles;
-
-            legPoints[i + 1].localEulerAngles = originalRotation + rotationLimitTable[i * 2] ;
-            rotationMin[i] = legPoints[i + 1].rotation.eulerAngles;
-            legPoints[i + 1].localEulerAngles = originalRotation + rotationLimitTable[i * 2 + 1];
-            rotationMax[i] = legPoints[i + 1].rotation.eulerAngles;
-
-            legPoints[i + 1].localEulerAngles = originalRotation;
-
-        }
-
+        direction = new Vector3[3];
+        direction[0] = legPoints[2].up;
+        direction[1] = legPoints[1].up;
     }
 
-    Vector3[] rotationLimitTable =
+    private void CalculateRotationLimit()
     {
-        new Vector3(-22, -62, -53),
-        new Vector3(9, 8 , 0),
-        new Vector3(-50, 20, -5),
-        new Vector3(-20, 30, 5),
-    };
+        originalPos = new Vector3[3];
+        originalPos[2] = legPoints[2].localPosition;
+        originalPos[1] = legPoints[1].localPosition;
+        originalPos[0] = legPoints[0].localPosition;
+
+        originalQuaternion = new Quaternion[3];
+        originalQuaternion[2] = legPoints[2].localRotation;
+        originalQuaternion[1] = legPoints[1].localRotation;
+        originalQuaternion[0] = legPoints[0].localRotation;
+    }
 }
