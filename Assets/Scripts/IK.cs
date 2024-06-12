@@ -1,76 +1,120 @@
+using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class IK : MonoBehaviour
 {
     public LayerMask groundLayer;
-
-    public SpiderLeg spiderLeg;
-
-    public Transform destination;
-
-    public Transform rayCastPoint;
-
-    public Transform rayCastBackPoint;
-
     public float walkDistance;
+    public float stepTime;
 
+    public SpiderLeg[] spiderLeg;
 
-    public Vector3 legPoint;
+    public int currentIdx;
 
-    public Transform testPoint;
-
-    Vector3 a;
-    Vector3 b;
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(a, 0.1f);
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(b, 0.1f);
-    }
+    private Coroutine[] coroutines;
 
     void Start()
     {
-        spiderLeg.Setup();
-        legPoint = spiderLeg.legPoints[3].position;
+        currentIdx = 0;
+        coroutines = new Coroutine[4];
+
+        foreach (var leg in spiderLeg) 
+        {
+            leg.Setup();
+            leg.legPoint = leg.legPoints[3].position;
+        }
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        
-
-        //LegOne raycast
-        Vector3 hitPos = RayCastToGround();
-        rayCastBackPoint.position = hitPos;
-        if (Vector3.Distance(hitPos, spiderLeg.legPoints[3].position) > walkDistance) 
+        Vector3 hitPos;
+        Vector3 hitPos1;
+        switch (currentIdx)
         {
-            //Vector3 point = CalculateIK(spiderLeg.legPoints[2], spiderLeg.legPoints[3], spiderLeg.distance[2], hitPos, false);
-            //Vector3 point2 = CalculateIK(spiderLeg.legPoints[1], spiderLeg.legPoints[2], spiderLeg.distance[1], point, false);
-            //CalculateIK(spiderLeg.legPoints[0], spiderLeg.legPoints[1], spiderLeg.distance[0], point2, false);
-            legPoint = hitPos;
+            case 0:
+                hitPos = RayCastToGround(0);
+                hitPos1 = RayCastToGround(7);
+                if (Vector3.Distance(hitPos, spiderLeg[0].legPoints[3].position) > walkDistance
+                 || Vector3.Distance(hitPos1, spiderLeg[7].legPoints[3].position) > walkDistance)
+                {
+                    if (coroutines[currentIdx] != null)
+                    {
+                        StopCoroutine(coroutines[currentIdx]);
+                    }
+                    coroutines[currentIdx] = StartCoroutine(LerpDistination(0, 7, hitPos, hitPos1));
+                }
+                currentIdx = 1;
+                break;
+            case 1:
+                hitPos = RayCastToGround(1);
+                hitPos1 = RayCastToGround(6);
+                if (Vector3.Distance(hitPos, spiderLeg[1].legPoints[3].position) > walkDistance
+                 || Vector3.Distance(hitPos1, spiderLeg[6].legPoints[3].position) > walkDistance)
+                {
+                    if (coroutines[currentIdx] != null)
+                    {
+                        StopCoroutine(coroutines[currentIdx]);
+                    }
+                    coroutines[currentIdx] = StartCoroutine(LerpDistination(1, 6, hitPos, hitPos1));
+                }
+                currentIdx = 2;
+                break;
+            case 2:
+                hitPos = RayCastToGround(2);
+                hitPos1 = RayCastToGround(4);
+                if (Vector3.Distance(hitPos, spiderLeg[2].legPoints[3].position) > walkDistance
+                 || Vector3.Distance(hitPos1, spiderLeg[4].legPoints[3].position) > walkDistance)
+                {
+                    if (coroutines[currentIdx] != null)
+                    {
+                        StopCoroutine(coroutines[currentIdx]);
+                    }
+                    coroutines[currentIdx] = StartCoroutine(LerpDistination(2, 4, hitPos, hitPos1));
+                }
+                currentIdx = 3;
+                break;
+            case 3:
+                hitPos = RayCastToGround(3);
+                hitPos1 = RayCastToGround(5);
+                if (Vector3.Distance(hitPos, spiderLeg[3].legPoints[3].position) > walkDistance
+                 || Vector3.Distance(hitPos1, spiderLeg[5].legPoints[3].position) > walkDistance)
+                {
+                    if (coroutines[currentIdx] != null)
+                    {
+                        StopCoroutine(coroutines[currentIdx]);
+                    }
+                    coroutines[currentIdx] = StartCoroutine(LerpDistination(3, 5, hitPos, hitPos1));
+                }
+                currentIdx = 0;
+                break;
+            default:
+                currentIdx = 0;
+                break;
         }
-        
 
-        InitializePositions();
-        
-        Vector3 point = CalculateIK(spiderLeg.legPoints[2], spiderLeg.legPoints[3], spiderLeg.distance[2], legPoint, false, 2);
-        Vector3 point2 = CalculateIK(spiderLeg.legPoints[1], spiderLeg.legPoints[2], spiderLeg.distance[1], point, false, 1);
-        CalculateIK(spiderLeg.legPoints[0], spiderLeg.legPoints[1], spiderLeg.distance[0], point2, false, 0);
-        
+
+        for (int idx = 0; idx < spiderLeg.Length; idx++)
+        {
+            InitializePositions(idx);
+
+            Vector3 point = CalculateIK(spiderLeg[idx].legPoints[2], spiderLeg[idx].legPoints[3], spiderLeg[idx].distance[2], spiderLeg[idx].legPoint, false, 2);
+            Vector3 point2 = CalculateIK(spiderLeg[idx].legPoints[1], spiderLeg[idx].legPoints[2], spiderLeg[idx].distance[1], point, false, 1);
+            CalculateIK(spiderLeg[idx].legPoints[0], spiderLeg[idx].legPoints[1], spiderLeg[idx].distance[0], point2, false, 0);
+        }
     }
 
-    void InitializePositions()
+    void InitializePositions(int idx)
     {
-        spiderLeg.legPoints[2].localRotation = spiderLeg.originalQuaternion[2];
-        spiderLeg.legPoints[1].localRotation = spiderLeg.originalQuaternion[1];
-        spiderLeg.legPoints[0].localRotation = spiderLeg.originalQuaternion[0];
+        spiderLeg[idx].legPoints[2].localRotation = spiderLeg[idx].originalQuaternion[2];
+        spiderLeg[idx].legPoints[1].localRotation = spiderLeg[idx].originalQuaternion[1];
+        spiderLeg[idx].legPoints[0].localRotation = spiderLeg[idx].originalQuaternion[0];
 
-        Vector3 initPosPoint2 = legPoint - spiderLeg.direction[0] * spiderLeg.distance[2];
-        Vector3 initPosPoint1 = initPosPoint2 - spiderLeg.direction[1] * spiderLeg.distance[1];
+        Vector3 initPosPoint2 = spiderLeg[idx].legPoint - spiderLeg[idx].direction[0] * spiderLeg[idx].distance[2];
+        Vector3 initPosPoint1 = initPosPoint2 - spiderLeg[idx].direction[1] * spiderLeg[idx].distance[1];
 
-        CalculateIKHalf(spiderLeg.legPoints[0], spiderLeg.legPoints[1], spiderLeg.distance[0], initPosPoint1, false, 0);
+        CalculateIKHalf(spiderLeg[idx].legPoints[0], spiderLeg[idx].legPoints[1], spiderLeg[idx].distance[0], initPosPoint1, false, 0);
     }
 
 
@@ -124,9 +168,9 @@ public class IK : MonoBehaviour
         }
     }
 
-    Vector3 RayCastToGround()
+    Vector3 RayCastToGround(int idx)
     {
-        Vector3 raycastOrigin = rayCastPoint.position;
+        Vector3 raycastOrigin = spiderLeg[idx].rayCastPoint.position;
 
         Vector3 raycastDirection = Vector3.down;
 
@@ -140,6 +184,22 @@ public class IK : MonoBehaviour
         Debug.Log("ERROR");
         return Vector3.zero;
     }
+
+    IEnumerator LerpDistination(int idx1, int idx2, Vector3 targetPosition1, Vector3 targetPosition2)
+    {
+        float duration = 0f;
+        Vector3 initialPosition1 = spiderLeg[idx1].legPoint;
+        Vector3 initialPosition2 = spiderLeg[idx2].legPoint;
+
+        while (duration < stepTime)
+        {
+            spiderLeg[idx1].legPoint = Vector3.Lerp(initialPosition1, targetPosition1, duration / stepTime);
+            spiderLeg[idx2].legPoint = Vector3.Lerp(initialPosition2, targetPosition2, duration / stepTime);
+
+            duration += Time.deltaTime;
+            yield return null;
+        }
+    }
 }
 
 [System.Serializable]
@@ -150,6 +210,10 @@ public class SpiderLeg
     public Vector3[] direction;
     public Vector3[] originalPos;
     public Quaternion[] originalQuaternion;
+
+    public Vector3 legPoint;
+
+    public Transform rayCastPoint;
 
     public void Setup()
     {
