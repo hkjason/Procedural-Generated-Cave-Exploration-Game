@@ -9,9 +9,9 @@ public class CaveGenerator : MonoBehaviour
 
     //Multiple of 8
     [Header("Size")]
-    public int width = 512;
-    public int height = 512;
-    public int depth = 512;
+    public int width;
+    public int height;
+    public int depth;
 
     [Header("Seed")]
     [SerializeField] private int _seed;
@@ -45,14 +45,14 @@ public class CaveGenerator : MonoBehaviour
         // Draw a yellow sphere at the transform's position
         Gizmos.color = Color.red;
 
-        Gizmos.DrawSphere(new Vector3(0,0,0), 1);
-        Gizmos.DrawSphere(new Vector3(0, 0, height), 1);
-        Gizmos.DrawSphere(new Vector3(0, depth, 0), 1);
-        Gizmos.DrawSphere(new Vector3(0, depth, height), 1);
-        Gizmos.DrawSphere(new Vector3(width, 0, 0), 1);
-        Gizmos.DrawSphere(new Vector3(width, 0, height), 1);
-        Gizmos.DrawSphere(new Vector3(width, depth, 0), 1);
-        Gizmos.DrawSphere(new Vector3(width, depth, height), 1);
+        Gizmos.DrawSphere(new Vector3(0,0,0) /4, 1);
+        Gizmos.DrawSphere(new Vector3(0, 0, height) /4, 1);
+        Gizmos.DrawSphere(new Vector3(0, depth, 0) /4, 1);
+        Gizmos.DrawSphere(new Vector3(0, depth, height) / 4, 1);
+        Gizmos.DrawSphere(new Vector3(width, 0, 0) /4, 1);
+        Gizmos.DrawSphere(new Vector3(width, 0, height) / 4, 1);
+        Gizmos.DrawSphere(new Vector3(width, depth, 0)/ 4, 1);
+        Gizmos.DrawSphere(new Vector3(width, depth, height)/4, 1);
     }
 
 
@@ -120,7 +120,7 @@ public class CaveGenerator : MonoBehaviour
         Debug.Log("BaseCave time: " + (Time.realtimeSinceStartup - curTimeBase));
         
         float curTimeCA = Time.realtimeSinceStartup;
-        //_cellularAutomata.RunCSCA(width, height, depth);
+        _cellularAutomata.RunCSCA(width, height, depth);
         Debug.Log("CA time: " + (Time.realtimeSinceStartup - curTimeCA));
 
         float curTimeNoise = Time.realtimeSinceStartup;

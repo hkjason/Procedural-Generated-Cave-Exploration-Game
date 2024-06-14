@@ -13,6 +13,7 @@ public class IK : MonoBehaviour
     public int currentIdx;
 
     private Coroutine[] coroutines;
+    public Transform bodyRayCastPoint;
 
     void Start()
     {

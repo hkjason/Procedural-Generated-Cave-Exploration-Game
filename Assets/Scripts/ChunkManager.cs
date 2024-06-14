@@ -9,6 +9,8 @@ public class ChunkManager : MonoBehaviour
 {
     public static ChunkManager Instance { get; private set; }
 
+    public AStar aStar;
+
     public CaveVisualisor caveVisualisor;
     public Dictionary<Vector3Int, Chunk> chunkDic = new Dictionary<Vector3Int, Chunk>();
     const int CHUNKSIZE = 8;
@@ -165,11 +167,14 @@ public class ChunkManager : MonoBehaviour
                     ComputeBuffer _densityBufferAll = new ComputeBuffer(expandSize, sizeof(float));
                     ComputeBuffer _countBufferAll = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
 
+                    ComputeBuffer _countBufferTest = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+                    ComputeBuffer _totalCount = new ComputeBuffer(vSize, sizeof(int), ComputeBufferType.Append);
+
                     float[] dens = new float[expandSize];
                     for (int i = 0; i < size + 1; i++)
                     {
                         for (int j = 0; j < size + 1; j++)
-                        { 
+                        {
                             for (int k = 0; k < size + 1; k++)
                             {
                                 dens[i * (size + 1) * (size + 1) + j * (size + 1) + k] = CaveGenerator.Instance.GetCave(iterX + i, iterY + j, iterZ + k);
@@ -188,6 +193,8 @@ public class ChunkManager : MonoBehaviour
                     computeShaderMarchAll.SetFloat("terrain_surface", 0f);
                     computeShaderMarchAll.SetFloat("scale", scale);
 
+                    computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "totalCount", _totalCount);
+
                     computeShaderMarchAll.Dispatch(_marchAllKernelIdx, size / 8, size / 8, size / 8);
 
                     ComputeBuffer.CopyCount(_vertexBufferAll, _countBufferAll, 0);
@@ -195,13 +202,24 @@ public class ChunkManager : MonoBehaviour
                     _countBufferAll.GetData(totalCountArr);
                     int totalCount = totalCountArr[0];
 
-                    //GlobalCount += totalCount;
+                    ComputeBuffer.CopyCount(_totalCount, _countBufferTest, 0);
+                    int[] totalCountArr1 = new int[1];
+                    _countBufferTest.GetData(totalCountArr1);
+
+                    Debug.Log("tca length: " + totalCountArr1[0]);
+                    int wallCount = totalCountArr1[0];
+                    int[] wallsData = new int[wallCount];
+                    _totalCount.GetData(wallsData);
+
+                    for (int wallIdx = 0; wallIdx < wallCount; wallIdx++)
+                    {
+                        aStar.UpdateGrid(wallsData[wallIdx], true);
+                    }
 
                     TriangleWithPos[] trianglesData = new TriangleWithPos[totalCount];
 
                     _vertexBufferAll.GetData(trianglesData);
-                    ////Vertex count above is correct, 12920.
-                    ////Vertex added below incorrect.
+
                     for (int i = 0; i < 5; i++)
                     {
                         for (int j = 0; j < 5; j++)
@@ -234,7 +252,7 @@ public class ChunkManager : MonoBehaviour
                                     triangles[idx + 1] = idx + 1;
                                     triangles[idx + 2] = idx + 2;
 
-                                    GlobalCount += 3;
+                                    //GlobalCount += 3;
                                 }
 
                                 Mesh mesh = new Mesh();
@@ -253,6 +271,9 @@ public class ChunkManager : MonoBehaviour
                     _vertexBufferAll.Release();
                     _countBufferAll.Release();
 
+
+                    _totalCount.Release();
+                    _countBufferTest.Release();
                 }
             }
         }
