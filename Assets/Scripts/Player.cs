@@ -45,7 +45,7 @@ public class Player : MonoBehaviour
     private float _flareCount;
     private float _flareSpawnTime;
 
-    
+
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position
@@ -160,7 +160,7 @@ public class Player : MonoBehaviour
     float CheckSlope()
     {
         float slopeAngle = 180f;
-        if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out _hit, 1f))
+        if (Physics.Raycast(transform.position - new Vector3(0f, 0.99f, 0f), Vector3.down, out _hit, 10f))
         {
             if (_hit.transform.gameObject.layer == _terrainLayerIndex)
                 slopeAngle = Vector3.Angle(_hit.normal, Vector3.up);
@@ -248,5 +248,11 @@ public class Player : MonoBehaviour
                 _flareSpawnTime = Time.time;
             }
         }
+    }
+
+    public Vector3Int GetCurrentGridPos()
+    {
+        Vector3 posInGrid = _hit.point * 4;
+        return new Vector3Int(Mathf.FloorToInt(posInGrid.x), Mathf.FloorToInt(posInGrid.y), Mathf.FloorToInt(posInGrid.z));
     }
 }

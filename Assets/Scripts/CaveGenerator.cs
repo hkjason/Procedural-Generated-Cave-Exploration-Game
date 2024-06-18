@@ -39,6 +39,8 @@ public class CaveGenerator : MonoBehaviour
 
     public ComputeShader noiseComputeShader;
 
+    public RaycastHit spiderHit;
+
 
     void OnDrawGizmosSelected()
     {
@@ -146,7 +148,7 @@ public class CaveGenerator : MonoBehaviour
         {
             for (int j = 0; j < 10; j++)
             {
-                Vector3 raycastOrigin = orePoints[i];
+                Vector3 raycastOrigin = orePoints[i] / 4;
 
                 Vector3 raycastDirection = UnityEngine.Random.insideUnitSphere * 10f;
 
@@ -156,6 +158,8 @@ public class CaveGenerator : MonoBehaviour
                 if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, _terrainLayer))
                 {
                     orePoints[i] = (hit.point);
+
+                    spiderHit = hit;
                     break;
                 }
             }

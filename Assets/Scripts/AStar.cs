@@ -1,8 +1,6 @@
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
-using UnityEngine.AI;
-using static UnityEditor.FilePathAttribute;
 
 public class AStar : MonoBehaviour
 {
@@ -17,6 +15,8 @@ public class AStar : MonoBehaviour
 
     public LayerMask groundLayer;
 
+    public Player player;
+
     private void OnDrawGizmosSelected()
     {
 
@@ -25,13 +25,13 @@ public class AStar : MonoBehaviour
         {
             foreach (var p in path)
             {
-                Gizmos.DrawSphere(p, 0.1f);
+                Gizmos.DrawSphere(new Vector3(p.x/4f, p.y/4f, p.z/4f), 0.1f);
             }
         }
         Gizmos.DrawRay(new Vector3(20.4239998f, 59.4669991f, 54.6850014f), Vector3.down);
         Gizmos.color = UnityEngine.Color.yellow;
-        Gizmos.DrawSphere(new Vector3Int(1, 1, 1), 0.3f);
-        Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3), 0.3f);
+        Gizmos.DrawSphere(new Vector3Int(1, 1, 1)/4, 0.3f);
+        Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3)/4, 0.3f);
 
         Gizmos.color = UnityEngine.Color.cyan;
 
@@ -54,6 +54,7 @@ public class AStar : MonoBehaviour
         }
         */
 
+        /*
         for (int x = -1; x <= 1; x++)
         {
             for (int y = -1; y <= 1; y++)
@@ -76,6 +77,7 @@ public class AStar : MonoBehaviour
                 }
             }
         }
+        */
 
     }
 
@@ -101,18 +103,37 @@ public class AStar : MonoBehaviour
 
             Debug.Log("ptGrid:" + pointGrid[debugVec.x, debugVec.y, debugVec.z]);
 
+            Vector3Int playerPos = player.GetCurrentGridPos();
 
+            Debug.Log("playerGrid:" + pointGrid[playerPos.x, playerPos.y, playerPos.z]);
+
+            path = PathFind(debugVec, playerPos);
+            Debug.Log(path.Count);
         }
     }
 
 
     private void Start()
     {
+        pointGrid = new bool[width, depth, height];
+
+        /*
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < depth; j++)
+            {
+                for (int k = 0; k < height; k++)
+                {
+                    pointGrid[i, j, k] = true;
+                }
+            }
+        }
+        */
+
         path = new List<Vector3Int>();
 
-        pointGrid = new bool[width, height, depth];
-
-        path = PathFind(new Vector3Int(1, 1, 1), new Vector3Int(width / 2, depth / 4, height / 3));
+        //path = PathFind(new Vector3Int(1, 1, 1), new Vector3Int(width / 2, depth / 4, height / 3));
+        //Debug.Log("pCOunt" + path.Count);
     }
 
     public void UpdateGrid(int loc, bool val)
@@ -124,36 +145,30 @@ public class AStar : MonoBehaviour
         pointGrid[x, y, z] = val;
     }
 
-    List<Vector3Int> PathFind(Vector3Int startLoc, Vector3Int endLoc)
+    public List<Vector3Int> PathFind(Vector3Int startLoc, Vector3Int endLoc)
     {
-        Debug.Log("s" + startLoc);
-        Debug.Log("e" + endLoc);
+        float totalTime = 0;
+        float curTime = Time.realtimeSinceStartup;
 
-        Dictionary<Vector3Int, AstarNode> openList = new Dictionary<Vector3Int, AstarNode>();
-        List<Vector3Int> closeList = new List<Vector3Int>();
+        Dictionary<Vector3Int, AStarNode> dict = new Dictionary<Vector3Int, AStarNode> ();
+        PriorityQueue openList = new PriorityQueue();
+        HashSet<Vector3Int> closeList = new HashSet<Vector3Int>();
 
-        openList.Add(startLoc, new AstarNode(startLoc));
+        AStarNode aStarNode = new AStarNode(startLoc);
+        openList.Enqueue(aStarNode);
+        dict.Add(startLoc, aStarNode);
         while (openList.Count > 0)
         {
-            
-            AstarNode currentNode = null;
-
-            foreach (AstarNode node in openList.Values)
-            {
-                if (currentNode == null || node.fCost < currentNode.fCost ||
-                    node.fCost == currentNode.fCost && node.hCost < currentNode.hCost)
-                {
-                    currentNode = node;
-                }
-            }
+            AStarNode currentNode = openList.Dequeue();
 
             if (currentNode.loc == endLoc)
             {
+                Debug.Log("TotalTime: " + totalTime);
                 return BuildPath(startLoc, currentNode);
             }
 
-            openList.Remove(currentNode.loc);
             closeList.Add(currentNode.loc);
+
 
             for (int x = -1; x <= 1; x++)
             {
@@ -163,47 +178,53 @@ public class AStar : MonoBehaviour
                     {
                         Vector3Int neighbourLocation = new Vector3Int(currentNode.loc.x + x, currentNode.loc.y + y, currentNode.loc.z + z);
 
-                        if (pointGrid[neighbourLocation.x, neighbourLocation.y, neighbourLocation.z] == false
-                            || closeList.Contains(neighbourLocation))
+                        if (pointGrid[neighbourLocation.x, neighbourLocation.y, neighbourLocation.z] == false)
                         {
                             continue;
                         }
 
-                        AstarNode neighbourNode;
-                        if (openList.ContainsKey(neighbourLocation))
+                        if (closeList.Contains(neighbourLocation))
                         {
-                            neighbourNode = openList[neighbourLocation];
+                            continue;
+                        }
 
+                        AStarNode neighbourNode;
+                        if (dict.TryGetValue(neighbourLocation, out neighbourNode))
+                        {
                             int cost = currentNode.gCost + CalDist(currentNode.loc, neighbourNode.loc);
                             if (cost < neighbourNode.gCost)
                             {
                                 neighbourNode.gCost = cost;
                                 neighbourNode.parentNode = currentNode;
+                                openList.UpdateItem(neighbourNode);
                             }
                         }
                         else
                         {
-                            neighbourNode = new AstarNode(neighbourLocation);
-                            openList.Add(neighbourLocation, neighbourNode);
+                            neighbourNode = new AStarNode(neighbourLocation);
+                            openList.Enqueue(neighbourNode);
+                            dict.Add(neighbourLocation, neighbourNode);
 
                             neighbourNode.gCost = currentNode.gCost + CalDist(currentNode.loc, neighbourNode.loc);
                             neighbourNode.hCost = CalDist(neighbourNode.loc, endLoc);
                             neighbourNode.parentNode = currentNode;
+
                         }
                     }
                 }
             }
 
+            totalTime = Time.realtimeSinceStartup - curTime;
         }
 
         return null;
     }
 
-    List<Vector3Int> BuildPath(Vector3Int startLoc, AstarNode endNode)
+    List<Vector3Int> BuildPath(Vector3Int startLoc, AStarNode endNode)
     {
         List<Vector3Int> paths = new List<Vector3Int>();
 
-        AstarNode currentNode = endNode;
+        AStarNode currentNode = endNode;
         while (currentNode.loc != startLoc)
         {
             paths.Add(currentNode.loc);
@@ -255,23 +276,6 @@ public class AStar : MonoBehaviour
             {
                 return 173 * distX + 141 * (distY - distX) + 100 * (distZ - distY);
             }
-        }
-    }
-
-    public class AstarNode
-    {
-        public Vector3Int loc;
-        public AstarNode parentNode;
-        public int gCost = 0; //from start node
-        public int hCost = 0; //from end node
-        public int fCost 
-        {
-            get { return gCost + hCost; }
-        }
-
-        public AstarNode(Vector3Int location)
-        {
-            loc = location;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using Unity.VisualScripting;
@@ -206,7 +207,8 @@ public class ChunkManager : MonoBehaviour
                     int[] totalCountArr1 = new int[1];
                     _countBufferTest.GetData(totalCountArr1);
 
-                    Debug.Log("tca length: " + totalCountArr1[0]);
+                    
+                    //Debug.Log("tca length: " + totalCountArr1[0]);
                     int wallCount = totalCountArr1[0];
                     int[] wallsData = new int[wallCount];
                     _totalCount.GetData(wallsData);
@@ -270,10 +272,10 @@ public class ChunkManager : MonoBehaviour
                     _densityBufferAll.Release();
                     _vertexBufferAll.Release();
                     _countBufferAll.Release();
-
-
                     _totalCount.Release();
                     _countBufferTest.Release();
+
+                    GC.Collect();
                 }
             }
         }

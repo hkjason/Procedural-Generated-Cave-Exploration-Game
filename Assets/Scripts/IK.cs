@@ -1,5 +1,6 @@
 using System.Collections;
-using TMPro;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class IK : MonoBehaviour
@@ -15,6 +16,24 @@ public class IK : MonoBehaviour
     private Coroutine[] coroutines;
     public Transform bodyRayCastPoint;
 
+    public AStar aStar;
+    public Player player;
+
+    public Rigidbody spiderRb;
+
+    public float groundDistance;
+    [Range(0f,1f)]
+    public float rotationRatio;
+    [Range(0f, 1f)]
+    public float positionRatio;
+
+    RaycastHit lastHit;
+    Vector3 lastPos;
+
+    public float speed;
+
+    private Coroutine posCoroutine;
+    private Coroutine rotCoroutine;
     void Start()
     {
         currentIdx = 0;
@@ -26,10 +45,80 @@ public class IK : MonoBehaviour
             leg.legPoint = leg.legPoints[3].position;
         }
     }
+    private void OnEnable()
+    {
+        transform.position = CaveGenerator.Instance.spiderHit.point + CaveGenerator.Instance.spiderHit.normal * groundDistance;
+    }
 
     // Update is called once per frame
     void FixedUpdate()
     {
+        //Vector3 targetPoss = Vector3.MoveTowards(transform.position, transform.position + transform.forward, Time.fixedDeltaTime * speed);
+        //transform.position = targetPoss;
+
+        Vector3 raycastOrigin = bodyRayCastPoint.position;
+
+        Vector3 raycastDirection = transform.up * -1;
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 2f, groundLayer))
+        {
+            Gizmos.color = Color.blue;
+            Debug.DrawRay(raycastOrigin, raycastDirection);
+
+            if (lastHit.collider == null)
+            {
+                lastHit = hit;
+            }
+            else
+            {
+                if ((hit.normal - lastHit.normal).magnitude > 0.01f)
+                {
+                    if (rotCoroutine != null)
+                    {
+                        StopCoroutine(rotCoroutine);
+                    }
+                    Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
+                    rotCoroutine = StartCoroutine(LerpRotation(transform.rotation, targetRotation));
+
+                    //Quaternion lerpRotationTest = Quaternion.Lerp(transform.rotation, targetRotation, rotationRatio);
+                    //transform.rotation = targetRotation;
+
+                    
+                    //Vector3 targetPosition = hit.point + hit.normal * groundDistance;
+
+                    //transform.position = Vector3.Lerp(transform.position, targetPosition, positionRatio);
+
+                    Debug.Log("Normal Change");
+                    
+                }
+                else
+                {
+
+                    
+                    //Vector3 targetPosition = hit.point + hit.normal * groundDistance;
+
+                    //transform.position = Vector3.Lerp(transform.position, targetPosition, positionRatio);
+
+                }
+                
+            }
+
+        }
+        
+        
+        Vector3 posInGrid = hit.point * 4;
+        
+        /*
+        List<Vector3Int> path= aStar.PathFind(new Vector3Int(Mathf.FloorToInt(posInGrid.x), Mathf.FloorToInt(posInGrid.y), Mathf.FloorToInt(posInGrid.z))
+            , player.GetCurrentGridPos());
+
+        Vector3 newPosition = Vector3.MoveTowards(transform.position, path[1], 5 * Time.fixedDeltaTime);
+        spiderRb.MovePosition(newPosition);
+        */
+
+
         Vector3 hitPos;
         Vector3 hitPos1;
         switch (currentIdx)
@@ -173,7 +262,7 @@ public class IK : MonoBehaviour
     {
         Vector3 raycastOrigin = spiderLeg[idx].rayCastPoint.position;
 
-        Vector3 raycastDirection = Vector3.down;
+        Vector3 raycastDirection = spiderLeg[idx].rayCastPoint.transform.up * -1;
 
         RaycastHit hit;
 
@@ -196,6 +285,32 @@ public class IK : MonoBehaviour
         {
             spiderLeg[idx1].legPoint = Vector3.Lerp(initialPosition1, targetPosition1, duration / stepTime);
             spiderLeg[idx2].legPoint = Vector3.Lerp(initialPosition2, targetPosition2, duration / stepTime);
+
+            duration += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    IEnumerator LerpPosition(Vector3 targetPosition1, Vector3 targetPosition2)
+    {
+        float duration = 0f;
+
+        while (duration < positionRatio)
+        {
+            transform.position = Vector3.Lerp(targetPosition1, targetPosition2, duration / positionRatio);
+
+            duration += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    IEnumerator LerpRotation(Quaternion targetRotation1, Quaternion targetRotation2)
+    {
+        float duration = 0f;
+
+        while (duration < rotationRatio)
+        {
+            transform.rotation = Quaternion.Lerp(targetRotation1, targetRotation2, duration / rotationRatio);
 
             duration += Time.deltaTime;
             yield return null;
