@@ -17,6 +17,20 @@ public class AStar : MonoBehaviour
 
     public Player player;
 
+    public static AStar Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
 
@@ -34,50 +48,6 @@ public class AStar : MonoBehaviour
         Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3)/4, 0.3f);
 
         Gizmos.color = UnityEngine.Color.cyan;
-
-
-        /*
-        int drawn = 0;
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                for (int z = 0; z < depth; z++)
-                {
-                    if (pointGrid[x, y, z] && drawn < 1000)
-                    {
-                        drawn++;
-                        Gizmos.DrawSphere(new Vector3(x, y, z) /4 + new Vector3(0.125f, 0.125f, 0.125f), 0.05f);
-                    }
-                }
-            }
-        }
-        */
-
-        /*
-        for (int x = -1; x <= 1; x++)
-        {
-            for (int y = -1; y <= 1; y++)
-            {
-                for (int z = -1; z <= 1; z++)
-                {
-                    if (x == 0 && y == 0 && z == 0)
-                    {
-                        Gizmos.color = UnityEngine.Color.cyan;
-                    }
-                    else if (pointGrid[81 + x, 236 + y, 218 + z])
-                    {
-                        Gizmos.color = UnityEngine.Color.green;
-                    }
-                    else
-                    {
-                        Gizmos.color = UnityEngine.Color.red;
-                    }
-                    Gizmos.DrawSphere(new Vector3(81 + x, 236 + y, 218 + z) / 4 + new Vector3(0.125f, 0.125f, 0.125f), 0.05f);
-                }
-            }
-        }
-        */
 
     }
 
@@ -277,5 +247,16 @@ public class AStar : MonoBehaviour
                 return 173 * distX + 141 * (distY - distX) + 100 * (distZ - distY);
             }
         }
+    }
+
+
+    public bool GetGrid(Vector3Int loc)
+    {
+        return pointGrid[loc.x, loc.y, loc.z];
+    }
+
+    public bool GetGrid(int x, int y, int z)
+    {
+        return pointGrid[x, y, z];
     }
 }

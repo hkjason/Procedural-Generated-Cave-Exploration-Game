@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -49,6 +50,27 @@ public class ChunkManager : MonoBehaviour
         GlobalCount = 0;
     }
 
+    private void OnDrawGizmosSelected()
+    {
+        int count = 0;
+
+        Gizmos.color = UnityEngine.Color.red;
+        if (chunkDic != null && chunkDic.Count > 0)
+        {
+            foreach (Chunk chunk in chunkDic.Values)
+            {
+
+                foreach (Vector3Int loc in chunk.exitPoints)
+                {
+                    Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
+                    count++;
+                }
+            }
+        }
+        Debug.Log("c" + count);
+    }
+
+
     public void CreateChunks(int xSize, int ySize, int zSize)
     {
         _width = xSize;
@@ -92,6 +114,8 @@ public class ChunkManager : MonoBehaviour
 
 
         MarchAll();
+        //BuildExitAll();
+
         Debug.Log("GCount: " + GlobalCount);
     }
 
@@ -242,6 +266,11 @@ public class ChunkManager : MonoBehaviour
                                 Vector3[] vertices = new Vector3[idxList.Count * 3];
                                 int[] triangles = new int[idxList.Count * 3];
 
+                                if (idxList.Count > 0)
+                                {
+                                    GlobalCount++;
+                                }
+
                                 for (int jj = 0; jj < idxList.Count; jj++)
                                 {
                                     int idx = jj * 3;
@@ -266,6 +295,7 @@ public class ChunkManager : MonoBehaviour
                                 Vector3Int chunkLoc = new Vector3Int(iterX + i * 8, iterY + j * 8, iterZ + k * 8);
                                 Chunk chunk = chunkDic[chunkLoc];
                                 chunk.BuildChunk(mesh);
+                                chunk.BuildExit();
                             }
                         }
                     }
@@ -274,8 +304,6 @@ public class ChunkManager : MonoBehaviour
                     _countBufferAll.Release();
                     _totalCount.Release();
                     _countBufferTest.Release();
-
-                    GC.Collect();
                 }
             }
         }
