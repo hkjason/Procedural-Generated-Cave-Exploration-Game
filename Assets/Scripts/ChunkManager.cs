@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using Unity.VisualScripting;
@@ -21,15 +22,32 @@ public class ChunkManager : MonoBehaviour
 
     public ComputeShader computeShader;
     private ComputeBuffer _vertexBuffer;
-    private ComputeBuffer _densityBufferAll;
+    private ComputeBuffer _densityBuffer;
     private ComputeBuffer _countBuffer;
 
     public ComputeShader computeShaderMarchAll;
+    private ComputeBuffer _vertexBufferAll;
+    private ComputeBuffer _densityBufferAll;
+    private ComputeBuffer _countBufferTest;
+    private ComputeBuffer _countBufferAll;
+    private ComputeBuffer _totalCount;
+
 
     private int _marchKernelIdx;
     private int _marchAllKernelIdx;
 
     int GlobalCount;
+
+
+    Vector2Int[] uvTable = new Vector2Int[6]
+    {
+        new Vector2Int(0,1),
+        new Vector2Int(1,0),
+        new Vector2Int(0,0),
+        new Vector2Int(0,1),
+        new Vector2Int(1,1),
+        new Vector2Int(1,0),
+    };
 
     private void Awake()
     {
@@ -52,6 +70,7 @@ public class ChunkManager : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        /*
         int count = 0;
 
         Gizmos.color = UnityEngine.Color.red;
@@ -68,6 +87,7 @@ public class ChunkManager : MonoBehaviour
             }
         }
         Debug.Log("c" + count);
+        */
     }
 
 
@@ -112,9 +132,13 @@ public class ChunkManager : MonoBehaviour
             }
         }
 
-
         MarchAll();
-        //BuildExitAll();
+
+        foreach (Chunk c in chunkDic.Values)
+        {
+            c.BuildPaths();
+        }
+
 
         Debug.Log("GCount: " + GlobalCount);
     }
@@ -122,12 +146,12 @@ public class ChunkManager : MonoBehaviour
     public void BuildChunks(Chunk chunk)
     {
         _vertexBuffer = new ComputeBuffer(512 * 5, sizeof(float) * 9, ComputeBufferType.Append);
-        _densityBufferAll = new ComputeBuffer(729, sizeof(float));
+        _densityBuffer = new ComputeBuffer(729, sizeof(float));
         _countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
 
-        _densityBufferAll.SetData(chunk.density);
+        _densityBuffer.SetData(chunk.density);
         _vertexBuffer.SetCounterValue(0);
-        computeShader.SetBuffer(_marchKernelIdx, "densityBuffer", _densityBufferAll);
+        computeShader.SetBuffer(_marchKernelIdx, "densityBuffer", _densityBuffer);
         computeShader.SetBuffer(_marchKernelIdx, "vertexBuffer", _vertexBuffer);
 
         Vector3 vec = new Vector3(chunk.chunkPosition.x, chunk.chunkPosition.y, chunk.chunkPosition.z);
@@ -170,7 +194,7 @@ public class ChunkManager : MonoBehaviour
 
         chunk.BuildChunk(mesh);
 
-        _densityBufferAll.Release();
+        _densityBuffer.Release();
         _vertexBuffer.Release();
         _countBuffer.Release();
     }
@@ -188,12 +212,12 @@ public class ChunkManager : MonoBehaviour
                     int vSize = size * size * size;
                     int expandSize = (size + 1) * (size + 1) * (size + 1);
 
-                    ComputeBuffer _vertexBufferAll = new ComputeBuffer(vSize * 5, sizeof(float) * 12, ComputeBufferType.Append);
-                    ComputeBuffer _densityBufferAll = new ComputeBuffer(expandSize, sizeof(float));
-                    ComputeBuffer _countBufferAll = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+                    _vertexBufferAll = new ComputeBuffer(vSize * 5, sizeof(float) * 12, ComputeBufferType.Append);
+                    _densityBufferAll = new ComputeBuffer(expandSize, sizeof(float));
+                    _countBufferAll = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
 
-                    ComputeBuffer _countBufferTest = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-                    ComputeBuffer _totalCount = new ComputeBuffer(vSize, sizeof(int), ComputeBufferType.Append);
+                    _countBufferTest = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+                    _totalCount = new ComputeBuffer(vSize, sizeof(int), ComputeBufferType.Append);
 
                     float[] dens = new float[expandSize];
                     for (int i = 0; i < size + 1; i++)
@@ -265,6 +289,7 @@ public class ChunkManager : MonoBehaviour
 
                                 Vector3[] vertices = new Vector3[idxList.Count * 3];
                                 int[] triangles = new int[idxList.Count * 3];
+                                Vector2[] uvs = new Vector2[idxList.Count * 3];
 
                                 if (idxList.Count > 0)
                                 {
@@ -283,19 +308,23 @@ public class ChunkManager : MonoBehaviour
                                     triangles[idx + 1] = idx + 1;
                                     triangles[idx + 2] = idx + 2;
 
+                                    uvs[idx] = uvTable[idx % 6];
+                                    uvs[idx + 1] = uvTable[(idx + 1) % 6];
+                                    uvs[idx + 2] = uvTable[(idx + 2) % 6];
                                     //GlobalCount += 3;
                                 }
 
                                 Mesh mesh = new Mesh();
                                 mesh.vertices = vertices;
                                 mesh.triangles = triangles;
+                                mesh.uv = uvs;
                                 mesh.RecalculateTangents();
                                 mesh.RecalculateNormals();
 
                                 Vector3Int chunkLoc = new Vector3Int(iterX + i * 8, iterY + j * 8, iterZ + k * 8);
                                 Chunk chunk = chunkDic[chunkLoc];
                                 chunk.BuildChunk(mesh);
-                                chunk.BuildExit();
+                                //chunk.BuildExit();
                             }
                         }
                     }
@@ -312,10 +341,10 @@ public class ChunkManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_densityBufferAll != null)
+        if (_densityBuffer != null)
         {
-            _densityBufferAll.Release();
-            _densityBufferAll = null;
+            _densityBuffer.Release();
+            _densityBuffer = null;
         }
         if (_vertexBuffer != null)
         {
@@ -326,6 +355,32 @@ public class ChunkManager : MonoBehaviour
         {
             _countBuffer.Release();
             _countBuffer = null;
+        }
+
+        if (_densityBufferAll != null)
+        {   
+            _densityBufferAll.Release();
+            _densityBufferAll = null;
+        }
+        if (_vertexBufferAll != null)
+        {   
+            _vertexBufferAll.Release();
+            _vertexBufferAll = null;
+        }
+        if (_countBufferAll != null)
+        {   
+            _countBufferAll.Release();
+            _countBufferAll = null;
+        }
+        if (_totalCount != null)
+        {   
+            _totalCount.Release();
+            _totalCount = null;
+        }
+        if (_countBufferTest != null)
+        {   
+            _countBufferTest.Release();
+            _countBufferTest = null;
         }
     }
 

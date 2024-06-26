@@ -16,9 +16,12 @@ public class Chunk
     public float[] density;
     const int pointArrSize = 729;
 
-
     //For HPA*
     public List<Vector3Int> exitPoints;
+    public Dictionary<(Vector3Int, Vector3Int), List<Vector3Int>> pathDic;
+    public Dictionary<(Vector3Int, Vector3Int), int> costDic;
+
+    public Dictionary<Vector3Int, List<Vector3Int>> exitDic;
 
     private Vector3Int[] xyTable = new Vector3Int[8]
     {
@@ -68,6 +71,11 @@ public class Chunk
         chunkObject.layer = LayerMask.NameToLayer("Terrain");
 
         density = new float[pointArrSize];
+
+        exitPoints = new List<Vector3Int>();
+        pathDic = new Dictionary<(Vector3Int, Vector3Int), List<Vector3Int>>();
+        costDic = new Dictionary<(Vector3Int, Vector3Int), int>();
+        exitDic = new Dictionary<Vector3Int, List<Vector3Int>>();
     }
 
     HashSet<Vector3Int> openSet;
@@ -75,7 +83,6 @@ public class Chunk
 
     public void BuildExit()
     {
-        exitPoints = new List<Vector3Int>();
         Vector3Int end = chunkPosition + new Vector3Int(8, 8, 8);
 
         openSet = new HashSet<Vector3Int>();
@@ -104,7 +111,7 @@ public class Chunk
             openSet.Remove(baseLoc);
             openList.RemoveAt(0);
             List<Vector3Int> area = FloodFillXY(baseLoc);
-            if (AStar.Instance.GetGrid(baseLoc))
+            if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x, baseLoc.y, baseLoc.z - 1))
             {
                 area.Add(baseLoc);
             }
@@ -122,10 +129,53 @@ public class Chunk
                     z += location.z;
                 }
 
-                exitPoints.Add(new Vector3Int(x, y, z) / area.Count);
+                Vector3Int thisExitPoint = (new Vector3Int(x, y, z) / area.Count);
+                List<Vector3Int> connections;
+                Vector3Int neighbourLoc = chunkPosition + new Vector3Int(0, 0, -8);
+                Vector3Int neighbourExit = thisExitPoint + new Vector3Int(0, 0, -1);
+
+                if (!exitPoints.Contains(thisExitPoint))
+                {
+                    exitPoints.Add(thisExitPoint);
+                    connections = new List<Vector3Int>();
+                    connections.Add(neighbourLoc);
+                    connections.Add(neighbourExit);
+
+                    exitDic.Add(thisExitPoint, connections);
+                }
+                else
+                {
+                    connections = exitDic[thisExitPoint];
+                    connections.Add(neighbourLoc);
+                    connections.Add(neighbourExit);
+
+                    exitDic[thisExitPoint] = connections;
+                }
+
+
+                Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
+
+                if (!neighbourChunk.exitPoints.Contains(neighbourExit))
+                {
+                    neighbourChunk.exitPoints.Add(neighbourExit);
+                    connections = new List<Vector3Int>();
+                    connections.Add(chunkPosition);
+                    connections.Add(thisExitPoint);
+
+                    exitDic.Add(neighbourExit, connections);
+                }
+                else
+                {
+                    connections = neighbourChunk.exitDic[neighbourExit];
+                    connections.Add(chunkPosition);
+                    connections.Add(thisExitPoint);
+
+                    neighbourChunk.exitDic[neighbourExit] = connections;
+                }
+                
             }
         }
-
+        
         /////
         ///XZ
         /////
@@ -146,7 +196,7 @@ public class Chunk
             openSet.Remove(baseLoc);
             openList.RemoveAt(0);
             List<Vector3Int> area = FloodFillXZ(baseLoc);
-            if (AStar.Instance.GetGrid(baseLoc))
+            if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x, baseLoc.y - 1, baseLoc.z))
             {
                 area.Add(baseLoc);
             }
@@ -157,14 +207,106 @@ public class Chunk
                 int y = 0;
                 int z = 0;
 
-                foreach (Vector3Int location in area) 
+                foreach (Vector3Int location in area)
                 {
                     x += location.x;
                     y += location.y;
                     z += location.z;
                 }
 
-                exitPoints.Add(new Vector3Int(x, y, z) / area.Count);
+                Vector3Int thisExitPoint = (new Vector3Int(x, y, z) / area.Count);
+                List<Vector3Int> connections;
+                Vector3Int neighbourLoc = chunkPosition + new Vector3Int(0, -8, 0);
+                Vector3Int neighbourExit = thisExitPoint + new Vector3Int(0, -1, 0);
+
+                if (!exitPoints.Contains(thisExitPoint))
+                {
+                    exitPoints.Add(thisExitPoint);
+                    connections = new List<Vector3Int>();
+                    connections.Add(neighbourLoc);
+                    connections.Add(neighbourExit);
+
+                    exitDic.Add(thisExitPoint, connections);
+                }
+                else
+                {
+                    connections = new List<Vector3Int>();
+                    connections = exitDic[thisExitPoint];
+                    connections.Add(neighbourLoc);
+                    connections.Add(neighbourExit);
+
+                    exitDic[thisExitPoint] = connections;
+                }
+                Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
+
+                if (neighbourExit == new Vector3Int(119, 215, 143))
+                {
+                    foreach (var aa in neighbourChunk.exitPoints)
+                    {
+                        Debug.Log("epoints: " + aa);
+                    }
+
+                    foreach (var bb in neighbourChunk.exitDic.Keys)
+                    {
+                        Debug.Log("key: " + bb);
+                    }
+
+                    int countt = 0;
+                    int countt2 = 0;
+                    foreach (Chunk c in ChunkManager.Instance.chunkDic.Values)
+                    {
+                        countt += c.exitDic.Count;
+                        countt2 += c.exitPoints.Count;
+
+                        foreach (var ca in exitPoints)
+                        {
+                            if (!c.exitDic.ContainsKey(ca))
+                            {
+                                Debug.Log("not found: " + ca);
+                                foreach (var ke in exitDic.Keys)
+                                {
+                                    Debug.Log("keys: " + ke);
+                                }
+                            }
+                        }
+
+                        foreach (var cb in exitDic.Keys)
+                        {
+                            if (!c.exitPoints.Contains(cb))
+                            {
+                                Debug.Log("not found b: " + cb);
+                                foreach (var pt in exitPoints)
+                                {
+                                    Debug.Log("pt: " + pt);
+                                }
+                            }
+                        }
+                    }
+
+                    Debug.Log("pt" + countt2);
+                    Debug.Log("dic" + countt);
+                }
+
+
+
+                if (!neighbourChunk.exitPoints.Contains(neighbourExit))
+                {
+                    neighbourChunk.exitPoints.Add(neighbourExit);
+                    connections = new List<Vector3Int>();
+                    connections.Add(chunkPosition);
+                    connections.Add(thisExitPoint);
+
+                    neighbourChunk.exitDic.Add(neighbourExit, connections);
+                }
+                else
+                {
+                    connections = neighbourChunk.exitDic[neighbourExit];
+                    connections.Add(chunkPosition);
+                    connections.Add(thisExitPoint);
+
+                    neighbourChunk.exitDic[neighbourExit] = connections;
+                }
+
             }
         }
         /////
@@ -187,7 +329,7 @@ public class Chunk
             openSet.Remove(baseLoc);
             openList.RemoveAt(0);
             List<Vector3Int> area = FloodFillYZ(baseLoc);
-            if (AStar.Instance.GetGrid(baseLoc))
+            if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x - 1, baseLoc.y, baseLoc.z))
             {
                 area.Add(baseLoc);
             }
@@ -205,7 +347,48 @@ public class Chunk
                     z += location.z;
                 }
 
-                exitPoints.Add(new Vector3Int(x, y, z) / area.Count);
+                Vector3Int thisExitPoint = (new Vector3Int(x, y, z) / area.Count);
+                List<Vector3Int> connections;
+                Vector3Int neighbourLoc = chunkPosition + new Vector3Int(-8, 0, 0);
+                Vector3Int neighbourExit = thisExitPoint + new Vector3Int(-1, 0, 0);
+
+                if (!exitPoints.Contains(thisExitPoint))
+                {
+                    exitPoints.Add(thisExitPoint);
+                    connections = new List<Vector3Int>();
+                    connections.Add(neighbourLoc);
+                    connections.Add(neighbourExit);
+
+                    exitDic.Add(thisExitPoint, connections);
+                }
+                else
+                {
+                    connections = exitDic[thisExitPoint];
+                    connections.Add(neighbourLoc);
+                    connections.Add(neighbourExit);
+
+                    exitDic[thisExitPoint] = connections;
+                }
+
+
+                Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
+                if (!neighbourChunk.exitPoints.Contains(neighbourExit))
+                {
+                    neighbourChunk.exitPoints.Add(neighbourExit);
+                    connections = new List<Vector3Int>();
+                    connections.Add(chunkPosition);
+                    connections.Add(thisExitPoint);
+
+                    exitDic.Add(neighbourExit, connections);
+                }
+                else
+                {
+                    connections = neighbourChunk.exitDic[neighbourExit];
+                    connections.Add(chunkPosition);
+                    connections.Add(thisExitPoint);
+
+                    neighbourChunk.exitDic[neighbourExit] = connections;
+                }
             }
         }
     }
@@ -223,7 +406,7 @@ public class Chunk
                 openSet.Remove(loc);
                 openList.Remove(loc);
 
-                if (AStar.Instance.GetGrid(loc))
+                if (AStar.Instance.GetGrid(loc) && AStar.Instance.TryGetGrid(loc.x, loc.y, loc.z -1))
                 {
                     fill.AddRange(FloodFillXY(loc));
                     fill.Add(loc);
@@ -247,7 +430,7 @@ public class Chunk
                 openSet.Remove(loc);
                 openList.Remove(loc);
 
-                if (AStar.Instance.GetGrid(loc))
+                if (AStar.Instance.GetGrid(loc) && AStar.Instance.TryGetGrid(loc.x, loc.y - 1, loc.z))
                 { 
                     fill.Add(loc);
                     fill.AddRange(FloodFillXZ(loc));
@@ -271,7 +454,7 @@ public class Chunk
                 openSet.Remove(loc);
                 openList.Remove(loc);
 
-                if (AStar.Instance.GetGrid(loc))
+                if (AStar.Instance.GetGrid(loc) && AStar.Instance.TryGetGrid(loc.x - 1, loc.y, loc.z))
                 {
                     fill.Add(loc);
                     fill.AddRange(FloodFillYZ(loc));
@@ -281,6 +464,31 @@ public class Chunk
 
         return fill;
     }
+
+    public void BuildPaths()
+    {
+        HashSet<Vector3Int> pointsSet = new HashSet<Vector3Int>();
+
+        for (int i = 0; i < exitPoints.Count; i++) 
+        {
+            pointsSet.Add(exitPoints[i]);
+            for (int j = 0; j < exitPoints.Count; j++)
+            {
+                if (pointsSet.Contains(exitPoints[j])) continue;
+
+                List<Vector3Int> path = AStar.Instance.PathFindBase(exitPoints[i], exitPoints[j], chunkPosition, out int cost);
+                if (path != null)
+                { 
+                    pathDic.Add((exitPoints[i], exitPoints[j]), path);
+                    costDic.Add((exitPoints[i], exitPoints[j]), cost);
+                    path.Reverse();
+                    pathDic.Add((exitPoints[j], exitPoints[i]), path);
+                    costDic.Add((exitPoints[j], exitPoints[i]), cost);
+                }
+            }
+        }
+    }
+
 
     public void BuildChunk(Mesh mesh)
     {
