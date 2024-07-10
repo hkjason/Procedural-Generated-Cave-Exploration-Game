@@ -108,16 +108,13 @@ public class Chunk
         {
             Vector3Int baseLoc = openList[0];
 
-            openSet.Remove(baseLoc);
-            openList.RemoveAt(0);
             List<Vector3Int> area = FloodFillXY(baseLoc);
-            if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x, baseLoc.y, baseLoc.z - 1))
-            {
-                area.Add(baseLoc);
-            }
 
             if (area.Count > 0)
             {
+                
+
+
                 int x = 0;
                 int y = 0;
                 int z = 0;
@@ -129,13 +126,32 @@ public class Chunk
                     z += location.z;
                 }
 
-                Vector3Int thisExitPoint = (new Vector3Int(x, y, z) / area.Count);
+                Vector3Int midPt = (new Vector3Int(x, y, z) / area.Count);
+                int min_distance = int.MaxValue;
+
+                Vector3Int thisExitPoint = new Vector3Int();
+
+                foreach (Vector3Int location in area)
+                { 
+                    int dist = Mathf.Abs(location.x - midPt.x) + Mathf.Abs(location.z - midPt.z);
+                    if (dist < min_distance)
+                    {
+                        min_distance = dist;
+                        thisExitPoint = location;
+                    }
+                }
+
                 List<Vector3Int> connections;
                 Vector3Int neighbourLoc = chunkPosition + new Vector3Int(0, 0, -8);
                 Vector3Int neighbourExit = thisExitPoint + new Vector3Int(0, 0, -1);
 
+
+
                 if (!exitPoints.Contains(thisExitPoint))
                 {
+                    //Debug.Log("XY add: " + thisExitPoint + " at: " + chunkPosition);
+                    //Debug.Log("XY dict add: " + neighbourExit + " at: " + chunkPosition);
+
                     exitPoints.Add(thisExitPoint);
                     connections = new List<Vector3Int>();
                     connections.Add(neighbourLoc);
@@ -145,6 +161,8 @@ public class Chunk
                 }
                 else
                 {
+                    //Debug.Log("XY dict change: " + thisExitPoint + " at: " + chunkPosition);
+
                     connections = exitDic[thisExitPoint];
                     connections.Add(neighbourLoc);
                     connections.Add(neighbourExit);
@@ -157,15 +175,20 @@ public class Chunk
 
                 if (!neighbourChunk.exitPoints.Contains(neighbourExit))
                 {
+                    //Debug.Log("XY neighbour add: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
+                    //Debug.Log("XY neighbour dict add: " + thisExitPoint + " at: " + neighbourChunk.chunkPosition);
+
                     neighbourChunk.exitPoints.Add(neighbourExit);
                     connections = new List<Vector3Int>();
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
 
-                    exitDic.Add(neighbourExit, connections);
+                    neighbourChunk.exitDic.Add(neighbourExit, connections);
                 }
                 else
                 {
+                    //Debug.Log("XY neighbour dict change: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
+
                     connections = neighbourChunk.exitDic[neighbourExit];
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
@@ -193,8 +216,6 @@ public class Chunk
         {
             Vector3Int baseLoc = openList[0];
 
-            openSet.Remove(baseLoc);
-            openList.RemoveAt(0);
             List<Vector3Int> area = FloodFillXZ(baseLoc);
             if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x, baseLoc.y - 1, baseLoc.z))
             {
@@ -203,9 +224,18 @@ public class Chunk
 
             if (area.Count > 0)
             {
+                /*
+                if (AStar.Instance.testCount > 0)
+                {
+                    return;
+                }
+                AStar.Instance.testCount++;
+                */
+
                 int x = 0;
                 int y = 0;
                 int z = 0;
+               
 
                 foreach (Vector3Int location in area)
                 {
@@ -214,13 +244,35 @@ public class Chunk
                     z += location.z;
                 }
 
-                Vector3Int thisExitPoint = (new Vector3Int(x, y, z) / area.Count);
+                Vector3Int midPt = (new Vector3Int(x, y, z) / area.Count);
+                int min_distance = int.MaxValue;
+
+                Vector3Int thisExitPoint = new Vector3Int();
+
+                foreach (Vector3Int location in area)
+                {
+                    int dist = Mathf.Abs(location.x - midPt.x) + Mathf.Abs(location.z - midPt.z);
+                    if (dist < min_distance)
+                    {
+                        min_distance = dist;
+                        thisExitPoint = location;
+                    }
+                }
+
                 List<Vector3Int> connections;
                 Vector3Int neighbourLoc = chunkPosition + new Vector3Int(0, -8, 0);
                 Vector3Int neighbourExit = thisExitPoint + new Vector3Int(0, -1, 0);
 
+                //Debug.Log("ChunkPos " + chunkPosition);
+                //Debug.Log("NeighbourChunkLoc " + neighbourLoc);
+                //Debug.Log("ExitPoint XY " + thisExitPoint);
+                //Debug.Log("NExitPoint " + neighbourExit);
+
                 if (!exitPoints.Contains(thisExitPoint))
                 {
+                    //Debug.Log("XZ add: " + thisExitPoint + " at: " + chunkPosition);
+                    //Debug.Log("XZ dict add: " + neighbourExit + " at: " + chunkPosition);
+
                     exitPoints.Add(thisExitPoint);
                     connections = new List<Vector3Int>();
                     connections.Add(neighbourLoc);
@@ -230,6 +282,8 @@ public class Chunk
                 }
                 else
                 {
+                    //Debug.Log("XZ dict change: " + thisExitPoint + " at: " + chunkPosition);
+
                     connections = new List<Vector3Int>();
                     connections = exitDic[thisExitPoint];
                     connections.Add(neighbourLoc);
@@ -239,58 +293,11 @@ public class Chunk
                 }
                 Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
 
-                if (neighbourExit == new Vector3Int(119, 215, 143))
-                {
-                    foreach (var aa in neighbourChunk.exitPoints)
-                    {
-                        Debug.Log("epoints: " + aa);
-                    }
-
-                    foreach (var bb in neighbourChunk.exitDic.Keys)
-                    {
-                        Debug.Log("key: " + bb);
-                    }
-
-                    int countt = 0;
-                    int countt2 = 0;
-                    foreach (Chunk c in ChunkManager.Instance.chunkDic.Values)
-                    {
-                        countt += c.exitDic.Count;
-                        countt2 += c.exitPoints.Count;
-
-                        foreach (var ca in exitPoints)
-                        {
-                            if (!c.exitDic.ContainsKey(ca))
-                            {
-                                Debug.Log("not found: " + ca);
-                                foreach (var ke in exitDic.Keys)
-                                {
-                                    Debug.Log("keys: " + ke);
-                                }
-                            }
-                        }
-
-                        foreach (var cb in exitDic.Keys)
-                        {
-                            if (!c.exitPoints.Contains(cb))
-                            {
-                                Debug.Log("not found b: " + cb);
-                                foreach (var pt in exitPoints)
-                                {
-                                    Debug.Log("pt: " + pt);
-                                }
-                            }
-                        }
-                    }
-
-                    Debug.Log("pt" + countt2);
-                    Debug.Log("dic" + countt);
-                }
-
-
-
                 if (!neighbourChunk.exitPoints.Contains(neighbourExit))
                 {
+                    //Debug.Log("XZ neighbour add: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
+                    //Debug.Log("XZ neighbour dict add: " + thisExitPoint + " at: " + neighbourChunk.chunkPosition);
+
                     neighbourChunk.exitPoints.Add(neighbourExit);
                     connections = new List<Vector3Int>();
                     connections.Add(chunkPosition);
@@ -300,6 +307,9 @@ public class Chunk
                 }
                 else
                 {
+                    //Debug.Log("XZ neighbour dict change: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
+
+
                     connections = neighbourChunk.exitDic[neighbourExit];
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
@@ -326,9 +336,9 @@ public class Chunk
         {
             Vector3Int baseLoc = openList[0];
 
-            openSet.Remove(baseLoc);
-            openList.RemoveAt(0);
             List<Vector3Int> area = FloodFillYZ(baseLoc);
+
+
             if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x - 1, baseLoc.y, baseLoc.z))
             {
                 area.Add(baseLoc);
@@ -347,13 +357,29 @@ public class Chunk
                     z += location.z;
                 }
 
-                Vector3Int thisExitPoint = (new Vector3Int(x, y, z) / area.Count);
+                Vector3Int midPt = (new Vector3Int(x, y, z) / area.Count);
+                int min_distance = int.MaxValue;
+
+                Vector3Int thisExitPoint = new Vector3Int();
+
+                foreach (Vector3Int location in area)
+                {
+                    int dist = Mathf.Abs(location.y - midPt.y) + Mathf.Abs(location.z - midPt.y);
+                    if (dist < min_distance)
+                    {
+                        min_distance = dist;
+                        thisExitPoint = location;
+                    }
+                }
                 List<Vector3Int> connections;
                 Vector3Int neighbourLoc = chunkPosition + new Vector3Int(-8, 0, 0);
                 Vector3Int neighbourExit = thisExitPoint + new Vector3Int(-1, 0, 0);
 
                 if (!exitPoints.Contains(thisExitPoint))
                 {
+                    //Debug.Log("YZ add: " + thisExitPoint + " at: " + chunkPosition);
+                    //Debug.Log("YZ dict add: " + neighbourExit + " at: " + chunkPosition);
+
                     exitPoints.Add(thisExitPoint);
                     connections = new List<Vector3Int>();
                     connections.Add(neighbourLoc);
@@ -363,6 +389,9 @@ public class Chunk
                 }
                 else
                 {
+                    //Debug.Log("YZ dict change: " + thisExitPoint + " at: " + chunkPosition);
+
+
                     connections = exitDic[thisExitPoint];
                     connections.Add(neighbourLoc);
                     connections.Add(neighbourExit);
@@ -374,15 +403,21 @@ public class Chunk
                 Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
                 if (!neighbourChunk.exitPoints.Contains(neighbourExit))
                 {
+                    //Debug.Log("YZ neighbour add: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
+                    //Debug.Log("YZ neighbour dict add: " + thisExitPoint + " at: " + neighbourChunk.chunkPosition);
+
+
                     neighbourChunk.exitPoints.Add(neighbourExit);
                     connections = new List<Vector3Int>();
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
 
-                    exitDic.Add(neighbourExit, connections);
+                    neighbourChunk.exitDic.Add(neighbourExit, connections);
                 }
                 else
                 {
+                    //Debug.Log("YZ neighbour dict change: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
+
                     connections = neighbourChunk.exitDic[neighbourExit];
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
@@ -397,19 +432,20 @@ public class Chunk
     {
         List<Vector3Int> fill = new List<Vector3Int>();
 
-        foreach (Vector3Int location in xyTable)
+        if (openSet.Contains(aloc))
         {
-            Vector3Int loc = aloc + location;
+            openSet.Remove(aloc);
+            openList.Remove(aloc);
 
-            if (openSet.Contains(loc))
+            if (AStar.Instance.GetGrid(aloc) && AStar.Instance.TryGetGrid(aloc.x, aloc.y, aloc.z - 1))
             {
-                openSet.Remove(loc);
-                openList.Remove(loc);
+                fill.Add(aloc);
 
-                if (AStar.Instance.GetGrid(loc) && AStar.Instance.TryGetGrid(loc.x, loc.y, loc.z -1))
+                foreach (Vector3Int location in xyTable)
                 {
+                    Vector3Int loc = aloc + location;
+
                     fill.AddRange(FloodFillXY(loc));
-                    fill.Add(loc);
                 }
             }
         }
@@ -421,18 +457,19 @@ public class Chunk
     { 
         List<Vector3Int> fill = new List<Vector3Int>();
 
-        foreach (Vector3Int location in xzTable) 
+        if (openSet.Contains(aloc))
         {
-            Vector3Int loc = aloc + location;
+            openSet.Remove(aloc);
+            openList.Remove(aloc);
 
-            if (openSet.Contains(loc))
+            if (AStar.Instance.GetGrid(aloc) && AStar.Instance.TryGetGrid(aloc.x, aloc.y - 1, aloc.z))
             {
-                openSet.Remove(loc);
-                openList.Remove(loc);
+                fill.Add(aloc);
 
-                if (AStar.Instance.GetGrid(loc) && AStar.Instance.TryGetGrid(loc.x, loc.y - 1, loc.z))
-                { 
-                    fill.Add(loc);
+                foreach (Vector3Int location in xzTable)
+                {
+                    Vector3Int loc = aloc + location;
+
                     fill.AddRange(FloodFillXZ(loc));
                 }
             }
@@ -445,18 +482,19 @@ public class Chunk
     {
         List<Vector3Int> fill = new List<Vector3Int>();
 
-        foreach (Vector3Int location in yzTable)
+        if (openSet.Contains(aloc))
         {
-            Vector3Int loc = aloc + location;
+            openSet.Remove(aloc);
+            openList.Remove(aloc);
 
-            if (openSet.Contains(loc))
+            if (AStar.Instance.GetGrid(aloc) && AStar.Instance.TryGetGrid(aloc.x - 1, aloc.y, aloc.z))
             {
-                openSet.Remove(loc);
-                openList.Remove(loc);
+                fill.Add(aloc);
 
-                if (AStar.Instance.GetGrid(loc) && AStar.Instance.TryGetGrid(loc.x - 1, loc.y, loc.z))
+                foreach (Vector3Int location in yzTable)
                 {
-                    fill.Add(loc);
+                    Vector3Int loc = aloc + location;
+
                     fill.AddRange(FloodFillYZ(loc));
                 }
             }

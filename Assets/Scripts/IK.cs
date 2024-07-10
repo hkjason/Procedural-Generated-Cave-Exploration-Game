@@ -16,7 +16,6 @@ public class IK : MonoBehaviour
     private Coroutine[] coroutines;
     public Transform bodyRayCastPoint;
 
-    public AStar aStar;
     public Player player;
 
     public Rigidbody spiderRb;
@@ -47,14 +46,15 @@ public class IK : MonoBehaviour
     }
     private void OnEnable()
     {
+        transform.rotation = Quaternion.LookRotation(-CaveGenerator.Instance.spiderHit.normal, Vector3.up);
         transform.position = CaveGenerator.Instance.spiderHit.point + CaveGenerator.Instance.spiderHit.normal * groundDistance;
     }
+    
 
-    // Update is called once per frame
     void FixedUpdate()
     {
-        //Vector3 targetPoss = Vector3.MoveTowards(transform.position, transform.position + transform.forward, Time.fixedDeltaTime * speed);
-        //transform.position = targetPoss;
+
+
 
         Vector3 raycastOrigin = bodyRayCastPoint.position;
 
@@ -64,9 +64,28 @@ public class IK : MonoBehaviour
 
         if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 2f, groundLayer))
         {
+
+            
             Gizmos.color = Color.blue;
             Debug.DrawRay(raycastOrigin, raycastDirection);
 
+            Vector3Int playerPos = player.GetCurrentGridPos();
+            Vector3 hitVec = hit.point * 4;
+            Vector3Int spiderGridPos = new Vector3Int(Mathf.FloorToInt(hitVec.x), Mathf.FloorToInt(hitVec.y), Mathf.FloorToInt(hitVec.z));
+
+            List<Vector3Int> path = AStar.Instance.HPASPathFind(spiderGridPos, playerPos);
+
+            Vector3Int dirInt = (path[1] - path[0]);
+            Vector3 direction = new Vector3(dirInt.x, dirInt.y, dirInt.z).normalized;
+
+            Quaternion spiderRotation = Quaternion.LookRotation(direction, hit.normal);
+
+            transform.rotation = spiderRotation;
+
+            transform.position += transform.forward * speed * Time.fixedDeltaTime;
+            
+
+            /*
             if (lastHit.collider == null)
             {
                 lastHit = hit;
@@ -82,14 +101,6 @@ public class IK : MonoBehaviour
                     Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
                     rotCoroutine = StartCoroutine(LerpRotation(transform.rotation, targetRotation));
 
-                    //Quaternion lerpRotationTest = Quaternion.Lerp(transform.rotation, targetRotation, rotationRatio);
-                    //transform.rotation = targetRotation;
-
-                    
-                    //Vector3 targetPosition = hit.point + hit.normal * groundDistance;
-
-                    //transform.position = Vector3.Lerp(transform.position, targetPosition, positionRatio);
-
                     Debug.Log("Normal Change");
                     
                 }
@@ -104,19 +115,13 @@ public class IK : MonoBehaviour
                 }
                 
             }
+            */
 
         }
         
-        
+        /*
         Vector3 posInGrid = hit.point * 4;
         
-        /*
-        List<Vector3Int> path= aStar.PathFind(new Vector3Int(Mathf.FloorToInt(posInGrid.x), Mathf.FloorToInt(posInGrid.y), Mathf.FloorToInt(posInGrid.z))
-            , player.GetCurrentGridPos());
-
-        Vector3 newPosition = Vector3.MoveTowards(transform.position, path[1], 5 * Time.fixedDeltaTime);
-        spiderRb.MovePosition(newPosition);
-        */
 
 
         Vector3 hitPos;
@@ -193,7 +198,10 @@ public class IK : MonoBehaviour
             Vector3 point2 = CalculateIK(spiderLeg[idx].legPoints[1], spiderLeg[idx].legPoints[2], spiderLeg[idx].distance[1], point, false, 1);
             CalculateIK(spiderLeg[idx].legPoints[0], spiderLeg[idx].legPoints[1], spiderLeg[idx].distance[0], point2, false, 0);
         }
+        */
+        
     }
+
 
     void InitializePositions(int idx)
     {

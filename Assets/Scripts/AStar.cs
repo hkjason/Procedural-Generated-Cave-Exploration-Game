@@ -13,9 +13,15 @@ public class AStar : MonoBehaviour
 
     List<Vector3Int> path;
 
+    List<Vector3Int> path1;
+
     public LayerMask groundLayer;
 
     public Player player;
+
+    public int testCount = 0;
+
+    List<Vector3Int> chunkLocList = new List<Vector3Int>();
 
     public static AStar Instance { get; private set; }
 
@@ -47,14 +53,74 @@ public class AStar : MonoBehaviour
         Gizmos.DrawSphere(new Vector3Int(1, 1, 1)/4, 0.3f);
         Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3)/4, 0.3f);
 
+        /*
         Gizmos.color = UnityEngine.Color.cyan;
+        if (chunkLocList != null && chunkLocList.Count > 0)
+        {
+            foreach (Vector3Int val in chunkLocList)
+            {
+                List<Vector3Int> cEP = ChunkManager.Instance.chunkDic[val].exitPoints;
+
+                foreach (Vector3Int loc in cEP)
+                {
+                    Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
+                }
+            }
+        }*/
+
+        Gizmos.color = UnityEngine.Color.cyan;
+        if (path1 != null && path1.Count > 0)
+        {
+            foreach (var p in path1)
+            {
+                Gizmos.DrawSphere(new Vector3(p.x / 4f, p.y / 4f, p.z / 4f), 0.1f);
+            }
+        }
+        Gizmos.DrawRay(new Vector3(20.4239998f, 59.4669991f, 54.6850014f), Vector3.down);
+        Gizmos.color = UnityEngine.Color.yellow;
+        Gizmos.DrawSphere(new Vector3Int(1, 1, 1) / 4, 0.3f);
+        Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3) / 4, 0.3f);
 
     }
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Alpha8))
+        {
+           // AStar.Instance.PathFindBase(new Vector3Int(116,256,255), new Vector3Int(116,256,256), new Vector3Int (112), out int cost);
+        }
+
         if (Input.GetKeyDown(KeyCode.Alpha9))
         {
+            Chunk c1 = ChunkManager.Instance.chunkDic[new Vector3Int(80, 232, 216)];
+            Chunk c2 = ChunkManager.Instance.chunkDic[new Vector3Int(72, 232, 216)];
+
+            string pStr = new string("");
+            for (int aa = 7; aa >= 0; aa--)
+            {
+                for (int bb = 0; bb < 8; bb++)
+                {
+                    pStr += Convert.ToInt32(GetGrid(new Vector3Int(80, 232 + aa, 216 + bb)));
+                }
+                pStr += "\n";
+            }
+
+            string pStr1 = new string("");
+            for (int aa = 7; aa >= 0; aa--)
+            {
+                for (int bb = 0; bb < 8; bb++)
+                {
+                    pStr1 += Convert.ToInt32(GetGrid(new Vector3Int(79, 232 + aa, 216 + bb)));
+                }
+                pStr1 += "\n";
+            }
+
+            Debug.Log(pStr);
+            Debug.Log(pStr1);
+
+
+
+
             Vector3 raycastOrigin = new Vector3(20.4239998f, 59.4669991f, 54.6850014f);
 
             Vector3 raycastDirection = Vector3.down;
@@ -77,9 +143,26 @@ public class AStar : MonoBehaviour
 
             Debug.Log("playerGrid:" + pointGrid[playerPos.x, playerPos.y, playerPos.z]);
 
-            path = HPASPathFind(debugVec, playerPos);
-            //path = PathFind(debugVec, playerPos);
+            float pfTime = Time.realtimeSinceStartup;
+            path = PathFind(debugVec, playerPos);
+            Debug.Log("pathfindtime: " + (Time.realtimeSinceStartup - pfTime));
             Debug.Log(path.Count);
+
+            chunkLocList = new List<Vector3Int>();
+            foreach (Vector3Int aaa in path)
+            {
+                Vector3Int chunkPos = GetChunkPos(aaa);
+                if (!chunkLocList.Contains(chunkPos))
+                {
+                    chunkLocList.Add(chunkPos);
+                };
+            }
+
+            float hpfTime = Time.realtimeSinceStartup;
+            path1 = HPASPathFind(debugVec, playerPos);
+            Debug.Log("Hpathfindtime: " + (Time.realtimeSinceStartup - hpfTime));
+            Debug.Log(path1.Count);
+
         }
     }
 
@@ -130,6 +213,7 @@ public class AStar : MonoBehaviour
         foreach (Vector3Int exit in cm.chunkDic[startChunkPos].exitPoints)
         {
             int cost;
+
             if (PathFindBase(startLoc, exit, startChunkPos, out cost) != null)
             {
                 AStarNode node = new AStarNode(exit);
@@ -140,30 +224,22 @@ public class AStar : MonoBehaviour
                 dict.Add(exit, node);
             }
         }
-
         Vector3Int endChunkPos = GetChunkPos(endLoc);
-        foreach (Vector3Int exit in cm.chunkDic[GetChunkPos(endLoc)].exitPoints)
-        { 
-            
-        }
+
+        List<Vector3Int> testList = new List<Vector3Int>();
+        int count = 0;
 
         while (openList.Count > 0)
         {
+            count++;
             AStarNode currentNode = openList.Dequeue();
+            testList.Add(currentNode.loc);
             Vector3Int currentChunkLoc = GetChunkPos(currentNode.loc);
             Chunk currentChunk = cm.chunkDic[currentChunkLoc];
 
-            if (currentChunkLoc == endChunkPos)
+            if (chunkLocList.Contains(currentChunkLoc))
             {
-                List<Vector3Int> result;
-                result = PathFindBase(currentNode.loc, endLoc, currentChunkLoc, out int cost);
-                if (result != null)
-                { 
-                    result.AddRange(BuildPathH(startChunkPos, currentNode));
-                    result.AddRange(PathFindBase(startLoc, result[result.Count - 1], startChunkPos, out cost));
-                    result.Reverse();
-                    return result;
-                }
+                chunkLocList.Remove(currentChunkLoc);
             }
 
             closeList.Add(currentNode.loc);
@@ -171,43 +247,132 @@ public class AStar : MonoBehaviour
 
             for (int x = 0; x < currentChunk.exitDic[currentNode.loc].Count; x += 2)
             {
+
                 Vector3Int neighbourChunkLoc = currentChunk.exitDic[currentNode.loc][x];
                 Vector3Int neighbourLocation = currentChunk.exitDic[currentNode.loc][x + 1];
+
 
                 if (closeList.Contains(neighbourLocation))
                 {
                     continue;
                 }
+                
+                AStarNode nextNode;
+
+                
+                if (dict.TryGetValue(neighbourLocation, out nextNode))
+                {
+                    if (currentNode.loc == new Vector3Int(116, 256, 256))
+                    {
+                        Debug.Log("PartAa");
+                        Debug.Log("NextNode" + nextNode.loc);
+
+                        foreach 
+                    }
+
+                    int nodeCost = currentNode.gCost + 100;
+                    if (nodeCost < nextNode.gCost)
+                    {
+                        nextNode.gCost = nodeCost;
+                        nextNode.parentNode = currentNode;
+                        openList.UpdateItem(nextNode);
+                    }
+                }
+                else
+                {
+                    nextNode = new AStarNode(neighbourLocation);
+
+                    if (currentNode.loc == new Vector3Int(116, 256, 256))
+                    {
+                        Debug.Log("PartAb");
+                        Debug.Log("NextNode" + nextNode.loc);
+                    }
+
+                    nextNode.gCost = currentNode.gCost + 100;
+                    nextNode.hCost = CalDist(nextNode.loc, endLoc);
+                    nextNode.parentNode = currentNode;
+                    dict.Add(neighbourLocation, nextNode);
+                }
+
+                closeList.Add(neighbourLocation);
+
+                if (neighbourChunkLoc == endChunkPos)
+                {
+                    List<Vector3Int> result;
+                    result = PathFindBase(neighbourLocation, endLoc, neighbourChunkLoc, out int cost);
+                    if (result != null)
+                    {
+                        Vector3Int startExit;
+
+                        int countt = 0;
+                        AStarNode testNode = nextNode;
+                        
+                        /*
+                        while (testNode.parentNode != null)
+                        {
+
+                            Debug.Log(countt + "" + testNode.loc);
+                            testNode = testNode.parentNode;
+                            countt++;
+                        }*/
+                        
+
+
+                        result.AddRange(BuildPathH(nextNode, out startExit));
+                        result.AddRange(PathFindBase(startLoc, startExit, startChunkPos, out cost));
+                        result.Reverse();
+                        return result;
+                    }
+                }
+
+
+
 
                 Chunk neighbourChunk = cm.chunkDic[neighbourChunkLoc];
+
 
                 for (int y = 0; y < neighbourChunk.exitPoints.Count; y++)
                 {
                     Vector3Int connectedExit = neighbourChunk.exitPoints[y];
 
-                    if (neighbourLocation == connectedExit)
+                    if (closeList.Contains(connectedExit))
+                    {
                         continue;
+                    }
 
                     int cost;
+
                     if (neighbourChunk.costDic.TryGetValue((neighbourLocation, connectedExit), out cost))
                     {
                         AStarNode neighbourNode;
                         if (dict.TryGetValue(connectedExit, out neighbourNode))
                         {
-                            int nodeCost = currentNode.gCost + 100;
+                            if (nextNode.loc == new Vector3Int(116, 256, 256))
+                            {
+                                Debug.Log("PartBa");
+                                Debug.Log("NextNode" + neighbourNode.loc);
+                            }
+
+                            int nodeCost = nextNode.gCost + cost;
                             if (nodeCost < neighbourNode.gCost)
                             {
                                 neighbourNode.gCost = nodeCost;
-                                neighbourNode.parentNode = currentNode;
+                                neighbourNode.parentNode = nextNode;
                                 openList.UpdateItem(neighbourNode);
                             }
                         }
                         else
                         {
+                            if (nextNode.loc == new Vector3Int(116, 256, 256))
+                            {
+                                Debug.Log("PartBb");
+                                Debug.Log("NextNode" + neighbourNode.loc);
+                            }
+
                             neighbourNode = new AStarNode(connectedExit);
-                            neighbourNode.gCost = currentNode.gCost + 100;
+                            neighbourNode.gCost = currentNode.gCost + cost;
                             neighbourNode.hCost = CalDist(neighbourNode.loc, endLoc);
-                            neighbourNode.parentNode = currentNode;
+                            neighbourNode.parentNode = nextNode;
                             openList.Enqueue(neighbourNode);
                             dict.Add(connectedExit, neighbourNode);
                         }
@@ -215,6 +380,7 @@ public class AStar : MonoBehaviour
                 }
             }
         }
+
         return null;
     }
 
@@ -363,20 +529,36 @@ public class AStar : MonoBehaviour
         return null;
     }
 
-    List<Vector3Int> BuildPathH(Vector3Int startChunkLoc, AStarNode endNode)
+    List<Vector3Int> BuildPathH(AStarNode endNode, out Vector3Int startExit)
     {
         List<Vector3Int> paths = new List<Vector3Int>();
 
+        Vector3Int lastNodeLoc;
         AStarNode currentNode = endNode;
-        while (currentNode.loc != startChunkLoc)
+
+        int counter = 0;
+        while (currentNode.parentNode != null)
         {
-            paths.Add(currentNode.loc);
+            //paths.Add(currentNode.loc);
+
+            lastNodeLoc = currentNode.loc;
             currentNode = currentNode.parentNode;
+
+            if (counter % 2 == 1)
+            { 
+                Chunk c = ChunkManager.Instance.chunkDic[GetChunkPos(lastNodeLoc)];
+
+                paths.AddRange(c.pathDic[(lastNodeLoc, currentNode.loc)]);
+            }
+
+            counter++;
         }
 
-        paths.Add(currentNode.loc);
+        startExit = currentNode.loc;
 
-        paths.Reverse();
+        //paths.Add(currentNode.loc);
+
+        //paths.Reverse();
 
         return paths;
     }

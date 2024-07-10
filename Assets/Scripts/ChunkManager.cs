@@ -88,6 +88,43 @@ public class ChunkManager : MonoBehaviour
         }
         Debug.Log("c" + count);
         */
+        Gizmos.color = UnityEngine.Color.red;
+
+        List<Chunk> chunkkList = new List<Chunk>();
+        chunkkList.Add(chunkDic[new Vector3Int(160, 152, 160)]);
+        chunkkList.Add(chunkDic[new Vector3Int(160, 144, 160)]);
+        foreach (Chunk chunkk in chunkkList)
+        {
+            foreach (Vector3Int loc in chunkk.exitPoints)
+            {
+                Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
+            }
+
+            Gizmos.color = UnityEngine.Color.green;
+        }
+        //Chunk chunkk = chunkDic[new Vector3Int(80, 232, 216)];
+
+
+        /*
+        Vector3Int draw1 = chunkk.exitPoints[0];
+        Vector3Int draw2 = chunkk.exitPoints[1];
+
+        List<Vector3Int> cd = chunkk.pathDic[(draw1, draw2)];
+
+        foreach (Vector3Int loc in cd)
+        {
+            Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.05f);
+        }*/
+
+        var locc = new Vector3Int(83, 236, 208);
+        Gizmos.DrawSphere(new Vector3(locc.x / 4f, locc.y / 4f, locc.z / 4f), 0.1f);
+        var locc1 = new Vector3Int(83, 236, 215);
+        Gizmos.DrawSphere(new Vector3(locc1.x / 4f, locc1.y / 4f, locc1.z / 4f), 0.1f);
+
+        foreach (var locd in chunkDic[new Vector3Int(80, 232, 208)].pathDic[(locc, locc1)])
+        {
+            Gizmos.DrawSphere(new Vector3(locd.x / 4f, locd.y / 4f, locd.z / 4f), 0.1f);
+        }
     }
 
 
@@ -324,7 +361,7 @@ public class ChunkManager : MonoBehaviour
                                 Vector3Int chunkLoc = new Vector3Int(iterX + i * 8, iterY + j * 8, iterZ + k * 8);
                                 Chunk chunk = chunkDic[chunkLoc];
                                 chunk.BuildChunk(mesh);
-                                //chunk.BuildExit();
+                                chunk.BuildExit();
                             }
                         }
                     }

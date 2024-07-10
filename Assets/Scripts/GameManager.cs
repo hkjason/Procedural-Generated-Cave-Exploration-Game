@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
             //player.Spawn(24, 44, 46);
-            player.Spawn(CaveGenerator.Instance.startingPt.x / 4, CaveGenerator.Instance.startingPt.y / 4, CaveGenerator.Instance.startingPt.z / 4);
+            player.Spawn(caveGenerator.startingPt.x / 4, caveGenerator.startingPt.y / 4, caveGenerator.startingPt.z / 4);
         }
     }
 }

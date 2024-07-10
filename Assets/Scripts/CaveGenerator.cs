@@ -55,6 +55,14 @@ public class CaveGenerator : MonoBehaviour
         Gizmos.DrawSphere(new Vector3(width, 0, height) / 4, 1);
         Gizmos.DrawSphere(new Vector3(width, depth, 0)/ 4, 1);
         Gizmos.DrawSphere(new Vector3(width, depth, height)/4, 1);
+
+        Gizmos.color = Color.blue;
+
+        Gizmos.DrawSphere(orePoints[orePoints.Count-1], 0.05f);
+        Gizmos.DrawSphere(spiderHit.point, 0.02f);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(spiderHit.point, spiderHit.point + spiderHit.normal * 0.5f);
     }
 
 
