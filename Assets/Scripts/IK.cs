@@ -21,7 +21,7 @@ public class IK : MonoBehaviour
     public Rigidbody spiderRb;
 
     public float groundDistance;
-    [Range(0f,1f)]
+    [Range(0f, 1f)]
     public float rotationRatio;
     [Range(0f, 1f)]
     public float positionRatio;
@@ -33,12 +33,21 @@ public class IK : MonoBehaviour
 
     private Coroutine posCoroutine;
     private Coroutine rotCoroutine;
+
+    public float upDist = 0.4f;
+    public float coolDown = 0.5f;
+    private bool onCD = false;
+    RaycastHit hit;
+
+    float currTime;
+    bool normalCD = false;
+
     void Start()
     {
         currentIdx = 0;
         coroutines = new Coroutine[4];
 
-        foreach (var leg in spiderLeg) 
+        foreach (var leg in spiderLeg)
         {
             leg.Setup();
             leg.legPoint = leg.legPoints[3].position;
@@ -47,142 +56,379 @@ public class IK : MonoBehaviour
     private void OnEnable()
     {
         transform.rotation = Quaternion.LookRotation(-CaveGenerator.Instance.spiderHit.normal, Vector3.up);
+        Debug.Log("spiderHIt: " + CaveGenerator.Instance.spiderHit.point);
+
         transform.position = CaveGenerator.Instance.spiderHit.point + CaveGenerator.Instance.spiderHit.normal * groundDistance;
-    }
-    
 
-    void FixedUpdate()
-    {
-
-
+        currTime = -10000;
 
         Vector3 raycastOrigin = bodyRayCastPoint.position;
 
         Vector3 raycastDirection = transform.up * -1;
+        if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 2f, groundLayer))
+        {
+            if (lastHit.collider == null)
+            {
+                lastHit = hit;
+            }
+        }
+    }
 
-        RaycastHit hit;
+    void FixedUpdate()
+    {
+        UpdateSpider();
+
+        //UpdateSpiderIK();
+
+    }
+
+    void UpdateSpider()
+    {
+        Vector3 raycastOrigin = bodyRayCastPoint.position;
+
+        Vector3 raycastDirection = transform.up * -1;
 
         if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 2f, groundLayer))
         {
+            if (lastHit.collider == null)
+            {
+                lastHit = hit;
+            }
 
-            
-            Gizmos.color = Color.blue;
-            Debug.DrawRay(raycastOrigin, raycastDirection);
+            float distDiff = upDist - (hit.point - raycastOrigin).magnitude;
+
+            Vector3 moveTo = hit.normal * (upDist - (hit.point - raycastOrigin).magnitude);
+
+            if (Mathf.Abs(distDiff) > 0.01f)
+            {
+                transform.position += moveTo;
+            }
+
+            Debug.DrawRay(raycastOrigin, raycastDirection, Color.blue);
+
+            if (hit.normal != lastHit.normal)
+            {
+                if (Time.realtimeSinceStartup - currTime < coolDown)
+                {
+                    hit = lastHit;
+                }
+                else
+                { 
+                    currTime = Time.realtimeSinceStartup;
+                    lastHit = hit;
+                }
+            }
+
 
             Vector3Int playerPos = player.GetCurrentGridPos();
             Vector3 hitVec = hit.point * 4;
             Vector3Int spiderGridPos = new Vector3Int(Mathf.FloorToInt(hitVec.x), Mathf.FloorToInt(hitVec.y), Mathf.FloorToInt(hitVec.z));
 
+            float currTimee = Time.realtimeSinceStartup;
             List<Vector3Int> path = AStar.Instance.HPASPathFind(spiderGridPos, playerPos);
+            Debug.Log("AstarTime:" + (Time.realtimeSinceStartup - currTimee));
+
 
             Vector3Int dirInt = (path[1] - path[0]);
             Vector3 direction = new Vector3(dirInt.x, dirInt.y, dirInt.z).normalized;
+            //Vector3 direction = transform.forward;
+            //transform.rotation = spiderRotation;
 
-            Quaternion spiderRotation = Quaternion.LookRotation(direction, hit.normal);
 
-            transform.rotation = spiderRotation;
 
-            transform.position += transform.forward * speed * Time.fixedDeltaTime;
-            
-
-            /*
-            if (lastHit.collider == null)
+            if (hit.normal != Vector3.zero)
             {
-                lastHit = hit;
-            }
-            else
-            {
-                if ((hit.normal - lastHit.normal).magnitude > 0.01f)
+                Vector3 slopeAdjustedDirection = Vector3.ProjectOnPlane(direction, hit.normal).normalized;
+
+                if (posCoroutine != null)
                 {
-                    if (rotCoroutine != null)
-                    {
-                        StopCoroutine(rotCoroutine);
-                    }
-                    Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
-                    rotCoroutine = StartCoroutine(LerpRotation(transform.rotation, targetRotation));
-
-                    Debug.Log("Normal Change");
-                    
+                    StopCoroutine(posCoroutine);
                 }
-                else
+                posCoroutine = StartCoroutine(LerpPosition(transform.position, transform.position + slopeAdjustedDirection * speed));
+
+                /*if (Physics.Raycast(raycastOrigin, angledDirection, out RaycastHit rhit, 2f, groundLayer))
                 {
+                    Debug.DrawRay(raycastOrigin, angledDirection, Color.green);
+                }*/
 
-                    
-                    //Vector3 targetPosition = hit.point + hit.normal * groundDistance;
 
-                    //transform.position = Vector3.Lerp(transform.position, targetPosition, positionRatio);
+                //transform.position += slopeAdjustedDirection * speed * Time.fixedDeltaTime;
 
+                Debug.DrawRay(transform.position, slopeAdjustedDirection, Color.red);
+
+                Quaternion spiderRotation = Quaternion.LookRotation(slopeAdjustedDirection, hit.normal);
+
+                if (rotCoroutine != null)
+                {
+                    StopCoroutine(rotCoroutine);
                 }
-                
+                rotCoroutine = StartCoroutine(LerpRotation(transform.rotation, spiderRotation));
             }
-            */
 
         }
-        
-        /*
-        Vector3 posInGrid = hit.point * 4;
-        
+    }
 
-
+    void UpdateSpiderIK()
+    {
         Vector3 hitPos;
         Vector3 hitPos1;
+        bool result;
+        bool result1;
         switch (currentIdx)
         {
             case 0:
-                hitPos = RayCastToGround(0);
-                hitPos1 = RayCastToGround(7);
-                if (Vector3.Distance(hitPos, spiderLeg[0].legPoints[3].position) > walkDistance
-                 || Vector3.Distance(hitPos1, spiderLeg[7].legPoints[3].position) > walkDistance)
+                result = RayCastToGround(0, out hitPos);
+                result1 = RayCastToGround(7, out hitPos1);
+
+                if (result && result1)
                 {
-                    if (coroutines[currentIdx] != null)
+                    if (Vector3.Distance(hitPos, spiderLeg[0].legPoints[3].position) > walkDistance
+                    || Vector3.Distance(hitPos1, spiderLeg[7].legPoints[3].position) > walkDistance)
                     {
-                        StopCoroutine(coroutines[currentIdx]);
+                        if (coroutines[currentIdx] != null)
+                        {
+                            StopCoroutine(coroutines[currentIdx]);
+                        }
+                        coroutines[currentIdx] = StartCoroutine(LerpDistination(0, 7, hitPos, hitPos1));
                     }
-                    coroutines[currentIdx] = StartCoroutine(LerpDistination(0, 7, hitPos, hitPos1));
+                }
+                else
+                {
+                    if (result == false && result1 == false)
+                    {
+                        if (Vector3.Distance(spiderLeg[0].legStartPos.position, spiderLeg[0].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[7].legStartPos.position, spiderLeg[7].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(0, 7, spiderLeg[0].legStartPos.position, spiderLeg[7].legStartPos.position));
+                        }
+ 
+                    }
+                    else if (result == true && result1 == false)
+                    {
+                        if (Vector3.Distance(hitPos, spiderLeg[0].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[7].legStartPos.position, spiderLeg[7].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(0, 7, hitPos, spiderLeg[7].legStartPos.position));
+
+
+                        }
+                        
+                    }
+                    else if (result == false && result1 == true)
+                    {
+                        if (Vector3.Distance(spiderLeg[0].legStartPos.position, spiderLeg[0].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(hitPos1, spiderLeg[7].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(0, 7, spiderLeg[0].legStartPos.position, hitPos1));
+
+
+                        }
+                    }
                 }
                 currentIdx = 1;
                 break;
             case 1:
-                hitPos = RayCastToGround(1);
-                hitPos1 = RayCastToGround(6);
-                if (Vector3.Distance(hitPos, spiderLeg[1].legPoints[3].position) > walkDistance
-                 || Vector3.Distance(hitPos1, spiderLeg[6].legPoints[3].position) > walkDistance)
+                result = RayCastToGround(1, out hitPos);
+                result1 = RayCastToGround(6, out hitPos1);
+
+                if (result && result1)
                 {
-                    if (coroutines[currentIdx] != null)
+                    if (Vector3.Distance(hitPos, spiderLeg[1].legPoints[3].position) > walkDistance
+                    || Vector3.Distance(hitPos1, spiderLeg[6].legPoints[3].position) > walkDistance)
                     {
-                        StopCoroutine(coroutines[currentIdx]);
+                        if (coroutines[currentIdx] != null)
+                        {
+                            StopCoroutine(coroutines[currentIdx]);
+                        }
+                        coroutines[currentIdx] = StartCoroutine(LerpDistination(1, 6, hitPos, hitPos1));
+
                     }
-                    coroutines[currentIdx] = StartCoroutine(LerpDistination(1, 6, hitPos, hitPos1));
+                }
+                else
+                {
+                    if (result == false && result1 == false)
+                    {
+                        if (Vector3.Distance(spiderLeg[1].legStartPos.position, spiderLeg[1].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[6].legStartPos.position, spiderLeg[6].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(1, 6, spiderLeg[1].legStartPos.position, spiderLeg[6].legStartPos.position));
+
+                        }
+
+                    }
+                    else if (result == true && result1 == false)
+                    {
+                        if (Vector3.Distance(hitPos, spiderLeg[1].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[6].legStartPos.position, spiderLeg[6].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(1, 6, hitPos, spiderLeg[6].legStartPos.position));
+
+                        }
+
+                    }
+                    else if (result == false && result1 == true)
+                    {
+                        if (Vector3.Distance(spiderLeg[1].legStartPos.position, spiderLeg[1].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(hitPos1, spiderLeg[6].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(1, 6, spiderLeg[1].legStartPos.position, hitPos1));
+
+                        }
+                    }
                 }
                 currentIdx = 2;
                 break;
             case 2:
-                hitPos = RayCastToGround(2);
-                hitPos1 = RayCastToGround(4);
-                if (Vector3.Distance(hitPos, spiderLeg[2].legPoints[3].position) > walkDistance
-                 || Vector3.Distance(hitPos1, spiderLeg[4].legPoints[3].position) > walkDistance)
+                result = RayCastToGround(2, out hitPos);
+                result1 = RayCastToGround(4, out hitPos1);
+
+                if (result && result1)
                 {
-                    if (coroutines[currentIdx] != null)
+                    if (Vector3.Distance(hitPos, spiderLeg[2].legPoints[3].position) > walkDistance
+                    || Vector3.Distance(hitPos1, spiderLeg[4].legPoints[3].position) > walkDistance)
                     {
-                        StopCoroutine(coroutines[currentIdx]);
+                        if (coroutines[currentIdx] != null)
+                        {
+                            StopCoroutine(coroutines[currentIdx]);
+                        }
+                        coroutines[currentIdx] = StartCoroutine(LerpDistination(2, 4, hitPos, hitPos1));
+
                     }
-                    coroutines[currentIdx] = StartCoroutine(LerpDistination(2, 4, hitPos, hitPos1));
+                }
+                else
+                {
+                    if (result == false && result1 == false)
+                    {
+                        if (Vector3.Distance(spiderLeg[2].legStartPos.position, spiderLeg[2].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[4].legStartPos.position, spiderLeg[4].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(2, 4, spiderLeg[2].legStartPos.position, spiderLeg[4].legStartPos.position));
+
+                        }
+
+                    }
+                    else if (result == true && result1 == false)
+                    {
+                        if (Vector3.Distance(hitPos, spiderLeg[2].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[4].legStartPos.position, spiderLeg[4].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(2, 4, hitPos, spiderLeg[4].legStartPos.position));
+                        }
+
+                    }
+                    else if (result == false && result1 == true)
+                    {
+                        if (Vector3.Distance(spiderLeg[2].legStartPos.position, spiderLeg[2].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(hitPos1, spiderLeg[4].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(2, 4, spiderLeg[2].legStartPos.position, hitPos1));
+
+                        }
+                    }
                 }
                 currentIdx = 3;
                 break;
             case 3:
-                hitPos = RayCastToGround(3);
-                hitPos1 = RayCastToGround(5);
-                if (Vector3.Distance(hitPos, spiderLeg[3].legPoints[3].position) > walkDistance
-                 || Vector3.Distance(hitPos1, spiderLeg[5].legPoints[3].position) > walkDistance)
+                result = RayCastToGround(3, out hitPos);
+                result1 = RayCastToGround(5, out hitPos1);
+
+                if (result && result1)
                 {
-                    if (coroutines[currentIdx] != null)
+                    if (Vector3.Distance(hitPos, spiderLeg[3].legPoints[3].position) > walkDistance
+                    || Vector3.Distance(hitPos1, spiderLeg[5].legPoints[3].position) > walkDistance)
                     {
-                        StopCoroutine(coroutines[currentIdx]);
+                        if (coroutines[currentIdx] != null)
+                        {
+                            StopCoroutine(coroutines[currentIdx]);
+                        }
+                        coroutines[currentIdx] = StartCoroutine(LerpDistination(3, 5, hitPos, hitPos1));
+
                     }
-                    coroutines[currentIdx] = StartCoroutine(LerpDistination(3, 5, hitPos, hitPos1));
                 }
-                currentIdx = 0;
+                else
+                {
+                    if (result == false && result1 == false)
+                    {
+                        if (Vector3.Distance(spiderLeg[3].legStartPos.position, spiderLeg[3].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[5].legStartPos.position, spiderLeg[5].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(3, 5, spiderLeg[3].legStartPos.position, spiderLeg[5].legStartPos.position));
+
+
+                        }
+
+                    }
+                    else if (result == true && result1 == false)
+                    {
+                        if (Vector3.Distance(hitPos, spiderLeg[3].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(spiderLeg[5].legStartPos.position, spiderLeg[5].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(3, 5, hitPos, spiderLeg[5].legStartPos.position));
+
+
+                        }
+
+                    }
+                    else if (result == false && result1 == true)
+                    {
+                        if (Vector3.Distance(spiderLeg[3].legStartPos.position, spiderLeg[3].legPoints[3].position) > walkDistance
+                        || Vector3.Distance(hitPos1, spiderLeg[5].legPoints[3].position) > walkDistance)
+                        {
+                            if (coroutines[currentIdx] != null)
+                            {
+                                StopCoroutine(coroutines[currentIdx]);
+                            }
+                            coroutines[currentIdx] = StartCoroutine(LerpDistination(3, 5, spiderLeg[3].legStartPos.position, hitPos1));
+
+
+                        }
+                    }
+                    currentIdx = 0;
+                }
                 break;
             default:
                 currentIdx = 0;
@@ -198,10 +444,8 @@ public class IK : MonoBehaviour
             Vector3 point2 = CalculateIK(spiderLeg[idx].legPoints[1], spiderLeg[idx].legPoints[2], spiderLeg[idx].distance[1], point, false, 1);
             CalculateIK(spiderLeg[idx].legPoints[0], spiderLeg[idx].legPoints[1], spiderLeg[idx].distance[0], point2, false, 0);
         }
-        */
-        
-    }
 
+    }
 
     void InitializePositions(int idx)
     {
@@ -266,8 +510,8 @@ public class IK : MonoBehaviour
         }
     }
 
-    Vector3 RayCastToGround(int idx)
-    {
+   bool RayCastToGround(int idx, out Vector3 result)
+   {
         Vector3 raycastOrigin = spiderLeg[idx].rayCastPoint.position;
 
         Vector3 raycastDirection = spiderLeg[idx].rayCastPoint.transform.up * -1;
@@ -277,10 +521,11 @@ public class IK : MonoBehaviour
         if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 2f, groundLayer))
         {
             Debug.DrawRay(raycastOrigin, raycastDirection * hit.distance, Color.red);
-            return hit.point;
+            result = hit.point;
+            return true;
         }
-        Debug.Log("ERROR");
-        return Vector3.zero;
+        result = Vector3.zero;
+        return false;
     }
 
     IEnumerator LerpDistination(int idx1, int idx2, Vector3 targetPosition1, Vector3 targetPosition2)
@@ -338,6 +583,7 @@ public class SpiderLeg
     public Vector3 legPoint;
 
     public Transform rayCastPoint;
+    public Transform legStartPos;
 
     public void Setup()
     {

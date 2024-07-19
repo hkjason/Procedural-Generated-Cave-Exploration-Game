@@ -32,8 +32,8 @@ public class Player : MonoBehaviour
     private bool _isJumping = false;
 
     [Header("Equipment")]
-    [SerializeField] private Pickaxe _pickaxe;
-    [SerializeField] private Flaregun _flaregun;
+    [SerializeField] public Pickaxe pickaxe;
+    [SerializeField] public Flaregun flaregun;
     private Equipment _currentEquipment;
 
     [Header("Flare")]
@@ -41,9 +41,13 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform _flareSpawnPoint;
     [SerializeField] private Transform _flareThrowPoint;
     [SerializeField] private float _throwPower;
-    [SerializeField] private float _flareRegenTime;
     private float _flareCount;
     private float _flareSpawnTime;
+
+    private int[] flareRechargeArr = { 14, 13, 12, 11 };
+    private int[] flareDurationArr = { 25, 30, 35 };
+
+    private GameManager gameManager;
 
 
     void OnDrawGizmosSelected()
@@ -57,7 +61,7 @@ public class Player : MonoBehaviour
     {
         _terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(_terrainLayer.value, 2));
         Cursor.lockState = CursorLockMode.Locked;
-        _currentEquipment = _pickaxe;
+        _currentEquipment = pickaxe;
         _flareCount = 4;
     }
 
@@ -183,19 +187,19 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (_currentEquipment == _pickaxe) return;
+            if (_currentEquipment == pickaxe) return;
             if (_currentEquipment.isAnimating) return;
 
             _currentEquipment.Unequip();
-            _currentEquipment = _pickaxe;
+            _currentEquipment = pickaxe;
             _currentEquipment.Equip();
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            if (_currentEquipment == _flaregun) return;
+            if (_currentEquipment == flaregun) return;
             if (_currentEquipment.isAnimating) return;
             _currentEquipment.Unequip();
-            _currentEquipment = _flaregun;
+            _currentEquipment = flaregun;
             _currentEquipment.Equip();
         }
 
@@ -229,6 +233,8 @@ public class Player : MonoBehaviour
         Rigidbody flareInstance;
         flareInstance = Instantiate(_flare, _flareSpawnPoint.position, Quaternion.identity) as Rigidbody;
 
+        Destroy(flareInstance, flareDurationArr[gameManager.flareDurationLevel]);
+
         Vector3 heading = _flareThrowPoint.position - _flareSpawnPoint.position;
         float distance = heading.magnitude;
         Vector3 direction = heading / distance;
@@ -242,7 +248,7 @@ public class Player : MonoBehaviour
     {
         if (_flareCount < 4)
         {
-            if (Time.time - _flareSpawnTime >= _flareRegenTime)
+            if (Time.time - _flareSpawnTime >= flareRechargeArr[gameManager.flareRechargeLevel])
             {
                 _flareCount++;
                 _flareSpawnTime = Time.time;

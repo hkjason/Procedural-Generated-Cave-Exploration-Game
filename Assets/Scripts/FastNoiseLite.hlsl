@@ -2235,11 +2235,12 @@ static void _fnlSingleDomainWarpOpenSimplex2Gradient(int seed, float warpAmp, fl
 // Public API
 // ====================
 
-fnl_state fnlCreateState(int seed)
+fnl_state fnlCreateState(int seed, float frequency)
 {
     fnl_state newState;
     newState.seed = seed;
-    newState.frequency = 0.01f;
+    //newState.frequency = 0.01f;
+    newState.frequency = frequency;
     newState.noise_type = FNL_NOISE_OPENSIMPLEX2;
     newState.rotation_type_3d = FNL_ROTATION_NONE;
     newState.fractal_type = FNL_FRACTAL_NONE;

@@ -21,8 +21,6 @@ public class AStar : MonoBehaviour
 
     public int testCount = 0;
 
-    List<Vector3Int> chunkLocList = new List<Vector3Int>();
-
     public static AStar Instance { get; private set; }
 
     private void Awake()
@@ -35,6 +33,9 @@ public class AStar : MonoBehaviour
         {
             Instance = this;
         }
+
+        pointGrid = new bool[width, depth, height];
+        path = new List<Vector3Int>();
     }
 
     private void OnDrawGizmosSelected()
@@ -52,21 +53,6 @@ public class AStar : MonoBehaviour
         Gizmos.color = UnityEngine.Color.yellow;
         Gizmos.DrawSphere(new Vector3Int(1, 1, 1)/4, 0.3f);
         Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3)/4, 0.3f);
-
-        /*
-        Gizmos.color = UnityEngine.Color.cyan;
-        if (chunkLocList != null && chunkLocList.Count > 0)
-        {
-            foreach (Vector3Int val in chunkLocList)
-            {
-                List<Vector3Int> cEP = ChunkManager.Instance.chunkDic[val].exitPoints;
-
-                foreach (Vector3Int loc in cEP)
-                {
-                    Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
-                }
-            }
-        }*/
 
         Gizmos.color = UnityEngine.Color.cyan;
         if (path1 != null && path1.Count > 0)
@@ -148,47 +134,13 @@ public class AStar : MonoBehaviour
             Debug.Log("pathfindtime: " + (Time.realtimeSinceStartup - pfTime));
             Debug.Log(path.Count);
 
-            chunkLocList = new List<Vector3Int>();
-            foreach (Vector3Int aaa in path)
-            {
-                Vector3Int chunkPos = GetChunkPos(aaa);
-                if (!chunkLocList.Contains(chunkPos))
-                {
-                    chunkLocList.Add(chunkPos);
-                };
-            }
-
             float hpfTime = Time.realtimeSinceStartup;
             path1 = HPASPathFind(debugVec, playerPos);
             Debug.Log("Hpathfindtime: " + (Time.realtimeSinceStartup - hpfTime));
             Debug.Log(path1.Count);
-
         }
     }
 
-
-    private void Start()
-    {
-        pointGrid = new bool[width, depth, height];
-
-        /*
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < depth; j++)
-            {
-                for (int k = 0; k < height; k++)
-                {
-                    pointGrid[i, j, k] = true;
-                }
-            }
-        }
-        */
-
-        path = new List<Vector3Int>();
-
-        //path = PathFind(new Vector3Int(1, 1, 1), new Vector3Int(width / 2, depth / 4, height / 3));
-        //Debug.Log("pCOunt" + path.Count);
-    }
 
     public void UpdateGrid(int loc, bool val)
     {
@@ -226,21 +178,11 @@ public class AStar : MonoBehaviour
         }
         Vector3Int endChunkPos = GetChunkPos(endLoc);
 
-        List<Vector3Int> testList = new List<Vector3Int>();
-        int count = 0;
-
         while (openList.Count > 0)
         {
-            count++;
             AStarNode currentNode = openList.Dequeue();
-            testList.Add(currentNode.loc);
             Vector3Int currentChunkLoc = GetChunkPos(currentNode.loc);
             Chunk currentChunk = cm.chunkDic[currentChunkLoc];
-
-            if (chunkLocList.Contains(currentChunkLoc))
-            {
-                chunkLocList.Remove(currentChunkLoc);
-            }
 
             closeList.Add(currentNode.loc);
 
@@ -262,14 +204,6 @@ public class AStar : MonoBehaviour
                 
                 if (dict.TryGetValue(neighbourLocation, out nextNode))
                 {
-                    if (currentNode.loc == new Vector3Int(116, 256, 256))
-                    {
-                        Debug.Log("PartAa");
-                        Debug.Log("NextNode" + nextNode.loc);
-
-                        foreach 
-                    }
-
                     int nodeCost = currentNode.gCost + 100;
                     if (nodeCost < nextNode.gCost)
                     {
@@ -281,12 +215,6 @@ public class AStar : MonoBehaviour
                 else
                 {
                     nextNode = new AStarNode(neighbourLocation);
-
-                    if (currentNode.loc == new Vector3Int(116, 256, 256))
-                    {
-                        Debug.Log("PartAb");
-                        Debug.Log("NextNode" + nextNode.loc);
-                    }
 
                     nextNode.gCost = currentNode.gCost + 100;
                     nextNode.hCost = CalDist(nextNode.loc, endLoc);
@@ -347,11 +275,6 @@ public class AStar : MonoBehaviour
                         AStarNode neighbourNode;
                         if (dict.TryGetValue(connectedExit, out neighbourNode))
                         {
-                            if (nextNode.loc == new Vector3Int(116, 256, 256))
-                            {
-                                Debug.Log("PartBa");
-                                Debug.Log("NextNode" + neighbourNode.loc);
-                            }
 
                             int nodeCost = nextNode.gCost + cost;
                             if (nodeCost < neighbourNode.gCost)
@@ -363,11 +286,6 @@ public class AStar : MonoBehaviour
                         }
                         else
                         {
-                            if (nextNode.loc == new Vector3Int(116, 256, 256))
-                            {
-                                Debug.Log("PartBb");
-                                Debug.Log("NextNode" + neighbourNode.loc);
-                            }
 
                             neighbourNode = new AStarNode(connectedExit);
                             neighbourNode.gCost = currentNode.gCost + cost;
@@ -533,9 +451,10 @@ public class AStar : MonoBehaviour
     {
         List<Vector3Int> paths = new List<Vector3Int>();
 
-        Vector3Int lastNodeLoc;
+        Vector3Int lastNodeLoc = new Vector3Int();
         AStarNode currentNode = endNode;
 
+        /*
         int counter = 0;
         while (currentNode.parentNode != null)
         {
@@ -553,6 +472,36 @@ public class AStar : MonoBehaviour
 
             counter++;
         }
+        */
+        bool first = true;
+        while (currentNode.parentNode != null)
+        {
+            if (first)
+            {
+                lastNodeLoc = currentNode.loc;
+                currentNode = currentNode.parentNode;
+
+                first = false;
+            }
+            else
+            {
+                if (ExitDist(lastNodeLoc, currentNode.loc))
+                {
+                    paths.Add(lastNodeLoc);
+                }
+                lastNodeLoc = currentNode.loc;
+                currentNode = currentNode.parentNode;
+
+                if (!ExitDist(currentNode.loc, lastNodeLoc))
+                {
+                    Chunk c = ChunkManager.Instance.chunkDic[GetChunkPos(lastNodeLoc)];
+
+                    paths.AddRange(c.pathDic[(lastNodeLoc, currentNode.loc)]);
+                }
+            }
+        }
+
+
 
         startExit = currentNode.loc;
 
@@ -561,6 +510,11 @@ public class AStar : MonoBehaviour
         //paths.Reverse();
 
         return paths;
+    }
+
+    bool ExitDist(Vector3Int a, Vector3Int b)
+    { 
+        return (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z)) == 1;
     }
 
     List<Vector3Int> BuildPath(Vector3Int startLoc, AStarNode endNode)

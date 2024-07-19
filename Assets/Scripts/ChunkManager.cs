@@ -1,12 +1,6 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.IO;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEditor.Progress;
 
 public class ChunkManager : MonoBehaviour
 {
@@ -15,7 +9,8 @@ public class ChunkManager : MonoBehaviour
     public AStar aStar;
 
     public CaveVisualisor caveVisualisor;
-    public Dictionary<Vector3Int, Chunk> chunkDic = new Dictionary<Vector3Int, Chunk>();
+    [System.NonSerialized] public Dictionary<Vector3Int, Chunk> chunkDic = new Dictionary<Vector3Int, Chunk>();
+    [System.NonSerialized] public List<Vector3Int> activeChunk = new List<Vector3Int>();
     const int CHUNKSIZE = 8;
     private int _width, _height, _depth;
     public float scale;
@@ -70,66 +65,41 @@ public class ChunkManager : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        /*
-        int count = 0;
+        Vector3Int aloc = new Vector3Int(160, 152, 160);
 
-        Gizmos.color = UnityEngine.Color.red;
-        if (chunkDic != null && chunkDic.Count > 0)
+        for (int i = 0; i < 8; i++)
         {
-            foreach (Chunk chunk in chunkDic.Values)
+            for (int j = 0; j < 8; j++)
             {
-
-                foreach (Vector3Int loc in chunk.exitPoints)
+                for (int k = 0; k < 8; k++)
                 {
-                    Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
-                    count++;
+                    Vector3Int loc = new Vector3Int(aloc.x + i, aloc.y + j, aloc.z + k);
+
+                    float noise = CaveGenerator.Instance._simplexNoise.GetNoise(loc.x, loc.y, loc.z);
+
+                    if (noise > 0.66f)
+                    {
+                        Gizmos.color = UnityEngine.Color.red;
+                        Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
+                    }
+                    else if (noise >= 0.33f && noise <= 0.66f)
+                    {
+                        Gizmos.color = UnityEngine.Color.yellow;
+                        Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
+                    }
+                    else
+                    {
+                        Gizmos.color = UnityEngine.Color.green;
+                        Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
+                    }
                 }
             }
-        }
-        Debug.Log("c" + count);
-        */
-        Gizmos.color = UnityEngine.Color.red;
-
-        List<Chunk> chunkkList = new List<Chunk>();
-        chunkkList.Add(chunkDic[new Vector3Int(160, 152, 160)]);
-        chunkkList.Add(chunkDic[new Vector3Int(160, 144, 160)]);
-        foreach (Chunk chunkk in chunkkList)
-        {
-            foreach (Vector3Int loc in chunkk.exitPoints)
-            {
-                Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
-            }
-
-            Gizmos.color = UnityEngine.Color.green;
-        }
-        //Chunk chunkk = chunkDic[new Vector3Int(80, 232, 216)];
-
-
-        /*
-        Vector3Int draw1 = chunkk.exitPoints[0];
-        Vector3Int draw2 = chunkk.exitPoints[1];
-
-        List<Vector3Int> cd = chunkk.pathDic[(draw1, draw2)];
-
-        foreach (Vector3Int loc in cd)
-        {
-            Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.05f);
-        }*/
-
-        var locc = new Vector3Int(83, 236, 208);
-        Gizmos.DrawSphere(new Vector3(locc.x / 4f, locc.y / 4f, locc.z / 4f), 0.1f);
-        var locc1 = new Vector3Int(83, 236, 215);
-        Gizmos.DrawSphere(new Vector3(locc1.x / 4f, locc1.y / 4f, locc1.z / 4f), 0.1f);
-
-        foreach (var locd in chunkDic[new Vector3Int(80, 232, 208)].pathDic[(locc, locc1)])
-        {
-            Gizmos.DrawSphere(new Vector3(locd.x / 4f, locd.y / 4f, locd.z / 4f), 0.1f);
         }
     }
 
 
-    public void CreateChunks(int xSize, int ySize, int zSize)
-    {
+    public IEnumerator CreateChunks(int xSize, int ySize, int zSize)
+    {        
         _width = xSize;
         _height = ySize;
         _depth = zSize;
@@ -139,6 +109,7 @@ public class ChunkManager : MonoBehaviour
             {
                 for (int k = 0; k < zSize ; k += CHUNKSIZE)
                 {
+                    
                     /*
                     Vector3Int chunkPos = new Vector3Int(i, j, k);
 
@@ -149,6 +120,8 @@ public class ChunkManager : MonoBehaviour
                     chunk.BuildChunk(mesh);
                     chunkDic.Add(chunkPos, chunk);
                     */
+
+                    
                     Vector3Int chunkPos = new Vector3Int(i, j, k);
 
                     Chunk chunk = new Chunk(chunkPos);
@@ -165,19 +138,25 @@ public class ChunkManager : MonoBehaviour
                         }
                     }
                     chunkDic.Add(chunkPos, chunk);
+                    
                 }
             }
         }
 
-        MarchAll();
+        
+        yield return StartCoroutine(MarchAll());
 
+        /*
         foreach (Chunk c in chunkDic.Values)
         {
             c.BuildPaths();
         }
+        */
 
 
         Debug.Log("GCount: " + GlobalCount);
+        
+        
     }
 
     public void BuildChunks(Chunk chunk)
@@ -236,7 +215,7 @@ public class ChunkManager : MonoBehaviour
         _countBuffer.Release();
     }
 
-    public void MarchAll()
+    IEnumerator MarchAll()
     {
         int size = 40; //5 each
 
@@ -246,6 +225,7 @@ public class ChunkManager : MonoBehaviour
             {
                 for (int iterZ = 0; iterZ < _depth; iterZ += size)
                 {
+
                     int vSize = size * size * size;
                     int expandSize = (size + 1) * (size + 1) * (size + 1);
 
@@ -271,6 +251,7 @@ public class ChunkManager : MonoBehaviour
                     _densityBufferAll.SetData(dens);
                     //_densityBufferAll.SetData(CaveGenerator.Instance.caveGrid, locIdx, 0, 41 * 41 * 41);
                     _vertexBufferAll.SetCounterValue(0);
+                    _totalCount.SetCounterValue(0);
                     computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "densityBuffer", _densityBufferAll);
                     computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "vertexBuffer", _vertexBufferAll);
 
@@ -292,8 +273,7 @@ public class ChunkManager : MonoBehaviour
                     int[] totalCountArr1 = new int[1];
                     _countBufferTest.GetData(totalCountArr1);
 
-                    
-                    //Debug.Log("tca length: " + totalCountArr1[0]);
+                    /*
                     int wallCount = totalCountArr1[0];
                     int[] wallsData = new int[wallCount];
                     _totalCount.GetData(wallsData);
@@ -301,7 +281,7 @@ public class ChunkManager : MonoBehaviour
                     for (int wallIdx = 0; wallIdx < wallCount; wallIdx++)
                     {
                         aStar.UpdateGrid(wallsData[wallIdx], true);
-                    }
+                    }*/
 
                     TriangleWithPos[] trianglesData = new TriangleWithPos[totalCount];
 
@@ -327,11 +307,7 @@ public class ChunkManager : MonoBehaviour
                                 Vector3[] vertices = new Vector3[idxList.Count * 3];
                                 int[] triangles = new int[idxList.Count * 3];
                                 Vector2[] uvs = new Vector2[idxList.Count * 3];
-
-                                if (idxList.Count > 0)
-                                {
-                                    GlobalCount++;
-                                }
+        
 
                                 for (int jj = 0; jj < idxList.Count; jj++)
                                 {
@@ -348,7 +324,6 @@ public class ChunkManager : MonoBehaviour
                                     uvs[idx] = uvTable[idx % 6];
                                     uvs[idx + 1] = uvTable[(idx + 1) % 6];
                                     uvs[idx + 2] = uvTable[(idx + 2) % 6];
-                                    //GlobalCount += 3;
                                 }
 
                                 Mesh mesh = new Mesh();
@@ -361,10 +336,19 @@ public class ChunkManager : MonoBehaviour
                                 Vector3Int chunkLoc = new Vector3Int(iterX + i * 8, iterY + j * 8, iterZ + k * 8);
                                 Chunk chunk = chunkDic[chunkLoc];
                                 chunk.BuildChunk(mesh);
-                                chunk.BuildExit();
+                                //chunk.BuildExit();
+
+                                GlobalCount++;
+                                if (idxList.Count > 0)
+                                {
+                                    activeChunk.Add(chunkLoc);
+                                }
                             }
                         }
                     }
+                    CaveGenerator.Instance.generateProgress = GlobalCount / 64000f * 0.925f + 0.075f;
+                    yield return null;
+
                     _densityBufferAll.Release();
                     _vertexBufferAll.Release();
                     _countBufferAll.Release();

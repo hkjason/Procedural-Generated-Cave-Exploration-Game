@@ -5,7 +5,7 @@
 RWStructuredBuffer<float> noiseBuffer;
 
 //static const float mFrequency = 0.01f;
-static const float magnitude = 1000;
+static const float magnitude = 4000;
 
 //static const int PrimeX = 501125321;
 //static const int PrimeY = 1136930381;
@@ -174,17 +174,23 @@ void CSSimplex (uint3 id : SV_DispatchThreadID)
     //x = r - x;
     //y = r - y;
     //z = r - z;
-    fnl_state noise1 = fnlCreateState(seed);
-    noise1.noise_type = FNL_NOISE_OPENSIMPLEX2;
-    fnl_state noise2 = fnlCreateState(seed1);
-    noise2.noise_type = FNL_NOISE_OPENSIMPLEX2;
+    fnl_state noise1 = fnlCreateState(seed, 0.0025f);
+    fnl_state noise2 = fnlCreateState(seed, 0.005f);
+    fnl_state noise3 = fnlCreateState(seed, 0.01f);
+    fnl_state noise4 = fnlCreateState(seed, 0.02f);
+
+    //fnl_state noise2 = fnlCreateState(seed1);
+    //noise2.noise_type = FNL_NOISE_OPENSIMPLEX2;
     
     float n1 = fnlGetNoise3D(noise1, id.x * magnitude, id.y * magnitude, id.z * magnitude);
-    float n2 = fnlGetNoise3D(noise2, id.x * magnitude, id.y * magnitude, id.z * magnitude);
+    float n2 = fnlGetNoise3D(noise2, id.x * magnitude/2, id.y * magnitude/2, id.z * magnitude/2);
+    float n3 = fnlGetNoise3D(noise3, id.x * magnitude/4, id.y * magnitude/4, id.z * magnitude/4);
+    float n4 = fnlGetNoise3D(noise4, id.x * magnitude/8, id.y * magnitude/8, id.z * magnitude/8);
+    //float n2 = fnlGetNoise3D(noise2, id.x * magnitude, id.y * magnitude, id.z * magnitude);
 
-    float combinedNoise = (n1 + n2) / 2;
+    float combinedNoise = n1 + n2 + n3 + n4;
     
-    combinedNoise *= 8;
+    combinedNoise *= 2.25f;
     combinedNoise += 1;
     combinedNoise /= 2;
     

@@ -18,8 +18,14 @@ public class Pickaxe : Equipment
 
     private Ray ray;
 
+    private float[] pickSpeedArr = {1f, 0.8f, 0.65f};
+
+    private GameManager gameManager;
+
     private void Start()
     {
+        gameManager = GameManager.Instance;
+
         equipPos = new Vector3(0.3f, 0f, 0.6f);
         digPos = new Vector3(0.1f, -0.01f, 1f);
         equipRotation = Quaternion.Euler(new Vector3(0f, 270f, 360f));
@@ -62,7 +68,7 @@ public class Pickaxe : Equipment
     {
         isAnimating = true;
 
-        float duration = cooldown / 2;
+        float duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 2;
         float elapsed = 0f;
 
         while (elapsed < duration) 
@@ -78,7 +84,7 @@ public class Pickaxe : Equipment
 
         Dig();
 
-        duration = cooldown / 2;
+        duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 2;
         elapsed = 0f;
 
         while (elapsed < duration)
@@ -99,7 +105,7 @@ public class Pickaxe : Equipment
     {
         isAnimating = true;
 
-        float duration = cooldown / 3;
+        float duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 3;
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -113,7 +119,7 @@ public class Pickaxe : Equipment
             yield return null;
         }
 
-        duration = cooldown / 3;
+        duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 3;
         elapsed = 0f;
 
         while (elapsed < duration)
@@ -129,7 +135,7 @@ public class Pickaxe : Equipment
 
         Dig();
 
-        duration = cooldown / 3;
+        duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 3;
         elapsed = 0f;
 
         while (elapsed < duration)

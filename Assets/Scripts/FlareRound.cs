@@ -3,17 +3,9 @@ using UnityEngine;
 public class FlareRound : MonoBehaviour
 {
     [SerializeField]
-    private float flareTTL;
-    [SerializeField]
     private Rigidbody rb;
     [SerializeField]
     private FlareType type;
-
-    
-    void Start()
-    {
-        Destroy(gameObject, flareTTL);
-    }
 
     void OnCollisionEnter(Collision collision)
     {
