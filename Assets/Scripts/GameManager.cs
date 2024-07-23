@@ -17,8 +17,6 @@ public class GameManager : MonoBehaviour
 
     private string saveFilePath;
 
-    public int loadState;
-
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
@@ -75,6 +73,18 @@ public class GameManager : MonoBehaviour
                 pickPowerLevel = saveData.pickPowerLevel;
                 pickSpeedLevel = saveData.pickSpeedLevel;
             }
+        }
+        else
+        {
+            money = 0;
+            hpLevel = 0;
+            flareRechargeLevel = 0;
+            flareDurationLevel = 0;
+            flareIntensityLevel = 0;
+            pickPowerLevel = 0;
+            pickSpeedLevel = 0;
+
+            SaveGame();
         }
     }
 

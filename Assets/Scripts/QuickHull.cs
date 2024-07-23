@@ -600,6 +600,8 @@ namespace GK
             // can't possibly have been visited yet, since the only thing in
             // litFaces is the current triangle.
             {
+
+
                 var oppositeFace = faces[face.Opposite0];
 
                 var dist = PointFaceDistance(
@@ -620,10 +622,12 @@ namespace GK
                 {
                     SearchHorizon(points, point, fi, face.Opposite0, oppositeFace);
                 }
+
             }
 
             if (!litFaces.Contains(face.Opposite1))
             {
+
                 var oppositeFace = faces[face.Opposite1];
 
                 var dist = PointFaceDistance(
@@ -644,10 +648,12 @@ namespace GK
                 {
                     SearchHorizon(points, point, fi, face.Opposite1, oppositeFace);
                 }
+
             }
 
             if (!litFaces.Contains(face.Opposite2))
             {
+
                 var oppositeFace = faces[face.Opposite2];
 
                 var dist = PointFaceDistance(
@@ -749,6 +755,8 @@ namespace GK
 
             if (!litFaces.Contains(nextFaceIndex1))
             {
+               
+
                 var oppositeFace = faces[nextFaceIndex1];
 
                 var dist = PointFaceDistance(

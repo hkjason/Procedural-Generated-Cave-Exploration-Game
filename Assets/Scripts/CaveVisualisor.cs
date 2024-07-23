@@ -453,24 +453,19 @@ public class CaveVisualisor : MonoBehaviour
                 Vector3 vert2 = position + cornerTable[edgeTable[index, 1]];
                 Vector3 vertPosition;
 
-                if (smoothTerrain)
-                {
-                    float vert1Sample = cube[edgeTable[index, 0]];
-                    float vert2Sample = cube[edgeTable[index, 1]];
+                float vert1Sample = cube[edgeTable[index, 0]];
+                float vert2Sample = cube[edgeTable[index, 1]];
 
-                    float difference = vert2Sample - vert1Sample;
+                float difference = vert2Sample - vert1Sample;
 
-                    if (difference == 0)
-                        difference = terrainSurface;
-                    else
-                        difference = (terrainSurface - vert1Sample) / difference;
-
-                    vertPosition = vert1 + ((vert2 - vert1) * difference);
-                }
+                if (difference == 0)
+                    difference = terrainSurface;
                 else
-                {
-                    vertPosition = (vert1 + vert2) / 2f;
-                }
+                    difference = (terrainSurface - vert1Sample) / difference;
+
+                vertPosition = vert1 + ((vert2 - vert1) * difference);
+
+                vertPosition /= 4f;
 
                 verticesList.Add(vertPosition);
                 trianglesList.Add(verticesList.Count - 1);

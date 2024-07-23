@@ -59,6 +59,8 @@ public class CaveGenerator : MonoBehaviour
     public delegate void GenComplete();
     public event GenComplete OnGenComplete;
 
+    public int progressInt = 0;
+
     Vector3Int[] nTable = {
         new Vector3Int(0, 0, 8),
         new Vector3Int(0, 0, -8),
@@ -87,41 +89,8 @@ public class CaveGenerator : MonoBehaviour
         Gizmos.DrawSphere(orePoints[orePoints.Count-1], 0.05f);
         Gizmos.DrawSphere(spiderHit.point, 0.02f);
 
-
         Gizmos.color = Color.red;
         Gizmos.DrawLine(spiderHit.point, spiderHit.point + spiderHit.normal * 0.5f);
-
-        /*
-        for (int i = 0; i < chunkLE.Count; i++)
-        {
-            Gizmos.color = Color.green;
-            foreach (Vector3Int vec in chunkLE[i])
-            {
-                Vector3 lh = vec + new Vector3Int(4, 4, 4);
-                Gizmos.DrawSphere(new Vector3(lh.x / 4, lh.y / 4, lh.z / 4), 0.1f);
-            }
-        }
-
-        for (int i = 0; i < chunkLM.Count; i++)
-        {
-            Gizmos.color = Color.yellow;
-            foreach (Vector3Int vec in chunkLM[i])
-            {
-                Vector3 lh = vec + new Vector3Int(4, 4, 4);
-                Gizmos.DrawSphere(new Vector3(lh.x / 4, lh.y / 4, lh.z / 4), 0.1f);
-            }
-        }
-
-        for (int i = 0; i < chunkLH.Count; i++)
-        {
-            Gizmos.color = Color.red;
-            foreach (Vector3Int vec in chunkLH[i])
-            {
-                Vector3 lh = vec + new Vector3Int(4, 4, 4);
-                Gizmos.DrawSphere(new Vector3(lh.x / 4, lh.y / 4, lh.z / 4), 0.1f);
-            }
-        }
-        */
 
         Gizmos.color = Color.yellow;
         foreach (Vector3 vv in orePointsNew)
@@ -163,75 +132,14 @@ public class CaveGenerator : MonoBehaviour
 
         isGen = false;
 
-        //StartCoroutine(CaveGeneration());
+        StartCoroutine(CaveGeneration());
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha4))
-        {
-            orePointsNew = new List<Vector3>();
-
-            Debug.Log("total chunks" + _chunkManager.activeChunk.Count);
-
-            Vector3Int midP = new Vector3Int(4, 4, 4);
-
-            foreach (Vector3Int cLoc in _chunkManager.activeChunk)
-            {
-                float noise = _simplexNoise.GetNoise(cLoc.x / 8, cLoc.y / 8, cLoc.z / 8);
-                openList.Add(cLoc);
-                openSet.Add(cLoc);
-            }
-
-            while (openList.Count > 0)
-            {
-                List<Vector3Int> filledArea = FloodFillList(openList[0]);
-
-                if (filledArea.Count > 25)
-                {
-                    float totalNoise = 0;
-
-                    foreach (Vector3Int cLoc in filledArea)
-                    {
-                        totalNoise += _simplexNoise.GetNoise(cLoc.x / 8, cLoc.y / 8, cLoc.z / 8);
-                    }
-
-                    totalNoise /= filledArea.Count;
-
-                    chunkList.Add(new Tuple<List<Vector3Int>, float>(filledArea, totalNoise));
-                }
-            }
-
-            chunkList.Sort((x, y) => y.Item2.CompareTo(x.Item2));
-
-            if (chunkList.Count >= 20)
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    OreSpawn(chunkList[i].Item1, 2);
-                }
-
-                for (int j = 10; j < 20; j++)
-                {
-                    OreSpawn(chunkList[j].Item1, 1);
-                }
-            }
-            else
-            {
-                Debug.Log("Gen fail");
-            }
-
-
-            //OreSpawn();
-            //Debug.Log("OreSpawn");
-            //FlowerSpawn();
-            //Debug.Log("FlowerSpawn");
-        }
-
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
-            StartCoroutine(CaveGeneration());
-            //StartCoroutine(BackToMain());
+            StartCoroutine(BackToMain());
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha0))
@@ -300,41 +208,43 @@ public class CaveGenerator : MonoBehaviour
 
         startingPt = new Vector3Int(width / 2, height / 2, depth / 2);
 
-        Debug.Log("RAM: " + SystemInfo.systemMemorySize);
-        Debug.Log("VRAM: " + SystemInfo.graphicsMemorySize);
-
         float curTimeBase = Time.realtimeSinceStartup;
         GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 1000, 5);
         mainTunnelAgent.Walk();
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
         mainCaveAgent.Walk();
-        _gameManager.loadState++;
         Debug.Log("BaseCave time: " + (Time.realtimeSinceStartup - curTimeBase));
-        
-        //yield return null;
 
         float curTimeCA = Time.realtimeSinceStartup;
+        progressInt = 1;
         yield return StartCoroutine(_cellularAutomata.RunCSCA(width, height, depth));
-        _gameManager.loadState++;
         Debug.Log("CA time: " + (Time.realtimeSinceStartup - curTimeCA));
 
         float curTimeNoise = Time.realtimeSinceStartup;
         _simplexNoise = new SimplexNoise(width, height, depth, _seed, noiseComputeShader);
+        progressInt = 2;
         yield return StartCoroutine(_simplexNoise.GenerateNoise());
-        _gameManager.loadState++;
         Debug.Log("SimplexNoise time: " + (Time.realtimeSinceStartup - curTimeNoise));
 
-        //yield return null;
 
         float curTimeMarch = Time.realtimeSinceStartup;
+        progressInt = 3;
         yield return StartCoroutine(_chunkManager.CreateChunks(width, height, depth));
-        _gameManager.loadState++;
         Debug.Log("MarchTime: " + (Time.realtimeSinceStartup - curTimeMarch));
 
         //Array.Clear(caveGrid, 0, caveGrid.Length);
 
+        float curTimeDiff = Time.realtimeSinceStartup;
+        DifficultyAreaGen();
+        Debug.Log("DiffTime: " + (Time.realtimeSinceStartup - curTimeDiff));
+
+        float curTimeOre = Time.realtimeSinceStartup;
+        _convexHull.OreMeshGen();
+        Debug.Log("OreMeshTime: " + (Time.realtimeSinceStartup - curTimeOre));
         Debug.Log("TotalTime: " + (Time.realtimeSinceStartup - curTimeOri));
 
+        player.Spawn(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4);
+        
         isGen = false;
         if (OnGenComplete != null)
         {
@@ -342,6 +252,7 @@ public class CaveGenerator : MonoBehaviour
         }
     }
 
+    /*
     void OreSpawn()
     {
         for (int i = 0; i < orePoints.Count; i++)
@@ -366,6 +277,7 @@ public class CaveGenerator : MonoBehaviour
         }
         
     }
+    */
 
     void FlowerSpawn()
     { 
@@ -449,7 +361,7 @@ public class CaveGenerator : MonoBehaviour
     {
         Debug.Log("DigOre");
 
-        _convexHull.UpdateOre(hit.point);
+        _convexHull.UpdateOre(hit);
     }
 
     public void DigCave(Ray ray, RaycastHit hit)
@@ -606,7 +518,59 @@ public class CaveGenerator : MonoBehaviour
         _chunkManager.DigCS(updatedPoint);
     }
 
+    public void DifficultyAreaGen()
+    {
+        orePointsNew = new List<Vector3>();
 
+        Debug.Log("total chunks" + _chunkManager.activeChunk.Count);
+
+        Vector3Int midP = new Vector3Int(4, 4, 4);
+
+        foreach (Vector3Int cLoc in _chunkManager.activeChunk)
+        {
+            float noise = _simplexNoise.GetNoise(cLoc.x / 8, cLoc.y / 8, cLoc.z / 8);
+            openList.Add(cLoc);
+            openSet.Add(cLoc);
+        }
+
+        while (openList.Count > 0)
+        {
+            List<Vector3Int> filledArea = FloodFillList(openList[0]);
+
+            if (filledArea.Count > 25)
+            {
+                float totalNoise = 0;
+
+                foreach (Vector3Int cLoc in filledArea)
+                {
+                    totalNoise += _simplexNoise.GetNoise(cLoc.x / 8, cLoc.y / 8, cLoc.z / 8);
+                }
+
+                totalNoise /= filledArea.Count;
+
+                chunkList.Add(new Tuple<List<Vector3Int>, float>(filledArea, totalNoise));
+            }
+        }
+
+        chunkList.Sort((x, y) => y.Item2.CompareTo(x.Item2));
+
+        if (chunkList.Count >= 20)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                OreSpawn(chunkList[i].Item1, 2);
+            }
+
+            for (int j = 10; j < 20; j++)
+            {
+                OreSpawn(chunkList[j].Item1, 1);
+            }
+        }
+        else
+        {
+            Debug.Log("Gen fail");
+        }
+    }
 
 
     Vector3Int GetLoc(int index)

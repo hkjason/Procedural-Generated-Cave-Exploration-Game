@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class StartUIManager : MonoBehaviour
 {
-    private GameManager gameManager;
-
     public Button startButton;
     public GameObject startButtonGO;
     public GameObject shopButtonGO;
@@ -33,7 +31,6 @@ public class StartUIManager : MonoBehaviour
     private void Start()
     {
         Cursor.lockState = CursorLockMode.None;
-        gameManager = GameManager.Instance;
     }
 
     public void StartGame()
@@ -41,40 +38,6 @@ public class StartUIManager : MonoBehaviour
         //startButtonGO.SetActive(false);
         //shopButtonGO.SetActive(false);
         //loadPanel.SetActive(true);
-        StartCoroutine(StartGameCoroutine());
-    }
-
-    IEnumerator StartGameCoroutine()
-    {
-        AsyncOperation operation = SceneManager.LoadSceneAsync(1);
-
-        while (!operation.isDone)
-        {
-            stateText.text = loadStateText[gameManager.loadState];
-            percentageText.text = loadStatePercentage[gameManager.loadState].ToString() + "%";
-            percentageSlider.value = loadStatePercentage[gameManager.loadState];
-            
-            /*if (operation.progress < 0.225f)
-            {
-                stateText.text = loadStateText[0];
-            }
-            else if (operation.progress < 0.45f)
-            {
-                stateText.text = loadStateText[1];
-            }
-            else if (operation.progress < 0.675f)
-            {
-                stateText.text = loadStateText[2];
-            }
-            else
-            {
-                stateText.text = loadStateText[3];
-            }
-            percentageSlider.value = operation.progress;
-            Debug.Log("pro" + operation.progress + "state" + gameManager.loadState);
-            */
-            yield return null;
-        }
-
+        SceneManager.LoadSceneAsync(1);
     }
 }

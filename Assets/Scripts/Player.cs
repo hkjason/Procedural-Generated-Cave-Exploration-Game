@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -49,6 +50,19 @@ public class Player : MonoBehaviour
 
     private GameManager gameManager;
 
+    private bool alive = false;
+
+    private float _oreCount = 0;
+    public float oreCount
+    {
+        get { return _oreCount; }
+        set
+        {
+            _oreCount = value;
+            oreCountChanged?.Invoke(value);
+        }
+    }
+    public event Action<float> oreCountChanged;
 
     void OnDrawGizmosSelected()
     {
@@ -63,19 +77,26 @@ public class Player : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         _currentEquipment = pickaxe;
         _flareCount = 4;
+        gameManager = GameManager.Instance;
     }
 
     void Update()
     {
-        CameraMovement();
-        GetPlayerMovement();
-        GetPlayerAction();
-        RegenFlare();
+        if (alive)
+        { 
+            CameraMovement();
+            GetPlayerMovement();
+            GetPlayerAction();
+            RegenFlare();
+        }
     }
 
     void FixedUpdate()
     {
-        PlayerMovement();
+        if (alive)
+        { 
+            PlayerMovement();
+        }
     }
 
     void CameraMovement()
@@ -217,6 +238,8 @@ public class Player : MonoBehaviour
     public void Spawn(int x, int y, int z)
     {
         transform.position = new Vector3Int(x, y, z);
+        gameObject.SetActive(true);
+        alive = true;
     }
 
     void SpawnFlare()
@@ -233,7 +256,7 @@ public class Player : MonoBehaviour
         Rigidbody flareInstance;
         flareInstance = Instantiate(_flare, _flareSpawnPoint.position, Quaternion.identity) as Rigidbody;
 
-        Destroy(flareInstance, flareDurationArr[gameManager.flareDurationLevel]);
+        Destroy(flareInstance.gameObject, flareDurationArr[gameManager.flareDurationLevel]);
 
         Vector3 heading = _flareThrowPoint.position - _flareSpawnPoint.position;
         float distance = heading.magnitude;
