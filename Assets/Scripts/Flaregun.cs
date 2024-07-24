@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Flaregun : Equipment
@@ -9,9 +10,35 @@ public class Flaregun : Equipment
     public AudioClip noAmmoSound;
     public AudioClip reloadSound;
     public int flareSpeed = 2000;
-    public int maxSpareRounds = 5;
-    public int spareRounds = 3;
-    public int currentRound = 0;
+    private int _spareRounds = 16;
+    private int _currentRound = 4;
+
+    private GameManager _gameManager;
+
+    private int[] flareDurationArr = { 25, 30, 35 };
+
+    public int spareRounds
+    {
+        get { return _spareRounds; }
+        set
+        {
+            _spareRounds = value;
+            spareRoundsChanged?.Invoke(value);
+        }
+    }
+
+    public int currentRound
+    {
+        get { return _currentRound; }
+        set
+        {
+            _currentRound = value;
+            currentRoundChanged?.Invoke(value);
+        }
+    }
+
+    public event Action<int> spareRoundsChanged;
+    public event Action<int> currentRoundChanged;
 
     public float flareTTL;
 
@@ -25,6 +52,8 @@ public class Flaregun : Equipment
 
         transform.localPosition = unequipPos;
         transform.localRotation = unequipRotation;
+
+        _gameManager = GameManager.Instance;
     }
 
     public override void Use(Ray ray)
@@ -44,6 +73,9 @@ public class Flaregun : Equipment
                 bulletInstance = Instantiate(flareBullet, barrelEnd.position, barrelEnd.rotation) as Rigidbody; //INSTANTIATING THE FLARE PROJECTILE
                 bulletInstance.AddForce(barrelEnd.forward * flareSpeed);
 
+                Light light = bulletInstance.GetComponent<Light>();
+                Destroy(light, flareDurationArr[_gameManager.flareDurationLevel]);
+
                 //Instantiate(muzzleParticles, barrelEnd.position, barrelEnd.rotation);   //INSTANTIATING THE GUN'S MUZZLE SPARKS	
                 currentRound--;
             }
@@ -59,11 +91,21 @@ public class Flaregun : Equipment
     {
         if (isAnimating) return;
 
-        if (spareRounds >= 1 && currentRound == 0)
+        if (currentRound < 4 && spareRounds >= 1)
         {
+            int roundsToReload = 4 - currentRound;
+            if (spareRounds >= roundsToReload)
+            {
+                currentRound += roundsToReload;
+                spareRounds -= roundsToReload;
+            }
+            else
+            {
+                currentRound += spareRounds;
+                spareRounds = 0;
+            }
+
             GetComponent<AudioSource>().PlayOneShot(reloadSound);
-            spareRounds--;
-            currentRound++;
             GetComponent<Animation>().CrossFade("Reload");
         }
     }

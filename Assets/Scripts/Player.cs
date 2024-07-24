@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -42,7 +43,12 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform _flareSpawnPoint;
     [SerializeField] private Transform _flareThrowPoint;
     [SerializeField] private float _throwPower;
-    private float _flareCount;
+    [SerializeField] private float holdThreshold = 0.5f;
+    [SerializeField] private Light _headLight;
+    private bool isHolding = false;
+    private float keyHoldTime = 0f;
+    private int _flareCount;
+
     private float _flareSpawnTime;
 
     private int[] flareRechargeArr = { 14, 13, 12, 11 };
@@ -62,7 +68,18 @@ public class Player : MonoBehaviour
             oreCountChanged?.Invoke(value);
         }
     }
+    public int flareCount
+    {
+        get { return _flareCount; }
+        set
+        {
+            _flareCount = value;
+            flareCountChanged?.Invoke(value);
+        }
+    }
+
     public event Action<float> oreCountChanged;
+    public event Action<int> flareCountChanged;
 
     void OnDrawGizmosSelected()
     {
@@ -76,7 +93,7 @@ public class Player : MonoBehaviour
         _terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(_terrainLayer.value, 2));
         Cursor.lockState = CursorLockMode.Locked;
         _currentEquipment = pickaxe;
-        _flareCount = 4;
+        flareCount = 4;
         gameManager = GameManager.Instance;
     }
 
@@ -231,24 +248,44 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F))
         {
-            SpawnFlare();
+            isHolding = true;
+            keyHoldTime = 0f;
+        }
+
+        if (Input.GetKey(KeyCode.F) && isHolding)
+        {
+            keyHoldTime += Time.deltaTime;
+            if (keyHoldTime > holdThreshold)
+            {
+                _headLight.enabled = !_headLight.enabled;
+                isHolding = false;
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.F))
+        {
+            if (isHolding && keyHoldTime <= holdThreshold)
+            {
+                SpawnFlare();
+            }
+            isHolding = false;
         }
     }
 
     public void Spawn(int x, int y, int z)
     {
-        transform.position = new Vector3Int(x, y, z);
+        transform.position = new Vector3(x, y + 0.7f, z);
         gameObject.SetActive(true);
         alive = true;
     }
 
     void SpawnFlare()
     {
-        if (_flareCount <= 0)
+        if (flareCount <= 0)
         {
             return;
         }
-        if (_flareCount == 4)
+        if (flareCount == 4)
         {
             _flareSpawnTime = Time.time;
         }
@@ -256,7 +293,8 @@ public class Player : MonoBehaviour
         Rigidbody flareInstance;
         flareInstance = Instantiate(_flare, _flareSpawnPoint.position, Quaternion.identity) as Rigidbody;
 
-        Destroy(flareInstance.gameObject, flareDurationArr[gameManager.flareDurationLevel]);
+        Light light = flareInstance.GetComponent<Light>();
+        Destroy(light, flareDurationArr[gameManager.flareDurationLevel]);
 
         Vector3 heading = _flareThrowPoint.position - _flareSpawnPoint.position;
         float distance = heading.magnitude;
@@ -264,16 +302,16 @@ public class Player : MonoBehaviour
 
         flareInstance.AddForce(direction * _throwPower);
 
-        _flareCount--;
+        flareCount--;
     }
 
     void RegenFlare()
     {
-        if (_flareCount < 4)
+        if (flareCount < 4)
         {
             if (Time.time - _flareSpawnTime >= flareRechargeArr[gameManager.flareRechargeLevel])
             {
-                _flareCount++;
+                flareCount++;
                 _flareSpawnTime = Time.time;
             }
         }

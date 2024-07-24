@@ -11,9 +11,14 @@ public class UIManager : MonoBehaviour
     public TMP_Text percentageText;
     public TMP_Text oreCountText;
     public Image oreCountImage;
+    public Slider flareCountSlider;
+
+    public TMP_Text roundsText;
+    public TMP_Text spareRoundsText;
 
     private CaveGenerator _caveGenerator;
     [SerializeField] private Player _player;
+    [SerializeField] private Flaregun _flaregun;
 
     private string[] textArr =
     {
@@ -30,8 +35,16 @@ public class UIManager : MonoBehaviour
 
         _caveGenerator.OnGenComplete += InactivateLoadPanel;
         _player.oreCountChanged += UpdateOreCount;
+        _player.flareCountChanged += UpdateFlareCount;
+
+        _flaregun.currentRoundChanged += UpdateRoundsCount;
+        _flaregun.spareRoundsChanged += UpdateSpareRoundsCount;
 
         loadingSlider.value = 0;
+        flareCountSlider.value = 4;
+
+        roundsText.text = "4";
+        spareRoundsText.text = "/16";
     }
 
     // Update is called once per frame
@@ -63,6 +76,21 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    void UpdateFlareCount(int flareCount)
+    { 
+        flareCountSlider.value = flareCount;
+    }
+
+    void UpdateRoundsCount(int roundsCount)
+    {
+        roundsText.text = roundsCount.ToString();
+    }
+
+    void UpdateSpareRoundsCount(int roundsCount)
+    {
+        spareRoundsText.text = "/" + roundsCount.ToString();
+    }
+
     private void OnDestroy()
     {
         if (_caveGenerator != null)
@@ -72,6 +100,12 @@ public class UIManager : MonoBehaviour
         if (_player != null)
         { 
             _player.oreCountChanged -= UpdateOreCount;
+            _player.flareCountChanged -= UpdateFlareCount;
+        }
+        if (_flaregun != null)
+        {
+            _flaregun.currentRoundChanged -= UpdateRoundsCount;
+            _flaregun.spareRoundsChanged -= UpdateSpareRoundsCount;
         }
     }
 }

@@ -107,10 +107,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 3
-  m_Height: 7
+  m_Radius: 0.5
+  m_Height: 4
   m_Direction: 2
-  m_Center: {x: -0.03, y: 0.02, z: 0}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!82 &8200000
 AudioSource:
   m_ObjectHideFlags: 0
@@ -308,6 +308,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a89778fa988d74449b02d410e8f603e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  flareTTL: 20
   rb: {fileID: 9010286869742346536}
   type: 0

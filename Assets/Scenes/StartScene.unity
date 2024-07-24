@@ -2779,7 +2779,6 @@ MonoBehaviour:
   flareIntensityLevel: 0
   pickPowerLevel: 0
   pickSpeedLevel: 0
-  loadState: 0
 --- !u!4 &439073793
 Transform:
   m_ObjectHideFlags: 0

@@ -241,6 +241,7 @@ public class CaveGenerator : MonoBehaviour
         float curTimeOre = Time.realtimeSinceStartup;
         _convexHull.OreMeshGen();
         Debug.Log("OreMeshTime: " + (Time.realtimeSinceStartup - curTimeOre));
+
         Debug.Log("TotalTime: " + (Time.realtimeSinceStartup - curTimeOri));
 
         player.Spawn(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4);
@@ -311,6 +312,126 @@ public class CaveGenerator : MonoBehaviour
                 }
             }
         }
+    }
+
+    void FlowerSpawn(List<Vector3Int> cList, int diffLevel)
+    {
+        int fCount = 0;
+        int iter = 0;
+        int totalFCount;
+        bool isTop;
+        switch (diffLevel)
+        {
+            case 0: 
+                totalFCount = 8;
+                isTop = true;
+                break;
+            case 1: totalFCount = 4;
+                isTop = true;
+                break;
+            case 2: totalFCount = 2;
+                isTop = false;
+                break;
+            default: totalFCount = 0;
+                isTop = true;
+                break;
+        }
+
+        while (fCount < totalFCount && iter <= 100)
+        {
+            if (diffLevel == 0)
+            {
+                isTop = UnityEngine.Random.value > 0.5f;
+            }
+
+            int randomIdx = UnityEngine.Random.Range(0, cList.Count);
+
+            Vector3Int cLoc = cList[randomIdx];
+
+            int randomX = UnityEngine.Random.Range(0, 8);
+            int randomY = UnityEngine.Random.Range(0, 8);
+            int randomZ = UnityEngine.Random.Range(0, 8);
+
+            int tries = 0;
+            while (tries < 5)
+            {
+                Vector3Int randLoc = cLoc + new Vector3Int(randomX, randomY, randomZ);
+
+                if (GetCave(randLoc.x, randLoc.y, randLoc.z) > 0)
+                {
+                    bool added = false;
+
+                    for (int j = 0; j < 5; j++)
+                    {
+                        Vector3 randOri = randLoc / 4;
+                        Vector3 raycastDirection;
+                        if (isTop)
+                        {
+                            raycastDirection = RandomRayTop();
+                        }
+                        else
+                        {
+                            raycastDirection = RandomRayBottom();
+                        }
+
+                        RaycastHit hit;
+
+                        if (Physics.Raycast(randOri, raycastDirection, out hit, 4f, _terrainLayer))
+                        {
+                            Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
+
+                            //Quaternion rotation = Quaternion.FromToRotation(hit.point, hit.normal);
+                            if (isTop && hit.normal.y > 0)
+                            {
+                                int randomFlowerIdx = UnityEngine.Random.Range(0, _flowerPrefab.Count);
+                                Instantiate(_flowerPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
+                                tries = 5;
+                                fCount++;
+                                added = true;
+                            }
+                            else if (!isTop && hit.normal.y < 0)
+                            {
+                                int randomFlowerIdx = UnityEngine.Random.Range(0, _plantPrefab.Count);
+                                Instantiate(_plantPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
+                                tries = 5;
+                                fCount++; 
+                                added = true;
+                            }
+
+                            if (added)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                tries++;
+                iter++;
+            }
+        }
+    }
+
+    Vector3 RandomRayTop()
+    {
+        Vector3 direction;
+        do
+        {
+            direction = UnityEngine.Random.insideUnitSphere;
+        } while (direction.y < 0);
+
+        return direction.normalized * 10f;
+    }
+
+    Vector3 RandomRayBottom()
+    {
+        Vector3 direction;
+        do
+        {
+            direction = UnityEngine.Random.insideUnitSphere;
+        } while (direction.y >= 0);
+
+        return direction.normalized * 10f;
     }
 
     void OreSpawn(List<Vector3Int> cList, int oreNum)
@@ -559,12 +680,19 @@ public class CaveGenerator : MonoBehaviour
             for (int i = 0; i < 10; i++)
             {
                 OreSpawn(chunkList[i].Item1, 2);
+                FlowerSpawn(chunkList[i].Item1, 2);
             }
 
             for (int j = 10; j < 20; j++)
             {
                 OreSpawn(chunkList[j].Item1, 1);
+                FlowerSpawn(chunkList[j].Item1, 1);
             }
+
+            for (int k = 20; k < chunkList.Count; k++)
+            {
+                FlowerSpawn(chunkList[k].Item1, 0);
+            }    
         }
         else
         {
