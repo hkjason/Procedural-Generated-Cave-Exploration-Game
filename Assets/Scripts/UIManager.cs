@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -60,10 +61,13 @@ public class UIManager : MonoBehaviour
     public Image set3check1;
     public Image set3check2;
 
-
     private int set1Completed;
     private int set2Completed;
     private int tutorialCompleted;
+
+    public GameObject quitCheckPanel;
+    public Button quitCancel;
+    public Button quitConfirm;
 
 
 
@@ -103,6 +107,9 @@ public class UIManager : MonoBehaviour
         inverseYToggle.onValueChanged.AddListener(delegate { UpdateSettings(); });
 
         continueButton.onClick.AddListener(ContinueGame);
+        quitButton.onClick.AddListener(QuitGameCheck);
+        quitCancel.onClick.AddListener(QuitGameBack);
+        quitConfirm.onClick.AddListener(QuitGameConfirm);
 
         if (!_gameManager.tutorial)
         {
@@ -170,6 +177,23 @@ public class UIManager : MonoBehaviour
         inGameUI.SetActive(true);
         _gameManager.isPause = false;
         Time.timeScale = 1;
+    }
+
+    void QuitGameCheck()
+    {
+        quitCheckPanel.SetActive(true);
+    }
+
+    void QuitGameConfirm()
+    {
+        _gameManager.isPause = false;
+        Time.timeScale = 1;
+        SceneManager.LoadSceneAsync(0);
+    }
+
+    void QuitGameBack()
+    {
+        quitCheckPanel.SetActive(false);
     }
 
     void InactivateLoadPanel()

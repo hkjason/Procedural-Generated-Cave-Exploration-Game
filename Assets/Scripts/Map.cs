@@ -9,7 +9,6 @@ public class Map : MonoBehaviour
     public Transform mainCamera;
 
     private Vector3 offset = new Vector3(400, 0, 0);
-    private Vector3 offsetCam = new Vector3(400, 0, -5);
 
     public float tempOff;
 

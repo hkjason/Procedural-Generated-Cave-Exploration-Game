@@ -127,7 +127,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         if (alive && !gameManager.isPause)
-        { 
+        {
             CameraMovement();
             GetPlayerMovement();
             GetPlayerAction();

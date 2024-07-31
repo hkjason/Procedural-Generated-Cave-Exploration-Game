@@ -289,4 +289,14 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
+
+    public void GameEndVictory()
+    { 
+        
+    }
+
+    public void GameEndDefeat()
+    { 
+    
+    }
 }
