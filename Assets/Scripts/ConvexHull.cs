@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 
 namespace GK
@@ -72,8 +71,6 @@ namespace GK
                 totalOreCount++;
             }
 
-            Debug.Log("5");
-
             for (int i = 0; i < CaveGenerator.Instance.orePointsNew.Count; i++)
             {
                 currentOreList = new List<Ore>();
@@ -109,7 +106,7 @@ namespace GK
             }
 
             Vector3Int growPoint;
-            Mesh caveMesh;
+            Mesh caveMesh = new Mesh();
             Vector3 firstPoint = new Vector3();
             Vector3 secondPoint = new Vector3();
 
@@ -120,6 +117,9 @@ namespace GK
                 do
                 {
                     growPoint = RandomNeightbour(pointForOre);
+
+                    if (growPoint.x < 0 || growPoint.y < 0 || growPoint.z < 0 || growPoint.x > 320 || growPoint.y > 320 || growPoint.z > 320)
+                    { continue; }
 
                     if (oreVisitList.Contains(growPoint))
                     {
@@ -174,9 +174,13 @@ namespace GK
                 caveMesh = caveVisualisor.TurboMarchingCube(growPoint);
             }
 
+            if (caveMesh.triangles.Length == 0)
+            {
+                return false;
+            }
             List<Vector3> randomCentres;
-
             int numOfOre = RandomOreCount(1, 4);
+
             randomCentres = GetRandomPointsOnMesh(caveMesh, numOfOre);
 
 
@@ -497,7 +501,7 @@ namespace GK
         {
             // Randomly select a triangle weighted by area
             float randomArea = UnityEngine.Random.value * totalArea;
-            int triangleIndex = -1;
+            int triangleIndex = 0;
             for (int i = 0; i < areas.Length; i++)
             {
                 if (randomArea < areas[i])
@@ -506,11 +510,6 @@ namespace GK
                     break;
                 }
                 randomArea -= areas[i];
-            }
-
-            if (triangleIndex == -1)
-            {
-                triangleIndex = (areas.Length - 1) * 3;
             }
 
             Vector3 v0 = vertices[triangles[triangleIndex]];

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
@@ -5,6 +6,8 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+
+    public bool isPause = false;
 
     public int money;
     public int hpLevel;
@@ -15,7 +18,109 @@ public class GameManager : MonoBehaviour
     public int pickPowerLevel;
     public int pickSpeedLevel;
 
+
+    public float mouseSensitivity;
+    public bool inverseY;
+
     private string saveFilePath;
+
+    public bool tutorial;
+
+    private bool _digWallQuest;
+    private bool _digOreQuest;
+
+    public event Action<bool> digWallChanged;
+    public event Action<bool> digOreChanged;
+
+    private bool _shootBulletQuest;
+    private bool _reloadQuest;
+
+    public event Action<bool> shootBulletChanged;
+    public event Action<bool> reloadChanged;
+
+    private bool _throwFlareQuest;
+    private bool _shootFlareQuest;
+
+    public event Action<bool> throwFlareChanged;
+    public event Action<bool> shootFlareChanged;
+
+    public bool digWallQuest
+    {
+        get { return _digWallQuest; }
+        set
+        {
+            if (_digWallQuest != value)
+            {
+                _digWallQuest = value;
+                if (value) digWallChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool digOreQuest
+    {
+        get { return _digOreQuest; }
+        set
+        {
+            if (_digOreQuest != value)
+            {
+                _digOreQuest = value;
+                if (value) digOreChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool shootBulletQuest
+    {
+        get { return _shootBulletQuest; }
+        set
+        {
+            if (_shootBulletQuest != value)
+            {
+                _shootBulletQuest = value;
+                if (value) shootBulletChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool reloadQuest
+    {
+        get { return _reloadQuest; }
+        set
+        {
+            if (_reloadQuest != value)
+            {
+                _reloadQuest = value;
+                if (value) reloadChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool throwFlareQuest
+    {
+        get { return _throwFlareQuest; }
+        set
+        {
+            if (_throwFlareQuest != value)
+            {
+                _throwFlareQuest = value;
+                if (value) throwFlareChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool shootFlareQuest
+    {
+        get { return _shootFlareQuest; }
+        set
+        {
+            if (_shootFlareQuest != value)
+            {
+                _shootFlareQuest = value;
+                if (value) shootFlareChanged?.Invoke(value);
+            }
+        }
+    }
 
     private void Awake()
     {
@@ -35,6 +140,8 @@ public class GameManager : MonoBehaviour
 
     public void SaveGame()
     {
+        Debug.Log("SaveGame");
+
         BinaryFormatter formatter = new BinaryFormatter();
         using (FileStream stream = new FileStream(saveFilePath, FileMode.Create))
         {
@@ -46,7 +153,12 @@ public class GameManager : MonoBehaviour
                 flareDurationLevel = flareDurationLevel,
                 flareIntensityLevel = flareIntensityLevel,
                 pickPowerLevel = pickPowerLevel,
-                pickSpeedLevel = pickSpeedLevel
+                pickSpeedLevel = pickSpeedLevel,
+
+                mouseSensitivity = mouseSensitivity,
+                inverseY = inverseY,
+
+                tutorial = tutorial
             };
 
             formatter.Serialize(stream, saveData);
@@ -55,6 +167,7 @@ public class GameManager : MonoBehaviour
 
     public void LoadGame()
     {
+        Debug.Log("LoadGame");
         if (File.Exists(saveFilePath))
         {
             BinaryFormatter formatter = new BinaryFormatter();
@@ -72,6 +185,11 @@ public class GameManager : MonoBehaviour
 
                 pickPowerLevel = saveData.pickPowerLevel;
                 pickSpeedLevel = saveData.pickSpeedLevel;
+
+                mouseSensitivity = saveData.mouseSensitivity;
+                inverseY = saveData.inverseY;
+
+                tutorial = saveData.tutorial;
             }
         }
         else
@@ -83,6 +201,11 @@ public class GameManager : MonoBehaviour
             flareIntensityLevel = 0;
             pickPowerLevel = 0;
             pickSpeedLevel = 0;
+
+            mouseSensitivity = 1;
+            inverseY = false;
+
+            tutorial = false;
 
             SaveGame();
         }

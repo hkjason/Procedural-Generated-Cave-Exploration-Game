@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public static Player Instance { get; private set; }
+
     [Header("CameraMovement")]
     [SerializeField] private Camera _camera;
-    [SerializeField] private float _hSensitivity;
-    [SerializeField] private float _vSensitivity;
     private float _xRotation = 0f;
     private float _yRotation = 0f;
 
@@ -35,8 +35,9 @@ public class Player : MonoBehaviour
 
     [Header("Equipment")]
     [SerializeField] public Pickaxe pickaxe;
+    [SerializeField] public Gun gun;
     [SerializeField] public Flaregun flaregun;
-    private Equipment _currentEquipment;
+    public Equipment currentEquipment;
 
     [Header("Flare")]
     [SerializeField] private Rigidbody _flare;
@@ -81,6 +82,20 @@ public class Player : MonoBehaviour
     public event Action<float> oreCountChanged;
     public event Action<int> flareCountChanged;
 
+    private int _maxHp = 100;
+    private int _hp;
+    public int hp
+    {
+        get { return _hp; }
+        set
+        {
+            _hp = value;
+            hpChanged?.Invoke(value);
+        }
+    }
+
+    public event Action<int> hpChanged;
+
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position
@@ -88,18 +103,30 @@ public class Player : MonoBehaviour
         Gizmos.DrawWireSphere(_groundCheck.position, _checkRadius);
     }
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+
     void Start()
     {
         _terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(_terrainLayer.value, 2));
-        Cursor.lockState = CursorLockMode.Locked;
-        _currentEquipment = pickaxe;
+        currentEquipment = pickaxe;
         flareCount = 4;
+        hp = _maxHp;
         gameManager = GameManager.Instance;
     }
 
     void Update()
     {
-        if (alive)
+        if (alive && !gameManager.isPause)
         { 
             CameraMovement();
             GetPlayerMovement();
@@ -118,8 +145,13 @@ public class Player : MonoBehaviour
 
     void CameraMovement()
     {
-        float x = Input.GetAxis("Mouse X") * _hSensitivity * Time.deltaTime;
-        float y = Input.GetAxis("Mouse Y") * _vSensitivity * Time.deltaTime;
+        float x = Input.GetAxis("Mouse X") * gameManager.mouseSensitivity * 100 * Time.deltaTime;
+        float y = Input.GetAxis("Mouse Y") * gameManager.mouseSensitivity * 100 * Time.deltaTime;
+
+        if (gameManager.inverseY)
+        {
+            y = -y;
+        }
 
         _xRotation -= y;
         _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
@@ -219,31 +251,61 @@ public class Player : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log("current equip" + _currentEquipment);
-            _currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
+            currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
+        }
+        else if (Input.GetMouseButton(0))
+        {
+            if (currentEquipment == gun)
+            {
+                currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
+            }
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            if (currentEquipment.isAnimating) return;
+            if (currentEquipment == pickaxe)
+            {
+                currentEquipment.Use(_camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)));
+            }
+            else
+            {
+                Equipment lastEquipment = currentEquipment;
+                currentEquipment.Unequip();
+                currentEquipment = pickaxe;
+                pickaxe.TemporaryDig(lastEquipment);
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (_currentEquipment == pickaxe) return;
-            if (_currentEquipment.isAnimating) return;
+            if (currentEquipment == pickaxe) return;
+            if (currentEquipment.isAnimating) return;
 
-            _currentEquipment.Unequip();
-            _currentEquipment = pickaxe;
-            _currentEquipment.Equip();
+            currentEquipment.Unequip();
+            currentEquipment = pickaxe;
+            currentEquipment.Equip();
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            if (_currentEquipment == flaregun) return;
-            if (_currentEquipment.isAnimating) return;
-            _currentEquipment.Unequip();
-            _currentEquipment = flaregun;
-            _currentEquipment.Equip();
+            if (currentEquipment == gun) return;
+            if (currentEquipment.isAnimating) return;
+            currentEquipment.Unequip();
+            currentEquipment = gun;
+            currentEquipment.Equip();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            if (currentEquipment == flaregun) return;
+            if (currentEquipment.isAnimating) return;
+            currentEquipment.Unequip();
+            currentEquipment = flaregun;
+            currentEquipment.Equip();
         }
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            _currentEquipment.Reload();
+            currentEquipment.Reload();
         }
 
         if (Input.GetKeyDown(KeyCode.F))
@@ -272,9 +334,19 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void Spawn(int x, int y, int z)
+    public void Spawn(Vector3 spawnOri)
     {
-        transform.position = new Vector3(x, y + 0.7f, z);
+        _playerRb.velocity = new Vector3(0, 0, 0);
+
+        Vector3 raycastDirection = Vector3.down;
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(spawnOri, raycastDirection, out hit, 10f, _terrainLayer))
+        {
+            transform.position = new Vector3(hit.point.x, hit.point.y + 0.7f, hit.point.z);
+        }
+
         gameObject.SetActive(true);
         alive = true;
     }
@@ -289,6 +361,8 @@ public class Player : MonoBehaviour
         {
             _flareSpawnTime = Time.time;
         }
+
+        gameManager.throwFlareQuest = true;
 
         Rigidbody flareInstance;
         flareInstance = Instantiate(_flare, _flareSpawnPoint.position, Quaternion.identity) as Rigidbody;
@@ -321,5 +395,23 @@ public class Player : MonoBehaviour
     {
         Vector3 posInGrid = _hit.point * 4;
         return new Vector3Int(Mathf.FloorToInt(posInGrid.x), Mathf.FloorToInt(posInGrid.y), Mathf.FloorToInt(posInGrid.z));
+    }
+
+
+    public void PlayerHpChange(int delta)
+    {
+        int val = hp + delta;
+        if (val > _maxHp)
+        {
+            hp = _maxHp;
+        }
+        else if (val <= 0)
+        {
+            hp = 0;
+        }
+        else
+        {
+            hp = val;
+        }
     }
 }

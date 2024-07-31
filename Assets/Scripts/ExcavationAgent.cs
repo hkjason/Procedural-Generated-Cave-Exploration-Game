@@ -17,12 +17,12 @@ public class ExcavationAgent : CaveAgent
                 for (int k = - weight /2; k < weight /2 +1; k++)
                 {
                     direction = new Vector3Int(i, j, k);
+                    if (WithinBounds(currentPos + direction))
+                    {
+                        CaveGenerator.Instance.SetCave(currentPos.x + direction.x, currentPos.y + direction.y, currentPos.z + direction.z, 1f); 
+                    }
                 }
             }
-        }
-        if (WithinBounds(currentPos + direction))
-        { 
-            CaveGenerator.Instance.SetCave(currentPos.x + direction.x, currentPos.y + direction.y, currentPos.z + direction.z, 1f); 
         }
 
     }

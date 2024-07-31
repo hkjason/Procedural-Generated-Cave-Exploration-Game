@@ -15,7 +15,7 @@ AppendStructuredBuffer<TriangleWithPos> vertexBuffer;
 AppendStructuredBuffer<int> triangleBuffer;
 
 StructuredBuffer<float> densityBuffer;
-AppendStructuredBuffer<int> totalCount;
+//AppendStructuredBuffer<int> totalCount;
 
 float3 pos;
 float terrain_surface;
@@ -50,11 +50,12 @@ void CSMarchingCubeAll(uint3 id : SV_DispatchThreadID, uint3 gid : SV_GroupID)
             configIndex |= 1 << i;
     }
     
+    /*
     if (configIndex != 0 && configIndex != 255)
     {
-        //totalCount.Append(configIndex);
         totalCount.Append(int(pos.x + id.x) * 320 * 320 + int(pos.y + id.y) * 320 + int(pos.z + id.z));
     }
+    */
     
     int edgeIndex = 0;
     for (int ii = 0; ii < 5; ii++)

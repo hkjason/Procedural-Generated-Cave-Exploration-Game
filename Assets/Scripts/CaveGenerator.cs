@@ -18,6 +18,7 @@ public class CaveGenerator : MonoBehaviour
     [Header("Seed")]
     [SerializeField] private int _seed;
     [SerializeField] private bool _randomSeed;
+    private bool genSuccess = false;
 
     [Header("Layer")]
     [SerializeField] private LayerMask _terrainLayer;
@@ -37,8 +38,6 @@ public class CaveGenerator : MonoBehaviour
     [Header("Cave Data")]
     public Vector3Int startingPt;
     [System.NonSerialized] public float[] caveGrid;
-    public List<Vector3> orePoints;
-    public List<Vector3> flowerPoints;
 
     public ComputeShader noiseComputeShader;
 
@@ -70,6 +69,9 @@ public class CaveGenerator : MonoBehaviour
         new Vector3Int(0, -8, 0)
     };
 
+    public GameObject bat;
+
+
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position
@@ -84,9 +86,11 @@ public class CaveGenerator : MonoBehaviour
         Gizmos.DrawSphere(new Vector3(width, depth, 0)/ 4, 1);
         Gizmos.DrawSphere(new Vector3(width, depth, height)/4, 1);
 
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(startingPt / 4, 1);
+
         Gizmos.color = Color.blue;
 
-        Gizmos.DrawSphere(orePoints[orePoints.Count-1], 0.05f);
         Gizmos.DrawSphere(spiderHit.point, 0.02f);
 
         Gizmos.color = Color.red;
@@ -97,6 +101,7 @@ public class CaveGenerator : MonoBehaviour
         {
             Gizmos.DrawSphere(vv, 0.5f);
         }
+
     }
 
 
@@ -127,25 +132,8 @@ public class CaveGenerator : MonoBehaviour
             }
         }
 
-        orePoints = new List<Vector3>();
-        flowerPoints = new List<Vector3>();
-
         isGen = false;
-
-        StartCoroutine(CaveGeneration());
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            StartCoroutine(BackToMain());
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha0))
-        {
-            player.Spawn(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4);
-        }
+        StartCoroutine(CaveGenerationChecker());
     }
 
     IEnumerator BackToMain()
@@ -194,6 +182,16 @@ public class CaveGenerator : MonoBehaviour
         return fill;
     }
 
+    IEnumerator CaveGenerationChecker()
+    {
+        genSuccess = false;
+
+        while (genSuccess == false)
+        {
+            yield return StartCoroutine(CaveGeneration());
+        }
+    }
+
     IEnumerator CaveGeneration() 
     {
         isGen = true;
@@ -204,48 +202,46 @@ public class CaveGenerator : MonoBehaviour
         {
             _seed = UnityEngine.Random.Range(1, 100000);
         }
+        Debug.Log("SEED: " + _seed);
         UnityEngine.Random.InitState(_seed);
 
         startingPt = new Vector3Int(width / 2, height / 2, depth / 2);
 
-        float curTimeBase = Time.realtimeSinceStartup;
         GrowAgent mainTunnelAgent = new GrowAgent(startingPt, 1000, 5);
         mainTunnelAgent.Walk();
-        ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 5);
+        ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 10);
         mainCaveAgent.Walk();
-        Debug.Log("BaseCave time: " + (Time.realtimeSinceStartup - curTimeBase));
 
-        float curTimeCA = Time.realtimeSinceStartup;
         progressInt = 1;
         yield return StartCoroutine(_cellularAutomata.RunCSCA(width, height, depth));
-        Debug.Log("CA time: " + (Time.realtimeSinceStartup - curTimeCA));
 
-        float curTimeNoise = Time.realtimeSinceStartup;
         _simplexNoise = new SimplexNoise(width, height, depth, _seed, noiseComputeShader);
         progressInt = 2;
         yield return StartCoroutine(_simplexNoise.GenerateNoise());
-        Debug.Log("SimplexNoise time: " + (Time.realtimeSinceStartup - curTimeNoise));
 
-
-        float curTimeMarch = Time.realtimeSinceStartup;
         progressInt = 3;
         yield return StartCoroutine(_chunkManager.CreateChunks(width, height, depth));
-        Debug.Log("MarchTime: " + (Time.realtimeSinceStartup - curTimeMarch));
 
         //Array.Clear(caveGrid, 0, caveGrid.Length);
 
-        float curTimeDiff = Time.realtimeSinceStartup;
         DifficultyAreaGen();
-        Debug.Log("DiffTime: " + (Time.realtimeSinceStartup - curTimeDiff));
 
-        float curTimeOre = Time.realtimeSinceStartup;
+        if (orePointsNew.Count < 20)
+        {
+            Debug.LogWarning("Generation Fail");
+            ClearData();
+            _seed = 1;
+            yield break;
+        }
+
+
+
         _convexHull.OreMeshGen();
-        Debug.Log("OreMeshTime: " + (Time.realtimeSinceStartup - curTimeOre));
 
-        Debug.Log("TotalTime: " + (Time.realtimeSinceStartup - curTimeOri));
 
-        player.Spawn(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4);
-        
+        player.Spawn(new Vector3(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4));
+
+        genSuccess = true;
         isGen = false;
         if (OnGenComplete != null)
         {
@@ -253,64 +249,11 @@ public class CaveGenerator : MonoBehaviour
         }
     }
 
-    /*
-    void OreSpawn()
+    void ClearData()
     {
-        for (int i = 0; i < orePoints.Count; i++)
+        foreach (Transform child in _chunkManager.transform)
         {
-            for (int j = 0; j < 10; j++)
-            {
-                Vector3 raycastOrigin = orePoints[i] / 4;
-
-                Vector3 raycastDirection = UnityEngine.Random.insideUnitSphere * 10f;
-
-                RaycastHit hit;
-
-                Debug.DrawRay(raycastOrigin, raycastDirection * 4f, UnityEngine.Color.red);
-                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, _terrainLayer))
-                {
-                    orePoints[i] = (hit.point);
-
-                    spiderHit = hit;
-                    break;
-                }
-            }
-        }
-        
-    }
-    */
-
-    void FlowerSpawn()
-    { 
-        foreach (Vector3 flowerPoint in flowerPoints)
-        {
-            for (int i = 0; i < 10; i++)
-            { 
-                Vector3 raycastOrigin = flowerPoint;
-
-                Vector3 raycastDirection = UnityEngine.Random.insideUnitSphere * 10f;
-
-                RaycastHit hit;
-
-                if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 4f, _terrainLayer))
-                {
-                    Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
-
-                    //Quaternion rotation = Quaternion.FromToRotation(hit.point, hit.normal);
-                    if (hit.normal.y > 0)
-                    {
-                        int randomIdx = UnityEngine.Random.Range(0, _flowerPrefab.Count);
-                        Instantiate(_flowerPrefab[randomIdx], hit.point - hit.normal * 0.05f, rotation);
-                    }
-                    else
-                    {
-                        int randomIdx = UnityEngine.Random.Range(0, _plantPrefab.Count);
-                        Instantiate(_plantPrefab[randomIdx], hit.point - hit.normal * 0.05f, rotation);
-                    }
-
-                    break;
-                }
-            }
+            Destroy(child.gameObject);
         }
     }
 
@@ -478,15 +421,53 @@ public class CaveGenerator : MonoBehaviour
         }
     }
 
+    void BatSpawn(List<Vector3Int> cList, int batNum)
+    {
+        int batCount = 0;
+        int iter = 0;
+        while (batCount < batNum && iter <= 20)
+        {
+            int randomIdx = UnityEngine.Random.Range(0, cList.Count);
+
+            Vector3Int cLoc = cList[randomIdx];
+
+            int randomX = UnityEngine.Random.Range(0, 8);
+            int randomY = UnityEngine.Random.Range(0, 8);
+            int randomZ = UnityEngine.Random.Range(0, 8);
+
+            int tries = 0;
+            while (tries < 5)
+            {
+                Vector3Int randLoc = cLoc + new Vector3Int(randomX, randomY, randomZ);
+
+                if (GetCave(randLoc.x, randLoc.y, randLoc.z) > 0)
+                {
+                    if (!Physics.CheckSphere(randLoc / 4, 0.4f, _terrainLayer))
+                    {
+                        Instantiate(bat, randLoc / 4, Quaternion.identity);
+                        batCount++;
+                        tries = 5;
+                    }
+                }
+
+                tries++;
+                iter++;
+            }
+        }
+    }
+
     public void DigOre(Ray ray, RaycastHit hit)
     {
         Debug.Log("DigOre");
 
+        _gameManager.digOreQuest = true;
         _convexHull.UpdateOre(hit);
     }
 
     public void DigCave(Ray ray, RaycastHit hit)
     {
+        _gameManager.digWallQuest = true;
+
         Debug.Log("Hit: " + hit.point * 4);
         Debug.Log("ray: " + ray.direction);
         Vector3 hitPos = hit.point * 4;
@@ -643,8 +624,6 @@ public class CaveGenerator : MonoBehaviour
     {
         orePointsNew = new List<Vector3>();
 
-        Debug.Log("total chunks" + _chunkManager.activeChunk.Count);
-
         Vector3Int midP = new Vector3Int(4, 4, 4);
 
         foreach (Vector3Int cLoc in _chunkManager.activeChunk)
@@ -680,12 +659,14 @@ public class CaveGenerator : MonoBehaviour
             for (int i = 0; i < 10; i++)
             {
                 OreSpawn(chunkList[i].Item1, 2);
+                BatSpawn(chunkList[i].Item1, 2);
                 FlowerSpawn(chunkList[i].Item1, 2);
             }
 
             for (int j = 10; j < 20; j++)
             {
                 OreSpawn(chunkList[j].Item1, 1);
+                BatSpawn(chunkList[j].Item1, 1);
                 FlowerSpawn(chunkList[j].Item1, 1);
             }
 

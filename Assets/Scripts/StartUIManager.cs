@@ -15,22 +15,30 @@ public class StartUIManager : MonoBehaviour
     public TMP_Text stateText;
     public TMP_Text percentageText;
     public Slider percentageSlider;
-    private string[] loadStateText =
-    {
-        "Brave walkers roaming...",
-        "Procedurally Generating Life...",
-        "PCG always comes with noise...",
-        "Marching Cubes parade..."
-    };
 
-    private int[] loadStatePercentage =
-    {
-        0, 1, 5, 10
-    };
+    //Credit
+    public Button creditButton;
+    public Button dimmedBackground;
+    public Button closeCreditButton;
+    public GameObject creditGO;
 
     private void Start()
     {
         Cursor.lockState = CursorLockMode.None;
+
+        creditButton.onClick.AddListener(OpenCredit);
+        dimmedBackground.onClick.AddListener(CloseCredit);
+        closeCreditButton.onClick.AddListener(CloseCredit);
+    }
+
+    void OpenCredit()
+    { 
+        creditGO.SetActive(true);
+    }
+
+    void CloseCredit()
+    {
+        creditGO.SetActive(false);
     }
 
     public void StartGame()

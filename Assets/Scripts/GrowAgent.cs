@@ -24,7 +24,7 @@ public class GrowAgent : CaveAgent
             {
                 //direction = new Vector3Int(Random.Range(-1, 2), Random.Range(-1, 2), Random.Range(-1, 2));
 
-                direction = cornerTable[Random.Range(0, 6)];
+                direction = cornerTable[UnityEngine.Random.Range(0, 6)];
             }
             while (!WithinBounds(currentPos + (direction * weight) , weight/2));
 
@@ -66,22 +66,15 @@ public class GrowAgent : CaveAgent
         {
             TunnelAgent tunnelAgent = new TunnelAgent(currentPos, Random.Range(tokens / 4 - tokens / 8, tokens / 4 + tokens / 8), weight / 2);
             tunnelAgentList.Add(tunnelAgent);
-            Debug.Log("Spawn");
         }
 
-        int randomNumber1 = Random.Range(0, 100);
+        int randomNumber1 = UnityEngine.Random.Range(0, 100);
         if (i > 10)
         {
             if ( randomNumber1 <= 3 + (i - lastAdd) )
             {
                 lastAdd = i;
-                CaveGenerator.Instance.orePoints.Add(currentPos);
             }
-        }
-
-        if (randomNumber1 >= 90 && randomNumber1 <= 99)
-        {
-            CaveGenerator.Instance.flowerPoints.Add(currentPos);
         }
     }
 

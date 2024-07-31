@@ -23,9 +23,9 @@ public class ChunkManager : MonoBehaviour
     public ComputeShader computeShaderMarchAll;
     private ComputeBuffer _vertexBufferAll;
     private ComputeBuffer _densityBufferAll;
-    private ComputeBuffer _countBufferTest;
+    //private ComputeBuffer _countBufferTest;
     private ComputeBuffer _countBufferAll;
-    private ComputeBuffer _totalCount;
+    //private ComputeBuffer _totalCount;
 
 
     private int _marchKernelIdx;
@@ -99,7 +99,10 @@ public class ChunkManager : MonoBehaviour
 
 
     public IEnumerator CreateChunks(int xSize, int ySize, int zSize)
-    {        
+    {
+        chunkDic = new Dictionary<Vector3Int, Chunk>();
+        activeChunk = new List<Vector3Int>();
+
         _width = xSize;
         _height = ySize;
         _depth = zSize;
@@ -109,19 +112,6 @@ public class ChunkManager : MonoBehaviour
             {
                 for (int k = 0; k < zSize ; k += CHUNKSIZE)
                 {
-                    
-                    /*
-                    Vector3Int chunkPos = new Vector3Int(i, j, k);
-
-                    Chunk chunk = new Chunk(chunkPos);
-
-                    Mesh mesh = caveVisualisor.CreateMeshData(chunkPos);
-
-                    chunk.BuildChunk(mesh);
-                    chunkDic.Add(chunkPos, chunk);
-                    */
-
-                    
                     Vector3Int chunkPos = new Vector3Int(i, j, k);
 
                     Chunk chunk = new Chunk(chunkPos);
@@ -138,7 +128,6 @@ public class ChunkManager : MonoBehaviour
                         }
                     }
                     chunkDic.Add(chunkPos, chunk);
-                    
                 }
             }
         }
@@ -152,11 +141,6 @@ public class ChunkManager : MonoBehaviour
             c.BuildPaths();
         }
         */
-
-
-        Debug.Log("GCount: " + GlobalCount);
-        
-        
     }
 
     public void BuildChunks(Chunk chunk)
@@ -217,6 +201,7 @@ public class ChunkManager : MonoBehaviour
 
     IEnumerator MarchAll()
     {
+        GlobalCount = 0;
         int size = 40; //5 each
 
         for (int iterX = 0; iterX < _width; iterX += size)
@@ -233,8 +218,8 @@ public class ChunkManager : MonoBehaviour
                     _densityBufferAll = new ComputeBuffer(expandSize, sizeof(float));
                     _countBufferAll = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
 
-                    _countBufferTest = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-                    _totalCount = new ComputeBuffer(vSize, sizeof(int), ComputeBufferType.Append);
+                    //_countBufferTest = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+                    //_totalCount = new ComputeBuffer(vSize, sizeof(int), ComputeBufferType.Append);
 
                     float[] dens = new float[expandSize];
                     for (int i = 0; i < size + 1; i++)
@@ -251,7 +236,7 @@ public class ChunkManager : MonoBehaviour
                     _densityBufferAll.SetData(dens);
                     //_densityBufferAll.SetData(CaveGenerator.Instance.caveGrid, locIdx, 0, 41 * 41 * 41);
                     _vertexBufferAll.SetCounterValue(0);
-                    _totalCount.SetCounterValue(0);
+                    //_totalCount.SetCounterValue(0);
                     computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "densityBuffer", _densityBufferAll);
                     computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "vertexBuffer", _vertexBufferAll);
 
@@ -260,7 +245,7 @@ public class ChunkManager : MonoBehaviour
                     computeShaderMarchAll.SetFloat("terrain_surface", 0f);
                     computeShaderMarchAll.SetFloat("scale", scale);
 
-                    computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "totalCount", _totalCount);
+                    //computeShaderMarchAll.SetBuffer(_marchAllKernelIdx, "totalCount", _totalCount);
 
                     computeShaderMarchAll.Dispatch(_marchAllKernelIdx, size / 8, size / 8, size / 8);
 
@@ -269,11 +254,11 @@ public class ChunkManager : MonoBehaviour
                     _countBufferAll.GetData(totalCountArr);
                     int totalCount = totalCountArr[0];
 
+                    /*
                     ComputeBuffer.CopyCount(_totalCount, _countBufferTest, 0);
                     int[] totalCountArr1 = new int[1];
                     _countBufferTest.GetData(totalCountArr1);
 
-                    /*
                     int wallCount = totalCountArr1[0];
                     int[] wallsData = new int[wallCount];
                     _totalCount.GetData(wallsData);
@@ -281,7 +266,8 @@ public class ChunkManager : MonoBehaviour
                     for (int wallIdx = 0; wallIdx < wallCount; wallIdx++)
                     {
                         aStar.UpdateGrid(wallsData[wallIdx], true);
-                    }*/
+                    }
+                    */
 
                     TriangleWithPos[] trianglesData = new TriangleWithPos[totalCount];
 
@@ -352,8 +338,6 @@ public class ChunkManager : MonoBehaviour
                     _densityBufferAll.Release();
                     _vertexBufferAll.Release();
                     _countBufferAll.Release();
-                    _totalCount.Release();
-                    _countBufferTest.Release();
                 }
             }
         }
@@ -392,16 +376,6 @@ public class ChunkManager : MonoBehaviour
         {   
             _countBufferAll.Release();
             _countBufferAll = null;
-        }
-        if (_totalCount != null)
-        {   
-            _totalCount.Release();
-            _totalCount = null;
-        }
-        if (_countBufferTest != null)
-        {   
-            _countBufferTest.Release();
-            _countBufferTest = null;
         }
     }
 

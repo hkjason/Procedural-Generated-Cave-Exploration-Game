@@ -232,19 +232,7 @@ public class AStar : MonoBehaviour
                     {
                         Vector3Int startExit;
 
-                        int countt = 0;
                         AStarNode testNode = nextNode;
-                        
-                        /*
-                        while (testNode.parentNode != null)
-                        {
-
-                            Debug.Log(countt + "" + testNode.loc);
-                            testNode = testNode.parentNode;
-                            countt++;
-                        }*/
-                        
-
 
                         result.AddRange(BuildPathH(nextNode, out startExit));
                         result.AddRange(PathFindBase(startLoc, startExit, startChunkPos, out cost));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -17,6 +18,14 @@ public abstract class Equipment : MonoBehaviour
 
     public bool isAnimating;
 
+    public static event Action<string> OnAmmoInfoUpdated;
+    public abstract string GetAmmoInfo();
+
+    protected void NotifyAmmoInfoUpdated()
+    {
+        OnAmmoInfoUpdated?.Invoke(GetAmmoInfo());
+    }
+
     //pos Vector3(0.300000012,0,0.600000024)
     //rot Vector3(0,270,354.999969)
     public virtual void Equip()
@@ -31,6 +40,7 @@ public abstract class Equipment : MonoBehaviour
         {
             StopCoroutine(currentEquipCoroutine);
         }
+        NotifyAmmoInfoUpdated();
 
         transform.gameObject.SetActive(true);
         currentEquipCoroutine = StartCoroutine(EquipCoroutine());

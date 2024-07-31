@@ -1,3 +1,4 @@
+using GLTFast.Schema;
 using System.Collections;
 using UnityEngine;
 
@@ -21,6 +22,8 @@ public class Pickaxe : Equipment
     private float[] pickSpeedArr = {1f, 0.8f, 0.65f};
 
     private GameManager gameManager;
+
+    public UnityEngine.Camera _camera;
 
     private void Start()
     {
@@ -47,9 +50,15 @@ public class Pickaxe : Equipment
         digRotation1 = Quaternion.Euler(new Vector3(29.2f, 295.2f, 334f));
     }
 
+    public override string GetAmmoInfo()
+    {
+        return "\u221E";
+    }
+
     public override void Use(Ray ray)
     {
         if (isAnimating) return;
+        isAnimating = true;
 
         this.ray = ray;
 
@@ -64,10 +73,72 @@ public class Pickaxe : Equipment
         }
     }
 
-    IEnumerator MoveAxe()
+    public void TemporaryDig(Equipment lastEquipment)
     {
+        if (isAnimating) return;
         isAnimating = true;
 
+        if (currentUnequipCoroutine != null)
+        {
+            StopCoroutine(currentUnequipCoroutine);
+            currentUnequipCoroutine = null;
+        }
+
+        if (currentEquipCoroutine != null)
+        {
+            StopCoroutine(currentEquipCoroutine);
+        }
+        NotifyAmmoInfoUpdated();
+
+        transform.gameObject.SetActive(true);
+
+        StartCoroutine(DigOnce(lastEquipment));
+    }
+
+    IEnumerator DigOnce(Equipment lastEquipment)
+    {
+        yield return currentEquipCoroutine = StartCoroutine(EquipCoroutineNoReset());
+
+        this.ray = _camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        yield return StartCoroutine(MoveAxeNoReset());
+
+        if (currentEquipCoroutine != null)
+        {
+            StopCoroutine(currentEquipCoroutine);
+            currentEquipCoroutine = null;
+        }
+
+        if (currentUnequipCoroutine != null)
+        {
+            StopCoroutine(currentUnequipCoroutine);
+        }
+
+        Unequip();
+        Player.Instance.currentEquipment = lastEquipment;
+        lastEquipment.Equip();
+    }
+
+    private IEnumerator EquipCoroutineNoReset()
+    {
+        float duration = 0.2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            transform.localPosition = Vector3.Lerp(unequipPos, equipPos, t);
+            transform.localRotation = Quaternion.Lerp(unequipRotation, equipRotation, t);
+
+            yield return null;
+        }
+
+        currentEquipCoroutine = null;
+    }
+
+    IEnumerator MoveAxe()
+    {
         float duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 2;
         float elapsed = 0f;
 
@@ -103,8 +174,6 @@ public class Pickaxe : Equipment
 
     IEnumerator MoveAxe1()
     {
-        isAnimating = true;
-
         float duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 3;
         float elapsed = 0f;
 
@@ -152,6 +221,39 @@ public class Pickaxe : Equipment
         isAnimating = false;
     }
 
+    IEnumerator MoveAxeNoReset()
+    {
+        float duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 2;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            transform.localPosition = Vector3.Lerp(equipPos, digPos, t);
+            transform.localRotation = Quaternion.Lerp(equipRotation, digRotation, t);
+
+            yield return null;
+        }
+
+        Dig();
+
+        duration = cooldown * pickSpeedArr[gameManager.pickSpeedLevel] / 2;
+        elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            transform.localPosition = Vector3.Lerp(digPos, equipPos, t);
+            transform.localRotation = Quaternion.Lerp(digRotation, equipRotation, t);
+
+            yield return null;
+        }
+    }
+
     void Dig()
     {
         RaycastHit hit;
@@ -166,9 +268,12 @@ public class Pickaxe : Equipment
             }
             else if (hit.transform.gameObject.layer == terrainLayerIndex)
             {
-                float curTime = Time.realtimeSinceStartup;
                 CaveGenerator.Instance.DigCave(ray, hit);
-                Debug.Log("DigTime" + (Time.realtimeSinceStartup - curTime));
+            }
+            else if (hit.transform.gameObject.tag == "Enemy")
+            {
+                Bat bat = hit.transform.GetComponent<Bat>();
+                bat.BatHpChange(-20);
             }
         }
     }

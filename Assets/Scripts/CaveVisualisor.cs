@@ -8,7 +8,6 @@ public class CaveVisualisor : MonoBehaviour
     List<Vector2> uvs = new List<Vector2>();
 
     [SerializeField] float terrainSurface;
-    [SerializeField] bool smoothTerrain =true;
 
     MeshFilter meshFilter;
     MeshCollider meshCollider;

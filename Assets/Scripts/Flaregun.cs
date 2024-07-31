@@ -23,7 +23,7 @@ public class Flaregun : Equipment
         set
         {
             _spareRounds = value;
-            spareRoundsChanged?.Invoke(value);
+            NotifyAmmoInfoUpdated();
         }
     }
 
@@ -33,12 +33,9 @@ public class Flaregun : Equipment
         set
         {
             _currentRound = value;
-            currentRoundChanged?.Invoke(value);
+            NotifyAmmoInfoUpdated();
         }
     }
-
-    public event Action<int> spareRoundsChanged;
-    public event Action<int> currentRoundChanged;
 
     public float flareTTL;
 
@@ -56,6 +53,11 @@ public class Flaregun : Equipment
         _gameManager = GameManager.Instance;
     }
 
+    public override string GetAmmoInfo()
+    {
+        return $"{currentRound}/{spareRounds}";
+    }
+
     public override void Use(Ray ray)
     {
         if (isAnimating) return;
@@ -66,6 +68,8 @@ public class Flaregun : Equipment
         {
             if (CheckCooldown())
             {
+                GameManager.Instance.shootFlareQuest = true;
+
                 GetComponent<Animation>().CrossFade("Shoot");
                 GetComponent<AudioSource>().PlayOneShot(flareShotSound);
 
@@ -90,6 +94,7 @@ public class Flaregun : Equipment
     public override void Reload()
     {
         if (isAnimating) return;
+        isAnimating = true;
 
         if (currentRound < 4 && spareRounds >= 1)
         {
@@ -107,6 +112,13 @@ public class Flaregun : Equipment
 
             GetComponent<AudioSource>().PlayOneShot(reloadSound);
             GetComponent<Animation>().CrossFade("Reload");
+
+            Invoke("OnFlareReloadEnd", 1.0831f);
         }
+    }
+
+    public void OnFlareReloadEnd()
+    {
+        isAnimating = false;
     }
 }

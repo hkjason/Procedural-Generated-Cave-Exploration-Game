@@ -56,6 +56,11 @@ public class Chunk
         new Vector3Int(0, 1, 1)
     };
 
+    //Map feature
+    public GameObject wireFrame;
+    private MeshFilter meshFilterWF;
+    private MeshRenderer meshRendererWF;
+
     public Chunk(Vector3Int pos)
     {
         chunkObject = new GameObject(pos.x + ", " + pos.y + ", " + pos.z);
@@ -75,6 +80,16 @@ public class Chunk
         pathDic = new Dictionary<(Vector3Int, Vector3Int), List<Vector3Int>>();
         costDic = new Dictionary<(Vector3Int, Vector3Int), int>();
         exitDic = new Dictionary<Vector3Int, List<Vector3Int>>();
+
+
+
+        //Map feature
+        wireFrame = new GameObject("WireFrame " + pos.x + ", " + pos.y + ", " + pos.z);
+        wireFrame.transform.position = new Vector3(400, 0, 0);
+        meshFilterWF = wireFrame.AddComponent<MeshFilter>();
+        meshRendererWF = wireFrame.AddComponent<MeshRenderer>();
+
+        wireFrame.layer = LayerMask.NameToLayer("WireFrame");
     }
 
     HashSet<Vector3Int> openSet;
@@ -529,16 +544,22 @@ public class Chunk
 
     public void BuildChunk(Mesh mesh)
     {
-        this.meshFilter.mesh = mesh;
-        this.meshCollider.sharedMesh = mesh;
+        meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
 
         meshRenderer.material = Resources.Load<Material>("Materials/ForTesting");
+
+        meshFilterWF.mesh = mesh;
+
+        meshRendererWF.material = Resources.Load<Material>("Materials/Wireframe-TransparentCulled");
     }
 
     public void UpdateChunk(Mesh mesh)
     {
-        this.meshFilter.mesh = mesh;
-        this.meshCollider.sharedMesh = mesh;
+        meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
+
+        meshFilterWF.mesh = mesh;
     }
 
     public void UpdateDensity()

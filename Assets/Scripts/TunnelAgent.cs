@@ -29,19 +29,10 @@ public class TunnelAgent : CaveAgent
                 {
                     for (int z = -(weight / 2); z <= (weight / 2); z++)
                     {
-                        CaveGenerator.Instance.SetCave(currentPos.x + x, currentPos.y + y, currentPos.z + z, 1f);
+                        if (WithinBounds(currentPos + new Vector3Int(x, y, z)))
+                            CaveGenerator.Instance.SetCave(currentPos.x + x, currentPos.y + y, currentPos.z + z, 1f);
                     }
                 }
-            }
-
-            int randomNumber1 = Random.Range(0, 100);
-            if (randomNumber1 <= 1)
-            {
-                CaveGenerator.Instance.orePoints.Add(currentPos);
-            }
-            if (randomNumber1 >= 90 && randomNumber1 <= 99)
-            {
-                CaveGenerator.Instance.flowerPoints.Add(currentPos);
             }
         }
 

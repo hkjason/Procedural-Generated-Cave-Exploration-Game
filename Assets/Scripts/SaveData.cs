@@ -11,4 +11,9 @@ public class SaveData
     public int flareIntensityLevel;
 
     public int hpLevel;
+
+    public float mouseSensitivity;
+    public bool inverseY;
+
+    public bool tutorial;
 }
