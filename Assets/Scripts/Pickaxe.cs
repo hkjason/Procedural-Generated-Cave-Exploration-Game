@@ -262,13 +262,20 @@ public class Pickaxe : Equipment
         {
             Debug.Log("Hit:" + hit.point);
 
-            if (hit.transform.gameObject.layer == oreLayerIndex)
+            if (hit.transform.gameObject.layer == terrainLayerIndex)
+            {
+                if (hit.transform.gameObject.tag == "Platform")
+                {
+                    Destroy(hit.transform.gameObject);
+                }
+                else
+                {
+                    CaveGenerator.Instance.DigCave(ray, hit);
+                }
+            }
+            else if (hit.transform.gameObject.layer == oreLayerIndex)
             {
                 CaveGenerator.Instance.DigOre(ray, hit);
-            }
-            else if (hit.transform.gameObject.layer == terrainLayerIndex)
-            {
-                CaveGenerator.Instance.DigCave(ray, hit);
             }
             else if (hit.transform.gameObject.tag == "Enemy")
             {

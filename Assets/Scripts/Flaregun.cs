@@ -115,6 +115,10 @@ public class Flaregun : Equipment
 
             Invoke("OnFlareReloadEnd", 1.0831f);
         }
+        else
+        {
+            isAnimating = false;
+        }
     }
 
     public void OnFlareReloadEnd()

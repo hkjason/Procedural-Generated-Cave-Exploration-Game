@@ -91,6 +91,10 @@ public class Gun : Equipment
             _gameManager.reloadQuest = true;
             StartCoroutine(WaitReload());
         }
+        else
+        { 
+            isAnimating = false;
+        }
     }
 
     IEnumerator WaitReload()

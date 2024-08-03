@@ -37,6 +37,7 @@ public class Player : MonoBehaviour
     [SerializeField] public Pickaxe pickaxe;
     [SerializeField] public Gun gun;
     [SerializeField] public Flaregun flaregun;
+    [SerializeField] public PlatformLauncher platformLauncher;
     public Equipment currentEquipment;
 
     [Header("Flare")]
@@ -300,6 +301,14 @@ public class Player : MonoBehaviour
             if (currentEquipment.isAnimating) return;
             currentEquipment.Unequip();
             currentEquipment = flaregun;
+            currentEquipment.Equip();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            if (currentEquipment == platformLauncher) return;
+            if (currentEquipment.isAnimating) return;
+            currentEquipment.Unequip();
+            currentEquipment = platformLauncher;
             currentEquipment.Equip();
         }
 
