@@ -47,6 +47,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float _throwPower;
     [SerializeField] private float holdThreshold = 0.5f;
     [SerializeField] private Light _headLight;
+    [SerializeField] private Light _headLight2;
     private bool isHolding = false;
     private float keyHoldTime = 0f;
     private int _flareCount;
@@ -329,6 +330,7 @@ public class Player : MonoBehaviour
             if (keyHoldTime > holdThreshold)
             {
                 _headLight.enabled = !_headLight.enabled;
+                _headLight2.enabled = !_headLight2.enabled;
                 isHolding = false;
             }
         }

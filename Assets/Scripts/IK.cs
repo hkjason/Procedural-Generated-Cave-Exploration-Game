@@ -36,11 +36,9 @@ public class IK : MonoBehaviour
 
     public float upDist = 0.4f;
     public float coolDown = 0.5f;
-    private bool onCD = false;
     RaycastHit hit;
 
     float currTime;
-    bool normalCD = false;
 
     void Start()
     {

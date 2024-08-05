@@ -299,4 +299,17 @@ public class GameManager : MonoBehaviour
     { 
     
     }
+
+
+    public void ResetQuest()
+    {
+        _digWallQuest = false;
+        _digOreQuest = false;
+
+        _shootBulletQuest = false;
+        _reloadQuest = false;
+
+        _throwFlareQuest = false;
+        _shootFlareQuest = false;
+    }
 }

@@ -24,7 +24,7 @@ namespace GK
         public LayerMask groundLayerMask;
 
         public int totalOreCount = 0;
-        public int oreCountInGame = 600;
+        public int oreCountInGame = 800;
 
         Vector3Int[] neighbourTable = new Vector3Int[6]
         {
@@ -613,18 +613,7 @@ namespace GK
 
             Vector3 randomDirection;
             Vector3 raycastOrigin = point + (normal * 0.1f);
-            Vector3 raycastDirection;
 
-            /*
-            int maxTry = 0;
-            do
-            {
-                randomDirection = UnityEngine.Random.insideUnitSphere.normalized;
-                raycastDirection = randomDirection;
-                maxTry++;
-
-            } while ((Vector3.Angle(point + randomDirection, normal) > angle || Physics.Raycast(raycastOrigin, raycastDirection, distance, groundLayerMask)) && maxTry < 20);
-            */
             randomDirection = UnityEngine.Random.insideUnitSphere.normalized;
 
 

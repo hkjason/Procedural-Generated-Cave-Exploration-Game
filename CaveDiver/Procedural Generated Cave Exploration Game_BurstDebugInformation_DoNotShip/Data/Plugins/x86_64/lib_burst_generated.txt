@@ -8,6 +8,7 @@ Library: C:\Users\jason\Documents\GitHub\Procedural-Generated-Cave-Exploration-G
 --float-precision=Standard
 --assembly-defines=UnityEngine;
 --assembly-defines=Assembly-CSharp;
+--assembly-defines=Unity.Postprocessing.Runtime;
 --assembly-defines=Unity.Burst;
 --assembly-defines=glTFast.dots;
 --assembly-defines=glTFast.Export;
@@ -163,6 +164,7 @@ Library: C:\Users\jason\Documents\GitHub\Procedural-Generated-Cave-Exploration-G
 --float-precision=Standard
 --assembly-defines=UnityEngine;
 --assembly-defines=Assembly-CSharp;
+--assembly-defines=Unity.Postprocessing.Runtime;
 --assembly-defines=Unity.Burst;
 --assembly-defines=glTFast.dots;
 --assembly-defines=glTFast.Export;

@@ -86,6 +86,7 @@ public class StartUIManager : MonoBehaviour
         //startButtonGO.SetActive(false);
         //shopButtonGO.SetActive(false);
         //loadPanel.SetActive(true);
+        GameManager.Instance.ResetQuest();
         SceneManager.LoadSceneAsync(1);
     }
 }

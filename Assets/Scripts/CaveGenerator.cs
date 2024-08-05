@@ -71,39 +71,9 @@ public class CaveGenerator : MonoBehaviour
 
     public GameObject bat;
 
-
-    void OnDrawGizmosSelected()
-    {
-        // Draw a yellow sphere at the transform's position
-        Gizmos.color = Color.red;
-
-        Gizmos.DrawSphere(new Vector3(0,0,0) /4, 1);
-        Gizmos.DrawSphere(new Vector3(0, 0, height) /4, 1);
-        Gizmos.DrawSphere(new Vector3(0, depth, 0) /4, 1);
-        Gizmos.DrawSphere(new Vector3(0, depth, height) / 4, 1);
-        Gizmos.DrawSphere(new Vector3(width, 0, 0) /4, 1);
-        Gizmos.DrawSphere(new Vector3(width, 0, height) / 4, 1);
-        Gizmos.DrawSphere(new Vector3(width, depth, 0)/ 4, 1);
-        Gizmos.DrawSphere(new Vector3(width, depth, height)/4, 1);
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawSphere(startingPt / 4, 1);
-
-        Gizmos.color = Color.blue;
-
-        Gizmos.DrawSphere(spiderHit.point, 0.02f);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(spiderHit.point, spiderHit.point + spiderHit.normal * 0.5f);
-
-        Gizmos.color = Color.yellow;
-        foreach (Vector3 vv in orePointsNew)
-        {
-            Gizmos.DrawSphere(vv, 0.5f);
-        }
-
-    }
-
+    private bool cullOn;
+    public List<Light> lights = new List<Light>();
+    public Camera cam;
 
     void Awake()
     {
@@ -134,6 +104,43 @@ public class CaveGenerator : MonoBehaviour
 
         isGen = false;
         StartCoroutine(CaveGenerationChecker());
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            cullOn = true;
+        }
+
+        if (cullOn)
+        {
+            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(cam);
+            int countlight = 0;
+
+            foreach (Light l in lights)
+            {
+                bool tf = CheckSphere(planes, l.transform.position, l.range);
+                l.enabled = tf;
+                if (tf)
+                    countlight++;
+            }
+
+            Debug.Log("CountLight: " + countlight);
+        }
+    }
+
+    bool CheckSphere(Plane[] planes, Vector3 center, float radius)
+    {
+        for (int i = 0; i < planes.Length; i++)
+        {
+            if (planes[i].normal.x * center.x + planes[i].normal.y * center.y +
+              planes[i].normal.z * center.z + planes[i].distance < -radius)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     IEnumerator BackToMain()
@@ -226,6 +233,7 @@ public class CaveGenerator : MonoBehaviour
 
         DifficultyAreaGen();
 
+        
         if (orePointsNew.Count < 20)
         {
             Debug.LogWarning("Generation Fail");
@@ -233,11 +241,8 @@ public class CaveGenerator : MonoBehaviour
             _seed = 1;
             yield break;
         }
-
-
-
+        
         _convexHull.OreMeshGen();
-
 
         player.Spawn(new Vector3(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4));
 
@@ -323,11 +328,13 @@ public class CaveGenerator : MonoBehaviour
                         {
                             Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
 
+                            GameObject lightGO;
                             //Quaternion rotation = Quaternion.FromToRotation(hit.point, hit.normal);
                             if (isTop && hit.normal.y > 0)
                             {
                                 int randomFlowerIdx = UnityEngine.Random.Range(0, _flowerPrefab.Count);
-                                Instantiate(_flowerPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
+                                lightGO = Instantiate(_flowerPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
+                                lights.Add(lightGO.GetComponentInChildren<Light>());
                                 tries = 5;
                                 fCount++;
                                 added = true;
@@ -335,7 +342,8 @@ public class CaveGenerator : MonoBehaviour
                             else if (!isTop && hit.normal.y < 0)
                             {
                                 int randomFlowerIdx = UnityEngine.Random.Range(0, _plantPrefab.Count);
-                                Instantiate(_plantPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
+                                lightGO = Instantiate(_plantPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
+                                lights.Add(lightGO.GetComponentInChildren<Light>());
                                 tries = 5;
                                 fCount++; 
                                 added = true;
@@ -381,7 +389,7 @@ public class CaveGenerator : MonoBehaviour
     {
         int oreCount = 0;
         int iter = 0;
-        while (oreCount < oreNum && iter <= 20)
+        while (oreCount < oreNum && iter <= 30)
         {
             int randomIdx = UnityEngine.Random.Range(0, cList.Count);
 
@@ -658,7 +666,7 @@ public class CaveGenerator : MonoBehaviour
         {
             for (int i = 0; i < 10; i++)
             {
-                OreSpawn(chunkList[i].Item1, 2);
+                OreSpawn(chunkList[i].Item1, 3);
                 BatSpawn(chunkList[i].Item1, 2);
                 FlowerSpawn(chunkList[i].Item1, 2);
             }
