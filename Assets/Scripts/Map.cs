@@ -8,6 +8,8 @@ public class Map : MonoBehaviour
     public Transform player;
     public Transform mainCamera;
 
+    public Camera mapCam;
+
     private Vector3 offset = new Vector3(400, 0, 0);
 
     public float tempOff;
@@ -26,6 +28,7 @@ public class Map : MonoBehaviour
             if (_mapOn != value)
             {
                 _mapOn = value;
+                mapCam.enabled = value;
                 mapChanged?.Invoke(value);
             }
         }

@@ -64,7 +64,7 @@ using System.Collections;
                     case BulletType.enemy:
                         if (hit.collider.tag == "Player")
                         {
-                            Player.Instance.PlayerHpChange(-10);
+                            Player.Instance.PlayerHpChange(-10, transform.parent.position);
                         }
                         break;
                 }

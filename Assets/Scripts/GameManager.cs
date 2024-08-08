@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -43,6 +44,8 @@ public class GameManager : MonoBehaviour
 
     public event Action<bool> throwFlareChanged;
     public event Action<bool> shootFlareChanged;
+
+    public event Action<bool> gameEndEvent;
 
     public bool digWallQuest
     {
@@ -291,14 +294,22 @@ public class GameManager : MonoBehaviour
 
 
     public void GameEndVictory()
-    { 
-        
+    {
+        Time.timeScale = 0;
+        money += Mathf.FloorToInt(Player.Instance.oreCount / 2);
+        SaveGame();
+        gameEndEvent?.Invoke(true);
     }
 
     public void GameEndDefeat()
-    { 
-    
+    {
+        Time.timeScale = 0;
+        money += Mathf.FloorToInt(Player.Instance.oreCount / 4);
+        SaveGame();
+        gameEndEvent?.Invoke(false);
     }
+
+
 
 
     public void ResetQuest()

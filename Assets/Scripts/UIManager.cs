@@ -39,6 +39,8 @@ public class UIManager : MonoBehaviour
 
     private bool settingsChanged = false;
 
+    public float ringRadius;
+
     private string[] textArr =
     {
         "Brave walkers roaming...",
@@ -69,7 +71,17 @@ public class UIManager : MonoBehaviour
     public Button quitCancel;
     public Button quitConfirm;
 
+    public GameObject victoryPanel;
+    public GameObject defeatPanel;
+    public Button victoryQuit;
+    public Button defeatQuit;
+    public TMP_Text victoryOre;
+    public TMP_Text victoryCoin;
+    public TMP_Text defeatOre;
+    public TMP_Text defeatCoin;
 
+    public Transform triangle;
+    public Transform indicator;
 
     // Start is called before the first frame update
     void Start()
@@ -81,6 +93,7 @@ public class UIManager : MonoBehaviour
         _player.oreCountChanged += UpdateOreCount;
         _player.flareCountChanged += UpdateFlareCount;
         _player.hpChanged += UpdateHp;
+        _player.OnDamageTaken += ShowDamageDirection;
 
         _gameManager.digWallChanged += FirstWallDig;
         _gameManager.digOreChanged += FirstOreDig;
@@ -88,6 +101,8 @@ public class UIManager : MonoBehaviour
         _gameManager.reloadChanged += FirstReload;
         _gameManager.throwFlareChanged += FirstFlareThrow;
         _gameManager.shootFlareChanged += FirstFlareShoot;
+
+        _gameManager.gameEndEvent += GameEndEvent;
 
         map.mapChanged += MapToggle;
 
@@ -110,6 +125,9 @@ public class UIManager : MonoBehaviour
         quitButton.onClick.AddListener(QuitGameCheck);
         quitCancel.onClick.AddListener(QuitGameBack);
         quitConfirm.onClick.AddListener(QuitGameConfirm);
+
+        victoryQuit.onClick.AddListener(QuitGameConfirm);
+        defeatQuit.onClick.AddListener(QuitGameConfirm);
 
         if (!_gameManager.tutorial)
         {
@@ -155,6 +173,28 @@ public class UIManager : MonoBehaviour
                 Time.timeScale = 0;
             }
         }
+    }
+
+    void ShowDamageDirection(Vector3 attackerPosition, Vector3 playerPosition)
+    {
+        Vector3 direction = (attackerPosition - playerPosition).normalized;
+
+        Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
+        triangle.rotation = rotation;
+
+        Vector3 screenPosition = Camera.main.WorldToScreenPoint(attackerPosition);
+
+        indicator.localPosition = screenPosition;
+
+        Vector2 screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
+
+        Vector2 directionFromCenter = new Vector2(screenPosition.x - screenCenter.x, screenPosition.y - screenCenter.y);
+
+        Vector2 normalizedDirection = directionFromCenter.normalized;
+
+        Vector2 ringPosition = screenCenter + normalizedDirection * ringRadius;
+
+        //indicator.localPosition = ringPosition;
     }
 
     void SaveSettings()
@@ -303,6 +343,22 @@ public class UIManager : MonoBehaviour
         CompleteTut();
     }
 
+    void GameEndEvent(bool b)
+    {
+        if (b)
+        {
+            victoryOre.text = Player.Instance.oreCount.ToString();
+            victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 2).ToString();
+            victoryPanel.SetActive(true);
+        }
+        else
+        {
+            victoryOre.text = Player.Instance.oreCount.ToString();
+            victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 4).ToString();
+            defeatPanel.SetActive(true);
+        }
+    }
+
     void TutChange()
     {
         if (set1Completed == 2)
@@ -340,6 +396,7 @@ public class UIManager : MonoBehaviour
         { 
             _player.oreCountChanged -= UpdateOreCount;
             _player.flareCountChanged -= UpdateFlareCount;
+            _player.OnDamageTaken -= ShowDamageDirection;
         }
         if (_gameManager != null)
         {

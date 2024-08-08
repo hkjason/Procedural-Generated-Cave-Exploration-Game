@@ -596,7 +596,7 @@ namespace GK
         {
             List<Vector3> randomPoints = new List<Vector3>();
 
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < normals.Count; i++)
             {
                 randomPoints.Add(GetRandomPointAroundNormal(points[i], normals[i], minDistance, maxDistance, minAngle, maxAngle));
             }

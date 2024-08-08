@@ -71,10 +71,6 @@ public class CaveGenerator : MonoBehaviour
 
     public GameObject bat;
 
-    private bool cullOn;
-    public List<Light> lights = new List<Light>();
-    public Camera cam;
-
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -104,43 +100,6 @@ public class CaveGenerator : MonoBehaviour
 
         isGen = false;
         StartCoroutine(CaveGenerationChecker());
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.O))
-        {
-            cullOn = true;
-        }
-
-        if (cullOn)
-        {
-            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(cam);
-            int countlight = 0;
-
-            foreach (Light l in lights)
-            {
-                bool tf = CheckSphere(planes, l.transform.position, l.range);
-                l.enabled = tf;
-                if (tf)
-                    countlight++;
-            }
-
-            Debug.Log("CountLight: " + countlight);
-        }
-    }
-
-    bool CheckSphere(Plane[] planes, Vector3 center, float radius)
-    {
-        for (int i = 0; i < planes.Length; i++)
-        {
-            if (planes[i].normal.x * center.x + planes[i].normal.y * center.y +
-              planes[i].normal.z * center.z + planes[i].distance < -radius)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     IEnumerator BackToMain()
@@ -271,13 +230,13 @@ public class CaveGenerator : MonoBehaviour
         switch (diffLevel)
         {
             case 0: 
-                totalFCount = 8;
+                totalFCount = 3;
                 isTop = true;
                 break;
-            case 1: totalFCount = 4;
+            case 1: totalFCount = 2;
                 isTop = true;
                 break;
-            case 2: totalFCount = 2;
+            case 2: totalFCount = 1;
                 isTop = false;
                 break;
             default: totalFCount = 0;
@@ -328,13 +287,11 @@ public class CaveGenerator : MonoBehaviour
                         {
                             Quaternion rotation = Quaternion.LookRotation(hit.normal) * Quaternion.Euler(90, 0, 0); ;
 
-                            GameObject lightGO;
                             //Quaternion rotation = Quaternion.FromToRotation(hit.point, hit.normal);
                             if (isTop && hit.normal.y > 0)
                             {
                                 int randomFlowerIdx = UnityEngine.Random.Range(0, _flowerPrefab.Count);
-                                lightGO = Instantiate(_flowerPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
-                                lights.Add(lightGO.GetComponentInChildren<Light>());
+                                Instantiate(_flowerPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
                                 tries = 5;
                                 fCount++;
                                 added = true;
@@ -342,8 +299,7 @@ public class CaveGenerator : MonoBehaviour
                             else if (!isTop && hit.normal.y < 0)
                             {
                                 int randomFlowerIdx = UnityEngine.Random.Range(0, _plantPrefab.Count);
-                                lightGO = Instantiate(_plantPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
-                                lights.Add(lightGO.GetComponentInChildren<Light>());
+                                Instantiate(_plantPrefab[randomFlowerIdx], hit.point - hit.normal * 0.05f, rotation);
                                 tries = 5;
                                 fCount++; 
                                 added = true;
@@ -466,8 +422,6 @@ public class CaveGenerator : MonoBehaviour
 
     public void DigOre(Ray ray, RaycastHit hit)
     {
-        Debug.Log("DigOre");
-
         _gameManager.digOreQuest = true;
         _convexHull.UpdateOre(hit);
     }
@@ -476,8 +430,6 @@ public class CaveGenerator : MonoBehaviour
     {
         _gameManager.digWallQuest = true;
 
-        Debug.Log("Hit: " + hit.point * 4);
-        Debug.Log("ray: " + ray.direction);
         Vector3 hitPos = hit.point * 4;
         float rayx = Mathf.Abs(ray.direction.x);
         float rayy = Mathf.Abs(ray.direction.y);
@@ -521,15 +473,10 @@ public class CaveGenerator : MonoBehaviour
             Debug.Log("No match");
         }
 
-
-        Debug.Log("Dig:" + hitPos);
-
         int x = Mathf.RoundToInt(hitPos.x);
         int y = Mathf.RoundToInt(hitPos.y);
         int z = Mathf.RoundToInt(hitPos.z);
         Vector3 digSpot = new Vector3(x, y, z);
-
-        Debug.Log("DigInt:" + digSpot);
 
         List<Vector3Int> updatedPoint = new List<Vector3Int>();
         for (int i = -1; i <= 1; i++)

@@ -401,6 +401,8 @@ MonoBehaviour:
   moveSpeed: 1
   bulletSpeed: 500
   rb: {fileID: 2066073164758766894}
+  markerGO: {fileID: 6457328979923860972, guid: 75c10638225a6224290e819510f8bccc, type: 3}
+  marker: {fileID: 8931947410970450556, guid: 75c10638225a6224290e819510f8bccc, type: 3}
 --- !u!65 &7773636607015913293
 BoxCollider:
   m_ObjectHideFlags: 0

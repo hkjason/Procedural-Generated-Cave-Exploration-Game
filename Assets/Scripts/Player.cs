@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -48,8 +49,10 @@ public class Player : MonoBehaviour
     [SerializeField] private float holdThreshold = 0.5f;
     [SerializeField] private Light _headLight;
     [SerializeField] private Light _headLight2;
-    private bool isHolding = false;
-    private float keyHoldTime = 0f;
+    private bool isHoldingF = false;
+    private float keyHoldTimeF = 0f;
+    private bool isHoldingE = false;
+    private float keyHoldTimeE = 0f;
     private int _flareCount;
 
     private float _flareSpawnTime;
@@ -97,6 +100,7 @@ public class Player : MonoBehaviour
     }
 
     public event Action<int> hpChanged;
+    public event Action<Vector3, Vector3> OnDamageTaken;
 
     void OnDrawGizmosSelected()
     {
@@ -320,28 +324,54 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F))
         {
-            isHolding = true;
-            keyHoldTime = 0f;
+            isHoldingF = true;
+            keyHoldTimeF = 0f;
         }
 
-        if (Input.GetKey(KeyCode.F) && isHolding)
+        if (Input.GetKey(KeyCode.F) && isHoldingF)
         {
-            keyHoldTime += Time.deltaTime;
-            if (keyHoldTime > holdThreshold)
+            keyHoldTimeF += Time.deltaTime;
+            if (keyHoldTimeF > holdThreshold)
             {
                 _headLight.enabled = !_headLight.enabled;
                 _headLight2.enabled = !_headLight2.enabled;
-                isHolding = false;
+                isHoldingF = false;
             }
         }
 
         if (Input.GetKeyUp(KeyCode.F))
         {
-            if (isHolding && keyHoldTime <= holdThreshold)
+            if (isHoldingF && keyHoldTimeF <= holdThreshold)
             {
                 SpawnFlare();
             }
-            isHolding = false;
+            isHoldingF = false;
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            isHoldingE = true;
+            keyHoldTimeE = 0f;
+        }
+
+        if (Input.GetKey(KeyCode.E) && isHoldingE)
+        {
+            keyHoldTimeE += Time.deltaTime;
+            if (keyHoldTimeE > holdThreshold)
+            {
+                if (oreCount >= 200)
+                {
+                    alive = false;
+                    gameManager.GameEndVictory();
+                }
+                isHoldingE = false;
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.E))
+        {
+            isHoldingE = false;
         }
     }
 
@@ -409,8 +439,10 @@ public class Player : MonoBehaviour
     }
 
 
-    public void PlayerHpChange(int delta)
+    public void PlayerHpChange(int delta, Vector3 source)
     {
+        OnDamageTaken?.Invoke(source, transform.position);
+
         int val = hp + delta;
         if (val > _maxHp)
         {
@@ -419,6 +451,8 @@ public class Player : MonoBehaviour
         else if (val <= 0)
         {
             hp = 0;
+            alive = false;
+            gameManager.GameEndDefeat();
         }
         else
         {

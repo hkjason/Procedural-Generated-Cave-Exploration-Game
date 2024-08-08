@@ -35,6 +35,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Cube:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -94,6 +98,8 @@ Material:
     m_Ints: []
     m_Floats:
     - PixelSnap: 0
+    - _AmbientRange: -1.1
+    - _BackfaceLightIntensity: 0.226
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
@@ -107,16 +113,25 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _ReflectIntensity: 1
     - _Rotation: 0
+    - _Shininess: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _AmbientColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BackfaceLightColor: {r: 0.19607845, g: 0.14509805, b: 0.08235294, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _PointLightPosition0: {r: 0, g: 0, b: 0, a: 0}
+    - _PointLightPosition1: {r: 0, g: 0, b: 0, a: 0}
+    - _PointLightPosition2: {r: 0, g: 0, b: 0, a: 0}
+    - _PointLightPosition3: {r: 0, g: 0, b: 0, a: 0}
+    - _ReflectColor: {r: 0.19607843, g: 0.14509805, b: 0.08235294, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _Tint: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}

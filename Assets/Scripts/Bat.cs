@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Timeline;
 
 
 public class Bat : MonoBehaviour
@@ -12,7 +13,7 @@ public class Bat : MonoBehaviour
     private float idleDuration = 5f;
     private float idleTimer = 0f;
 
-    private float checkCD = 3f;
+    private float checkCD = 2f;
     private float checkTimer = 0f;
 
     private float attackCD = 3f;
@@ -33,6 +34,8 @@ public class Bat : MonoBehaviour
 
     [SerializeField] private float bulletSpeed;
 
+    private Vector3 offset = new Vector3(400, 0, 0);
+
     private enum State { Idle, Roaming, Attacking, Dead}
     private State currentState;
 
@@ -40,6 +43,12 @@ public class Bat : MonoBehaviour
     Coroutine moveCoroutine;
 
     public Rigidbody rb;
+
+    public GameObject markerGO;
+
+    public Transform marker;
+
+    private bool isAttacking;
 
     private void Awake()
     {
@@ -50,6 +59,8 @@ public class Bat : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        marker = Instantiate(markerGO, Vector3.zero, Quaternion.identity).transform;
+
         anim = GetComponent<Animation>();
 
         hp = 100;
@@ -57,7 +68,19 @@ public class Bat : MonoBehaviour
         EnterState(State.Idle);
 
         checkTimer = 0f;
+        checkCD = 2f + Random.Range(0f, 1f);
+
+        Invoke("Register", 0);
     }
+
+    void Register()
+    {
+        if (!DamageIndicatorManager.CheckIfObjectInSight(this.transform))
+        {
+            DamageIndicatorManager.CreateIndicator(this.transform);
+        }
+    }
+
 
     private void OnDrawGizmosSelected()
     {
@@ -87,6 +110,15 @@ public class Bat : MonoBehaviour
                 break;
         }
     }
+
+    void LateUpdate()
+    {
+        if (isAttacking)
+        {
+            marker.localPosition = transform.position + offset;
+        }
+    }
+
 
     public void BatHpChange(int delta)
     {
@@ -172,7 +204,7 @@ public class Bat : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(newDirection);
 
         if (attackTimer >= attackCD)
-        { 
+        {
             if (Vector3.Angle(transform.forward, directionToPlayer) < 5f)
             {
                 attackTimer = 0;
@@ -180,11 +212,14 @@ public class Bat : MonoBehaviour
                 //ShootProjectile();
                 GameObject bulletInstance = Instantiate(proj, projSpawn.position, Quaternion.identity); //INSTANTIATING THE FLARE PROJECTILE
                 bulletInstance.transform.LookAt(player.transform.position);
+                bulletInstance.transform.SetParent(transform);
                 Rigidbody bullet = bulletInstance.GetComponent<Rigidbody>();
                 bullet.AddForce(bulletInstance.transform.forward * bulletSpeed);
             }
         }
     }
+
+    
 
 
     void CheckDistance()
@@ -198,12 +233,15 @@ public class Bat : MonoBehaviour
 
             if (dist < 8)
             {
-                EnterState(State.Attacking);
+                if (currentState != State.Attacking)
+                    EnterState(State.Attacking);
             }
             else if (dist >= 12 && currentState == State.Attacking)
             {
-                EnterState(State.Roaming);
+                if (currentState != State.Roaming)
+                    EnterState(State.Roaming);
             }
+            checkCD = 2f + Random.Range(0f, 1f);
         }
     }
 
@@ -225,17 +263,25 @@ public class Bat : MonoBehaviour
         switch (s)
         {
             case State.Idle:
+                isAttacking = false;
+                marker.gameObject.SetActive(false);
                 idleTimer = 0f;
                 idleDuration = Random.Range(2f, 5f);
                 break;
             case State.Roaming:
+                isAttacking = false;
+                marker.gameObject.SetActive(false);
                 break;
             case State.Attacking:
                 attackTimer = 0f;
+                marker.gameObject.SetActive(true);
+                isAttacking = true;
                 break;
             case State.Dead:
+                isAttacking = false;
                 anim.Stop();
                 rb.isKinematic = false;
+                marker.gameObject.SetActive(false);
                 Destroy(gameObject, 10f);
                 break;
         }

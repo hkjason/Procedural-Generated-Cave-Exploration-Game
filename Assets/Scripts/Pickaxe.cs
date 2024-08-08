@@ -260,8 +260,6 @@ public class Pickaxe : Equipment
 
         if (Physics.Raycast(ray.origin, ray.direction, out hit, 2f))
         {
-            Debug.Log("Hit:" + hit.point);
-
             if (hit.transform.gameObject.layer == terrainLayerIndex)
             {
                 if (hit.transform.gameObject.tag == "Platform")

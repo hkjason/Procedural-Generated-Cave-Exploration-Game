@@ -398,7 +398,6 @@ public class ChunkManager : MonoBehaviour
 
         foreach (Vector3Int chunks in chunksToUpdate)
         {
-            Debug.Log("name" + chunkDic[chunks].chunkObject.name);
             caveVisualisor.UpdateMeshData(chunkDic[chunks]);
         }
     }
