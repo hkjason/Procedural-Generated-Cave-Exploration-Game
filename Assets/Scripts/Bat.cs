@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.Timeline;
 
@@ -50,6 +51,8 @@ public class Bat : MonoBehaviour
 
     private bool isAttacking;
 
+    private bool targetFound;
+
     private void Awake()
     {
         //player = GameObject.FindGameObjectWithTag("Player").transform;
@@ -70,16 +73,8 @@ public class Bat : MonoBehaviour
         checkTimer = 0f;
         checkCD = 2f + Random.Range(0f, 1f);
 
-        Invoke("Register", 0);
     }
 
-    void Register()
-    {
-        if (!DamageIndicatorManager.CheckIfObjectInSight(this.transform))
-        {
-            DamageIndicatorManager.CreateIndicator(this.transform);
-        }
-    }
 
 
     private void OnDrawGizmosSelected()
@@ -207,6 +202,29 @@ public class Bat : MonoBehaviour
         {
             if (Vector3.Angle(transform.forward, directionToPlayer) < 5f)
             {
+                RaycastHit hit;
+
+                if (!targetFound)
+                {
+                    if (Physics.Raycast(transform.position, directionToPlayer, out hit, 12f))
+                    {
+                        if (hit.transform.gameObject.tag == "Player")
+                        {
+                            targetFound = true;
+                        }
+                        else
+                        {
+                            attackTimer = 2.5f;
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        attackTimer = 2.5f;
+                        return;
+                    }
+                }
+
                 attackTimer = 0;
 
                 //ShootProjectile();
@@ -274,6 +292,7 @@ public class Bat : MonoBehaviour
                 break;
             case State.Attacking:
                 attackTimer = 0f;
+                targetFound = false;
                 marker.gameObject.SetActive(true);
                 isAttacking = true;
                 break;

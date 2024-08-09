@@ -2,6 +2,7 @@ using GK;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -255,13 +256,13 @@ public class CaveGenerator : MonoBehaviour
 
             Vector3Int cLoc = cList[randomIdx];
 
-            int randomX = UnityEngine.Random.Range(0, 8);
-            int randomY = UnityEngine.Random.Range(0, 8);
-            int randomZ = UnityEngine.Random.Range(0, 8);
 
             int tries = 0;
             while (tries < 5)
             {
+                int randomX = UnityEngine.Random.Range(0, 8);
+                int randomY = UnityEngine.Random.Range(0, 8);
+                int randomZ = UnityEngine.Random.Range(0, 8);
                 Vector3Int randLoc = cLoc + new Vector3Int(randomX, randomY, randomZ);
 
                 if (GetCave(randLoc.x, randLoc.y, randLoc.z) > 0)
@@ -270,7 +271,7 @@ public class CaveGenerator : MonoBehaviour
 
                     for (int j = 0; j < 5; j++)
                     {
-                        Vector3 randOri = randLoc / 4;
+                        Vector3 randOri = new Vector3(randLoc.x/4f,randLoc.y/4f, randLoc.z/4f);
                         Vector3 raycastDirection;
                         if (isTop)
                         {
@@ -351,20 +352,20 @@ public class CaveGenerator : MonoBehaviour
 
             Vector3Int cLoc = cList[randomIdx];
 
-            int randomX = UnityEngine.Random.Range(0, 8);
-            int randomY = UnityEngine.Random.Range(0, 8);
-            int randomZ = UnityEngine.Random.Range(0, 8);
 
             int tries = 0;
             while (tries < 5)
             {
+                int randomX = UnityEngine.Random.Range(0, 8);
+                int randomY = UnityEngine.Random.Range(0, 8);
+                int randomZ = UnityEngine.Random.Range(0, 8);
                 Vector3Int randLoc = cLoc + new Vector3Int(randomX, randomY, randomZ);
 
                 if (GetCave(randLoc.x, randLoc.y, randLoc.z) > 0)
                 {
                     for (int j = 0; j < 5; j++)
                     {
-                        Vector3 randOri = randLoc / 4;
+                        Vector3 randOri = new Vector3(randLoc.x/4f, randLoc.y/4f, randLoc.z/4f);
                         Vector3 raycastDirection = UnityEngine.Random.insideUnitSphere * 10f;
 
                         RaycastHit hit;
@@ -389,28 +390,30 @@ public class CaveGenerator : MonoBehaviour
     {
         int batCount = 0;
         int iter = 0;
-        while (batCount < batNum && iter <= 20)
+        while (batCount < batNum && iter <= 50)
         {
             int randomIdx = UnityEngine.Random.Range(0, cList.Count);
 
             Vector3Int cLoc = cList[randomIdx];
 
-            int randomX = UnityEngine.Random.Range(0, 8);
-            int randomY = UnityEngine.Random.Range(0, 8);
-            int randomZ = UnityEngine.Random.Range(0, 8);
 
             int tries = 0;
-            while (tries < 5)
+            while (tries < 10)
             {
+                int randomX = UnityEngine.Random.Range(0, 8);
+                int randomY = UnityEngine.Random.Range(0, 8);
+                int randomZ = UnityEngine.Random.Range(0, 8);
                 Vector3Int randLoc = cLoc + new Vector3Int(randomX, randomY, randomZ);
 
                 if (GetCave(randLoc.x, randLoc.y, randLoc.z) > 0)
                 {
-                    if (!Physics.CheckSphere(randLoc / 4, 0.4f, _terrainLayer))
+                    Vector3 randLocF = new Vector3(randLoc.x / 4f, randLoc.y / 4f, randLoc.z / 4f);
+
+                    if (!Physics.CheckSphere(randLocF, 0.4f, _terrainLayer))
                     {
-                        Instantiate(bat, randLoc / 4, Quaternion.identity);
+                        Instantiate(bat, randLocF, Quaternion.identity);
                         batCount++;
-                        tries = 5;
+                        tries = 10;
                     }
                 }
 

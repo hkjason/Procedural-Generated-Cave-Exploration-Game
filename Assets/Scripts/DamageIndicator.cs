@@ -81,7 +81,7 @@ public class DamageIndicator : MonoBehaviour
 
     private IEnumerator Countdown()
     {
-        while (CanvasGroup.alpha < 1.0f)
+        while (CanvasGroup.alpha < 0.7f)
         {
             CanvasGroup.alpha += 4 * Time.deltaTime;
             yield return null;

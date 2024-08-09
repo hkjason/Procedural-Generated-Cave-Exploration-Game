@@ -26,7 +26,12 @@ using System.Collections;
                 Destroy(muzzleParticle, 1.5f); // 2nd parameter is lifetime of effect in seconds
             }
         }
-		
+
+        void Register()
+        {
+            DamageIndicatorManager.CreateIndicator(transform.parent);
+        }
+
         void FixedUpdate()
         {	
 			if (GetComponent<Rigidbody>().velocity.magnitude != 0)
@@ -64,7 +69,8 @@ using System.Collections;
                     case BulletType.enemy:
                         if (hit.collider.tag == "Player")
                         {
-                            Player.Instance.PlayerHpChange(-10, transform.parent.position);
+                            Invoke("Register", 0);
+                            Player.Instance.PlayerHpChange(-10);
                         }
                         break;
                 }

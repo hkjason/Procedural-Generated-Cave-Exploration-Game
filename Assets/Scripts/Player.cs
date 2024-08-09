@@ -27,7 +27,7 @@ public class Player : MonoBehaviour
     private RaycastHit _hit;
     private float _gravity = -9.81f;
     private float _gravityStartTime;
-    public bool _isGrounded = false;
+    public bool _isGrounded = true;
     public Vector3 playerVelo;
 
     [Header("Jump")]
@@ -378,6 +378,7 @@ public class Player : MonoBehaviour
     public void Spawn(Vector3 spawnOri)
     {
         _playerRb.velocity = new Vector3(0, 0, 0);
+        _isGrounded = true;
 
         Vector3 raycastDirection = Vector3.down;
 
@@ -387,6 +388,8 @@ public class Player : MonoBehaviour
         {
             transform.position = new Vector3(hit.point.x, hit.point.y + 0.7f, hit.point.z);
         }
+
+        Debug.Log("spawned at" + transform.position);
 
         gameObject.SetActive(true);
         alive = true;
@@ -439,10 +442,8 @@ public class Player : MonoBehaviour
     }
 
 
-    public void PlayerHpChange(int delta, Vector3 source)
+    public void PlayerHpChange(int delta)
     {
-        OnDamageTaken?.Invoke(source, transform.position);
-
         int val = hp + delta;
         if (val > _maxHp)
         {
