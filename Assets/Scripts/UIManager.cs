@@ -269,7 +269,7 @@ public class UIManager : MonoBehaviour
             StopCoroutine(hpCoroutine);
         }
         hpCoroutine = StartCoroutine(UpdateHpCoroutine(hp));
-        hpText.text = hp.ToString() + "/100";
+        hpText.text = hp.ToString() + "/" + Player.Instance.maxHp;
     }
 
     IEnumerator UpdateHpCoroutine(int newHp)

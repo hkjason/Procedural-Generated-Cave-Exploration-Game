@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -91,8 +93,11 @@ public class Player : MonoBehaviour
     public event Action<float> oreCountChanged;
     public event Action<int> flareCountChanged;
 
-    private int _maxHp = 100;
+    private int[] hpArr = { 100, 140, 160, 180, 200 };
+    public int maxHp;
     private int _hp;
+    public Slider hpSlider;
+    public TMP_Text hpSliderText;
     public int hp
     {
         get { return _hp; }
@@ -130,8 +135,12 @@ public class Player : MonoBehaviour
         _terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(_terrainLayer.value, 2));
         currentEquipment = pickaxe;
         flareCount = 4;
-        hp = _maxHp;
         gameManager = GameManager.Instance;
+        hp = hpArr[gameManager.hpLevel];
+        maxHp = hp;
+        hpSlider.maxValue = hp;
+        hpSlider.value = hp;
+        hpSliderText.text = hp + "/" + hp;
     }
 
     void Update()
@@ -470,9 +479,9 @@ public class Player : MonoBehaviour
     public void PlayerHpChange(int delta)
     {
         int val = hp + delta;
-        if (val > _maxHp)
+        if (val > maxHp)
         {
-            hp = _maxHp;
+            hp = maxHp;
         }
         else if (val <= 0)
         {

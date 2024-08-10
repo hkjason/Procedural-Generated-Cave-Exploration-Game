@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class Shop : MonoBehaviour
 {
-    public GameManager gameManager;
+    private GameManager gameManager;
 
     public Button pickPowerBtn;
     public Button pickSpeedBtn;
@@ -51,6 +51,8 @@ public class Shop : MonoBehaviour
 
     void Start()
     {
+        gameManager = GameManager.Instance;
+
         UpdateMoney();
         UpdatePickPower();
         UpdatePickSpeed();
