@@ -262,6 +262,7 @@ public class Pickaxe : Equipment
         {
             if (hit.transform.gameObject.layer == terrainLayerIndex)
             {
+                AudioManager.instance.PlayOnUnusedTrack(transform.position, "Pick_dirt");
                 if (hit.transform.gameObject.tag == "Platform")
                 {
                     Destroy(hit.transform.gameObject);
@@ -273,6 +274,29 @@ public class Pickaxe : Equipment
             }
             else if (hit.transform.gameObject.layer == oreLayerIndex)
             {
+                int oreDigIdx = Random.Range(0, 5);
+                switch (oreDigIdx)
+                {
+                    case 0:
+                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining1");
+                        break;
+                    case 1:
+                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining2");
+                        break;
+                    case 2:
+                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining3");
+                        break;
+                    case 3:
+                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining4");
+                        break;
+                    case 4:
+                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining5");
+                        break;
+                    default:
+                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining1");
+                        break;
+                }
+                AudioManager.instance.PlayOnUnusedTrack(transform.position, "Pick_rock", 0.45f);
                 CaveGenerator.Instance.DigOre(ray, hit);
             }
             else if (hit.transform.gameObject.tag == "Enemy")

@@ -16,4 +16,6 @@ public class SaveData
     public bool inverseY;
 
     public bool tutorial;
+
+    public AudioGameSetting audioGameSetting;
 }

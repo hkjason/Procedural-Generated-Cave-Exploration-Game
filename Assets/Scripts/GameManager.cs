@@ -47,6 +47,11 @@ public class GameManager : MonoBehaviour
 
     public event Action<bool> gameEndEvent;
 
+    //sound
+    public float masterVol;
+    public float bgmVol;
+    public float sfxVol;
+
     public bool digWallQuest
     {
         get { return _digWallQuest; }
@@ -138,6 +143,10 @@ public class GameManager : MonoBehaviour
         }
 
         saveFilePath = Application.persistentDataPath + "/saveData.dat";
+    }
+
+    private void Start()
+    {
         LoadGame();
     }
 
@@ -161,7 +170,9 @@ public class GameManager : MonoBehaviour
                 mouseSensitivity = mouseSensitivity,
                 inverseY = inverseY,
 
-                tutorial = tutorial
+                tutorial = tutorial,
+
+                audioGameSetting = AudioManager.instance.AudioSetting
             };
 
             formatter.Serialize(stream, saveData);
@@ -193,6 +204,8 @@ public class GameManager : MonoBehaviour
                 inverseY = saveData.inverseY;
 
                 tutorial = saveData.tutorial;
+
+                AudioManager.instance.AudioSetting = saveData.audioGameSetting;
             }
         }
         else
@@ -210,6 +223,7 @@ public class GameManager : MonoBehaviour
 
             tutorial = false;
 
+            AudioManager.instance.AudioSetting = new AudioGameSetting();
             SaveGame();
         }
     }

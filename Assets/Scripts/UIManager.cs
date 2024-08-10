@@ -23,6 +23,11 @@ public class UIManager : MonoBehaviour
     public Slider sensitivitySlider;
     public Toggle inverseYToggle;
 
+    //Sound
+    public Slider masterSlider;
+    public Slider bgmSlider;
+    public Slider sfxSlider;
+
     public GameObject inGameUI;
 
     public TMP_Text roundsText;
@@ -116,10 +121,15 @@ public class UIManager : MonoBehaviour
         sensitivitySlider.value = _gameManager.mouseSensitivity;
         inverseYToggle.isOn = _gameManager.inverseY;
 
+        masterSlider.value = AudioManager.instance.AudioSetting.masterVolume;
+        bgmSlider.value = AudioManager.instance.AudioSetting.BGMVolume;
+        sfxSlider.value = AudioManager.instance.AudioSetting.sfxVolume;
+
         Cursor.lockState = CursorLockMode.Locked;
 
-        sensitivitySlider.onValueChanged.AddListener(delegate { UpdateSettings(); });
-        inverseYToggle.onValueChanged.AddListener(delegate { UpdateSettings(); });
+        masterSlider.onValueChanged.AddListener(MasterChange);
+        bgmSlider.onValueChanged.AddListener(BGMChange);
+        sfxSlider.onValueChanged.AddListener(SfxChange);
 
         continueButton.onClick.AddListener(ContinueGame);
         quitButton.onClick.AddListener(QuitGameCheck);
@@ -199,12 +209,9 @@ public class UIManager : MonoBehaviour
 
     void SaveSettings()
     {
-        if (settingsChanged)
-        {
-            _gameManager.mouseSensitivity = sensitivitySlider.value;
-            _gameManager.inverseY = inverseYToggle.isOn;
-            _gameManager.SaveGame();
-        }
+        _gameManager.mouseSensitivity = sensitivitySlider.value;
+        _gameManager.inverseY = inverseYToggle.isOn;
+        _gameManager.SaveGame();
     }
 
     void ContinueGame()
@@ -285,9 +292,19 @@ public class UIManager : MonoBehaviour
         roundsText.text = ammoInfo;
     }
 
-    void UpdateSettings()
+    void MasterChange(float f)
     {
-        settingsChanged = true;
+        AudioManager.instance.AudioSetting.masterVolume = f;
+    }
+
+    void BGMChange(float f)
+    {
+        AudioManager.instance.AudioSetting.BGMVolume = f;
+    }
+
+    void SfxChange(float f)
+    {
+        AudioManager.instance.AudioSetting.sfxVolume = f;
     }
 
     void MapToggle(bool b)
