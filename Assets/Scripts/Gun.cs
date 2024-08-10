@@ -40,8 +40,8 @@ public class Gun : Equipment
         equipPos = new Vector3(0.2f, -0.25f, 0.55f);
         equipRotation = Quaternion.Euler(new Vector3(-1f, -1f, 0f));
 
-        unequipPos = new Vector3(0.2f, -0.7f, 0.55f);
-        unequipRotation = Quaternion.Euler(new Vector3(60f, 0f, 0f));
+        unequipPos = new Vector3(0.2f, -1.2f, 0.55f);
+        unequipRotation = Quaternion.Euler(new Vector3(100f, 0f, 0f));
 
         transform.localPosition = unequipPos;
         transform.localRotation = unequipRotation;
@@ -86,13 +86,18 @@ public class Gun : Equipment
 
         isAnimating = true;
 
-        if (currentRound < 30 && spareRounds >= 1)
+        if (currentRound >= 30)
+        {
+            isAnimating = false;
+        }
+        else if (currentRound < 30 && spareRounds >= 1)
         {
             _gameManager.reloadQuest = true;
             StartCoroutine(WaitReload());
         }
         else
-        { 
+        {
+            AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Flare_no_ammo");
             isAnimating = false;
         }
     }
@@ -117,7 +122,9 @@ public class Gun : Equipment
 
     IEnumerator ReloadCoroutine()
     {
-        float duration = 0.6f;
+        AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Gun_reload", 0.5f);
+
+        float duration = 0.9785f;
         float elapsed = 0f;
 
         while (elapsed < duration)

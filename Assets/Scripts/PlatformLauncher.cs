@@ -61,6 +61,8 @@ public class PlatformLauncher : Equipment
         {
             if (CheckCooldown())
             {
+                AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Platform_shot");
+
                 _gameManager.shootBulletQuest = true;
 
                 GameObject bulletInstance = Instantiate(platform, barrelEnd.position, barrelEnd.rotation);
@@ -85,12 +87,18 @@ public class PlatformLauncher : Equipment
 
         isAnimating = true;
 
-        if (currentRound < 2 && spareRounds >= 1)
+        if (currentRound >= 2)
         {
+            isAnimating = false;
+        }
+        else if (currentRound < 2 && spareRounds >= 1)
+        {
+            AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Platform_reload");
             StartCoroutine(WaitReload());
         }
         else
         {
+            AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Flare_no_ammo");
             isAnimating = false;
         }
     }
