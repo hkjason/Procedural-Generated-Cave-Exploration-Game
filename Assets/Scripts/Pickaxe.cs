@@ -1,5 +1,6 @@
 using GLTFast.Schema;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Pickaxe : Equipment
@@ -278,25 +279,25 @@ public class Pickaxe : Equipment
                 switch (oreDigIdx)
                 {
                     case 0:
-                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining1");
+                        AudioManager.instance.PlayOnUnusedTrack(hit.point, "Mining1");
                         break;
                     case 1:
-                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining2");
+                        AudioManager.instance.PlayOnUnusedTrack(hit.point, "Mining2");
                         break;
                     case 2:
-                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining3");
+                        AudioManager.instance.PlayOnUnusedTrack(hit.point, "Mining3");
                         break;
                     case 3:
-                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining4");
+                        AudioManager.instance.PlayOnUnusedTrack(hit.point, "Mining4");
                         break;
                     case 4:
-                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining5");
+                        AudioManager.instance.PlayOnUnusedTrack(hit.point, "Mining5");
                         break;
                     default:
-                        AudioManager.instance.PlayOnUnusedTrack(transform.position, "Mining1");
+                        AudioManager.instance.PlayOnUnusedTrack(hit.point, "Mining1");
                         break;
                 }
-                AudioManager.instance.PlayOnUnusedTrack(transform.position, "Pick_rock", 0.45f);
+                AudioManager.instance.PlayOnUnusedTrack(hit.point, "Pick_rock", 0.45f);
                 CaveGenerator.Instance.DigOre(ray, hit);
             }
             else if (hit.transform.gameObject.tag == "Enemy")

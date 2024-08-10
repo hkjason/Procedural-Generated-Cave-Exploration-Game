@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    public TMP_Text fpsText;
+
     public GameObject loadingPanel;
     public Slider loadingSlider;
     public TMP_Text loadingText;
@@ -150,6 +152,8 @@ public class UIManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        fpsText.text = (1.0f / Time.deltaTime).ToString();
+
         if (_caveGenerator.isGen)
         {
             float progress = _caveGenerator.generateProgress;
@@ -364,15 +368,21 @@ public class UIManager : MonoBehaviour
     {
         if (b)
         {
-            victoryOre.text = Player.Instance.oreCount.ToString();
-            victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 2).ToString();
-            victoryPanel.SetActive(true);
+            if (victoryPanel != null)
+            {
+                victoryPanel.SetActive(true);
+                victoryOre.text = Player.Instance.oreCount.ToString();
+                victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 2).ToString();
+            }
         }
         else
         {
-            victoryOre.text = Player.Instance.oreCount.ToString();
-            victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 4).ToString();
-            defeatPanel.SetActive(true);
+            if (defeatPanel != null)
+            { 
+                defeatPanel.SetActive(true);
+                victoryOre.text = Player.Instance.oreCount.ToString();
+                victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 4).ToString();
+            }
         }
     }
 

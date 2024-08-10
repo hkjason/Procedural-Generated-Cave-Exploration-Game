@@ -19,6 +19,10 @@ public class Player : MonoBehaviour
     float _speed;
     Vector3 _movement;
 
+    public AudioSource walkSound;
+    public AudioSource runSound;
+    public AudioSource jumpSound;
+
     [Header("GroundCheck")]
     [SerializeField] private Transform _groundCheck;
     [SerializeField] private float _checkRadius;
@@ -177,8 +181,28 @@ public class Player : MonoBehaviour
 
         _movement = (transform.right * x + transform.forward * z).normalized;
 
+        if (_movement.magnitude > 0 && !_isJumping)
+        {
+            if (isRunning)
+            {
+                runSound.enabled = true;
+                walkSound.enabled = false;
+            }
+            else
+            {
+                walkSound.enabled = true;
+                runSound.enabled = false;
+            }
+        }
+        else
+        {
+            walkSound.enabled = false;
+            runSound.enabled = false;
+        }
+
         if (y && _isJumping == false)
         {
+            jumpSound.enabled = true;
             _isJumping = true;
         }
     }
@@ -224,6 +248,7 @@ public class Player : MonoBehaviour
 
         if (_isGrounded)
         {
+            jumpSound.enabled = false;
             _isJumping = false;
         }
 

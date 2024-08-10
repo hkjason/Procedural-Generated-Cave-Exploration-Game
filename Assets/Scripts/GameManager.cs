@@ -135,7 +135,7 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         if (Instance != null && Instance != this)
         {
-            Destroy(this);
+            Destroy(this.gameObject);
         }
         else
         {
@@ -310,6 +310,7 @@ public class GameManager : MonoBehaviour
     public void GameEndVictory()
     {
         Time.timeScale = 0;
+        Cursor.lockState = CursorLockMode.None;
         money += Mathf.FloorToInt(Player.Instance.oreCount / 2);
         SaveGame();
         gameEndEvent?.Invoke(true);
@@ -318,6 +319,7 @@ public class GameManager : MonoBehaviour
     public void GameEndDefeat()
     {
         Time.timeScale = 0;
+        Cursor.lockState = CursorLockMode.None;
         money += Mathf.FloorToInt(Player.Instance.oreCount / 4);
         SaveGame();
         gameEndEvent?.Invoke(false);

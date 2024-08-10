@@ -20,6 +20,9 @@ using System.Collections;
         {
             projectileParticle = Instantiate(projectileParticle, transform.position, transform.rotation) as GameObject;
             projectileParticle.transform.parent = transform;
+            AudioSource projectileAudioSource = projectileParticle.GetComponent<AudioSource>();
+            projectileAudioSource.volume *= AudioManager.instance.AudioSetting.GetSFXValue();
+            projectileAudioSource.Play();
             if (muzzleParticle)
             {
                 muzzleParticle = Instantiate(muzzleParticle, transform.position, transform.rotation) as GameObject;
@@ -79,8 +82,11 @@ using System.Collections;
                 transform.position = hit.point + (hit.normal * collideOffset); // Move projectile to point of collision
 
                 GameObject impactP = Instantiate(impactParticle, transform.position, Quaternion.FromToRotation(Vector3.up, hit.normal)) as GameObject; // Spawns impact effect
+                AudioSource impactAudioSource = impactP.GetComponent<AudioSource>();
+                impactAudioSource.volume *= AudioManager.instance.AudioSetting.GetSFXValue();
+                impactAudioSource.Play();
 
-                ParticleSystem[] trails = GetComponentsInChildren<ParticleSystem>(); // Gets a list of particle systems, as we need to detach the trails
+            ParticleSystem[] trails = GetComponentsInChildren<ParticleSystem>(); // Gets a list of particle systems, as we need to detach the trails
                 //Component at [0] is that of the parent i.e. this object (if there is any)
                 for (int i = 1; i < trails.Length; i++) // Loop to cycle through found particle systems
                 {

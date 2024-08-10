@@ -6,9 +6,6 @@ public class Flaregun : Equipment
     public Rigidbody flareBullet;
     public Transform barrelEnd;
     public GameObject muzzleParticles;
-    public AudioClip flareShotSound;
-    public AudioClip noAmmoSound;
-    public AudioClip reloadSound;
     public int flareSpeed = 2000;
     private int _spareRounds = 16;
     private int _currentRound = 4;
@@ -42,10 +39,10 @@ public class Flaregun : Equipment
     private void Start()
     {
         equipPos = new Vector3(0.4252565f, -0.7843642f, 0.9609928f);
-        equipRotation = Quaternion.Euler(new Vector3(0f, -170.205f, 0f));
+        equipRotation = Quaternion.Euler(new Vector3(3f, -175f, 0f));
 
         unequipPos = new Vector3(0.4252565f, -1.12f, 0.9609928f);
-        unequipRotation = Quaternion.Euler(new Vector3(-90f, -170.205f, 0f));
+        unequipRotation = Quaternion.Euler(new Vector3(-90f, -175f, 0f));
 
         transform.localPosition = unequipPos;
         transform.localRotation = unequipRotation;
@@ -71,7 +68,7 @@ public class Flaregun : Equipment
                 GameManager.Instance.shootFlareQuest = true;
 
                 GetComponent<Animation>().CrossFade("Shoot");
-                GetComponent<AudioSource>().PlayOneShot(flareShotSound);
+                AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Flareshot", 0.5f);
 
                 Rigidbody bulletInstance;
                 bulletInstance = Instantiate(flareBullet, barrelEnd.position, barrelEnd.rotation) as Rigidbody; //INSTANTIATING THE FLARE PROJECTILE
@@ -87,7 +84,7 @@ public class Flaregun : Equipment
         else
         {
             GetComponent<Animation>().Play("noAmmo");
-            GetComponent<AudioSource>().PlayOneShot(noAmmoSound);
+            AudioManager.instance.PlayOnUnusedTrack(transform.position, "Flare_no_ammo");
         }
     }
 
@@ -110,7 +107,7 @@ public class Flaregun : Equipment
                 spareRounds = 0;
             }
 
-            GetComponent<AudioSource>().PlayOneShot(reloadSound);
+            AudioManager.instance.PlayOnUnusedTrack(transform.position, "Flare_reload");
             GetComponent<Animation>().CrossFade("Reload");
 
             Invoke("OnFlareReloadEnd", 1.0831f);

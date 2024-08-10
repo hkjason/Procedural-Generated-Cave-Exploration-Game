@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,6 +41,14 @@ public class Shop : MonoBehaviour
 
     public GameObject shopPanel;
 
+    public RectTransform topBar;
+    public float moveSpeed = 100f;
+    public float showDuration = 2f;
+
+    private Coroutine currentCoroutine;
+    private Vector3 hiddenPosition = new Vector3(0,122,0);
+    private Vector3 shownPosition = Vector3.zero;
+
     void Start()
     {
         UpdateMoney();
@@ -61,6 +70,7 @@ public class Shop : MonoBehaviour
                 messageText.text = "Not enough money.";
             }
 
+            ShowBar();
             UpdatePickPower();
             UpdateMoney();
         });
@@ -76,6 +86,7 @@ public class Shop : MonoBehaviour
                 messageText.text = "Not enough money.";
             }
 
+            ShowBar();
             UpdatePickSpeed();
             UpdateMoney();
         });
@@ -91,6 +102,7 @@ public class Shop : MonoBehaviour
                 messageText.text = "Not enough money.";
             }
 
+            ShowBar();
             UpdateFlareRecharge();
             UpdateMoney();
         });
@@ -106,6 +118,7 @@ public class Shop : MonoBehaviour
                 messageText.text = "Not enough money.";
             }
 
+            ShowBar();
             UpdateFlareDuration();
             UpdateMoney();
         });
@@ -121,6 +134,7 @@ public class Shop : MonoBehaviour
                 messageText.text = "Not enough money.";
             }
 
+            ShowBar();
             UpdateFlareIntensity();
             UpdateMoney();
         });
@@ -136,6 +150,7 @@ public class Shop : MonoBehaviour
                 messageText.text = "Not enough money.";
             }
 
+            ShowBar();
             UpdateHP();
             UpdateMoney();
         });
@@ -249,6 +264,42 @@ public class Shop : MonoBehaviour
         }
 
         hpSlider.value = level;
+    }
+
+    public void ShowBar()
+    {
+        if (currentCoroutine != null)
+        {
+            StopCoroutine(currentCoroutine);
+        }
+
+        currentCoroutine = StartCoroutine(ShowAndHideBar());
+    }
+
+    private IEnumerator ShowAndHideBar()
+    {
+        yield return StartCoroutine(MoveBar(shownPosition));
+
+        yield return new WaitForSeconds(showDuration);
+
+        yield return StartCoroutine(MoveBar(hiddenPosition));
+    }
+
+    private IEnumerator MoveBar(Vector3 endPos)
+    {
+        Vector3 startPos = topBar.anchoredPosition;
+
+        float elapsedTime = 0f;
+        float distance = Vector2.Distance(startPos, endPos);
+
+        while (elapsedTime < distance / moveSpeed)
+        {
+            topBar.anchoredPosition = Vector2.Lerp(startPos, endPos, elapsedTime / (distance / moveSpeed));
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        topBar.anchoredPosition = endPos;
     }
 
 

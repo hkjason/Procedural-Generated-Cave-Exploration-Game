@@ -6,8 +6,6 @@ public class ChunkManager : MonoBehaviour
 {
     public static ChunkManager Instance { get; private set; }
 
-    public AStar aStar;
-
     public CaveVisualisor caveVisualisor;
     [System.NonSerialized] public Dictionary<Vector3Int, Chunk> chunkDic = new Dictionary<Vector3Int, Chunk>();
     [System.NonSerialized] public List<Vector3Int> activeChunk = new List<Vector3Int>();

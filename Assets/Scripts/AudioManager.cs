@@ -96,21 +96,39 @@ public class AudioManager : MonoBehaviour
 
     void Awake()
     {
+        /*
         if (instance == null)
             instance = this;
         else
             this.gameObject.SetActive(false);
+        */
 
-        ChangeBGM(0);
+        if (instance != null && instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            instance = this;
+        }
     }
     public void ApplyAudioSettings()
     {
         BgmVolumeAdjust(audioSetting.BGMVolume);
-        print("Apply audio settings");
+        //Adjust player sound
+        if (Player.Instance != null)
+        {
+            Player.Instance.walkSound.volume = 0.5f * audioSetting.GetSFXValue();
+            Player.Instance.runSound.volume = 0.5f * audioSetting.GetSFXValue();
+            Player.Instance.jumpSound.volume = 0.5f * audioSetting.GetSFXValue();
+        }
+
+        //print("Apply audio settings");
     }
 
     private void Start()
     {
+        ChangeBGM(0);
         ApplyAudioSettings();
     }
 
@@ -451,7 +469,7 @@ public class AudioGameSetting
 {
     [SerializeField]float _masterVolume = 0.8f;
     public float masterVolume { get { return _masterVolume; }  set { _masterVolume = value; AudioManager.instance.ApplyAudioSettings(); } }
-    [SerializeField] float _BGMVolume = 0.5f;
+    [SerializeField] float _BGMVolume = 0.3f;
     public float BGMVolume { get { return _BGMVolume * masterVolume; } set { _BGMVolume = value; AudioManager.instance.ApplyAudioSettings(); }  }
     [SerializeField] float _sfxVolume = 0.5f;
     public float sfxVolume { get { return _sfxVolume * masterVolume; } set { _sfxVolume = value; AudioManager.instance.ApplyAudioSettings(); } }
