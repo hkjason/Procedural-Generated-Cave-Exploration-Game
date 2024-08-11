@@ -4707,6 +4707,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 12685dbdfd54bf3419988460f980709f, type: 3}
   - {fileID: 8300000, guid: 470228729b03752478a5744d0152c195, type: 3}
   - {fileID: 8300000, guid: 4af28d4a2f2aad34dbef8a5f6f3fed49, type: 3}
+  - {fileID: 8300000, guid: 7f693e459f1e4994c861d01dff3340c7, type: 3}
   - {fileID: 8300000, guid: 1b9460ae460becb41bfbd976c6fbe621, type: 3}
   UI_sfxs: []
 --- !u!1 &479580804
