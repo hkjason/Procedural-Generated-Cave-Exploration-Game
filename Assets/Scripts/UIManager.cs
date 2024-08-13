@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -90,6 +91,11 @@ public class UIManager : MonoBehaviour
     public Transform triangle;
     public Transform indicator;
 
+    public CanvasGroup pickaxeCG;
+    public CanvasGroup gunCG;
+    public CanvasGroup flaregunCG;
+    public CanvasGroup platformLauncherCG;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -100,7 +106,7 @@ public class UIManager : MonoBehaviour
         _player.oreCountChanged += UpdateOreCount;
         _player.flareCountChanged += UpdateFlareCount;
         _player.hpChanged += UpdateHp;
-        _player.OnDamageTaken += ShowDamageDirection;
+        _player.OnEquipmentChanged += HandleEquipmentChange;
 
         _gameManager.digWallChanged += FirstWallDig;
         _gameManager.digOreChanged += FirstOreDig;
@@ -186,6 +192,29 @@ public class UIManager : MonoBehaviour
                 pauseMenu.SetActive(true);
                 Time.timeScale = 0;
             }
+        }
+    }
+    private void HandleEquipmentChange(Equipment newEquipment)
+    {
+        pickaxeCG.alpha = 0.4f;
+        gunCG.alpha = 0.4f;
+        flaregunCG.alpha = 0.4f;
+        platformLauncherCG.alpha = 0.4f;
+        if (newEquipment is Pickaxe)
+        {
+            pickaxeCG.alpha = 1f;
+        }
+        else if (newEquipment is Gun)
+        {
+            gunCG.alpha = 1f;
+        }
+        else if (newEquipment is Flaregun)
+        {
+            flaregunCG.alpha = 1f;
+        }
+        else if (newEquipment is PlatformLauncher)
+        {
+            platformLauncherCG.alpha = 1f;
         }
     }
 
@@ -423,7 +452,6 @@ public class UIManager : MonoBehaviour
         { 
             _player.oreCountChanged -= UpdateOreCount;
             _player.flareCountChanged -= UpdateFlareCount;
-            _player.OnDamageTaken -= ShowDamageDirection;
         }
         if (_gameManager != null)
         {

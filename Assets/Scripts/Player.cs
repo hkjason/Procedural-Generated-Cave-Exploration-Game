@@ -45,7 +45,20 @@ public class Player : MonoBehaviour
     [SerializeField] public Gun gun;
     [SerializeField] public Flaregun flaregun;
     [SerializeField] public PlatformLauncher platformLauncher;
-    public Equipment currentEquipment;
+    public Equipment _currentEquipment;
+    public Action<Equipment> OnEquipmentChanged;
+    public Equipment currentEquipment
+    {
+        get => _currentEquipment;
+        set
+        {
+            if (_currentEquipment != value)
+            {
+                _currentEquipment = value;
+                OnEquipmentChanged?.Invoke(_currentEquipment);
+            }
+        }
+    }
 
     [Header("Flare")]
     [SerializeField] private Rigidbody _flare;
@@ -109,7 +122,7 @@ public class Player : MonoBehaviour
     }
 
     public event Action<int> hpChanged;
-    public event Action<Vector3, Vector3> OnDamageTaken;
+    //public event Action<Vector3, Vector3> OnDamageTaken;
 
     void OnDrawGizmosSelected()
     {
