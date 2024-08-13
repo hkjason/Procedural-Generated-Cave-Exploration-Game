@@ -10,6 +10,8 @@ This readme file is best read through github, or could be read using any text ed
 ### Asset
 **UI**  
 * [The Stone](https://assetstore.unity.com/packages/2d/gui/gui-the-stone-116852)
+* [Pickaxe UI](https://assetstore.unity.com/packages/2d/gui/icons/animated-loading-icons-47844)
+* [Weapon UI](https://assetstore.unity.com/packages/2d/gui/icons/fps-icons-pack-45240)
 
 **Sfx**
 * [Pickaxe digging sound 1](https://assetstore.unity.com/packages/audio/sound-fx/foley/earth-materials-sfx-mini-pack-21405)
