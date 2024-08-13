@@ -1911,7 +1911,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Alexey Rival\nStephen Wong\nLoeng Gau\n
+  m_text: Alexey Rival\nStephen Wong\nLoeng Gau\nZ\n
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fa08fff1716a04db18700207b6c202e5, type: 2}
   m_sharedMaterial: {fileID: 7908499825950019370, guid: fa08fff1716a04db18700207b6c202e5, type: 2}
@@ -4688,7 +4688,9 @@ MonoBehaviour:
   - {fileID: 1400977124}
   - {fileID: 737911596}
   - {fileID: 1434739934}
-  - {fileID: 1434739934}
+  - {fileID: 1452434059}
+  - {fileID: 1708374567}
+  - {fileID: 1927384092}
   looperAudioSource: {fileID: 1222211984}
   bgmIntroAudioSource: {fileID: 247969442}
   bgmAudioSource: {fileID: 1691254128}

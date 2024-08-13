@@ -55,8 +55,6 @@ public class PlatformLauncher : Equipment
     {
         if (isAnimating) return;
 
-        // && !GetComponent<Animation>().isPlaying
-
         if (currentRound > 0)
         {
             if (CheckCooldown())
@@ -76,8 +74,7 @@ public class PlatformLauncher : Equipment
         }
         else
         {
-            //GetComponent<Animation>().Play("noAmmo");
-            //GetComponent<AudioSource>().PlayOneShot(noAmmoSound);
+            AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Flare_no_ammo");
         }
     }
 

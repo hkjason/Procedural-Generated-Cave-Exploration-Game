@@ -74,8 +74,7 @@ public class Flaregun : Equipment
                 bulletInstance = Instantiate(flareBullet, barrelEnd.position, barrelEnd.rotation) as Rigidbody; //INSTANTIATING THE FLARE PROJECTILE
                 bulletInstance.AddForce(barrelEnd.forward * flareSpeed);
 
-                Light light = bulletInstance.GetComponent<Light>();
-                Destroy(light, flareDurationArr[_gameManager.flareDurationLevel]);
+                Destroy(bulletInstance.gameObject, flareDurationArr[_gameManager.flareDurationLevel]);
 
                 //Instantiate(muzzleParticles, barrelEnd.position, barrelEnd.rotation);   //INSTANTIATING THE GUN'S MUZZLE SPARKS	
                 currentRound--;
@@ -93,7 +92,11 @@ public class Flaregun : Equipment
         if (isAnimating) return;
         isAnimating = true;
 
-        if (currentRound < 4 && spareRounds >= 1)
+        if (currentRound >= 4)
+        { 
+            isAnimating = false;
+        }
+        else if (currentRound < 4 && spareRounds >= 1)
         {
             int roundsToReload = 4 - currentRound;
             if (spareRounds >= roundsToReload)
@@ -114,6 +117,7 @@ public class Flaregun : Equipment
         }
         else
         {
+            AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Flare_no_ammo");
             isAnimating = false;
         }
     }

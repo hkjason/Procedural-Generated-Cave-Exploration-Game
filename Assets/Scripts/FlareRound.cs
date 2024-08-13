@@ -20,11 +20,6 @@ public class FlareRound : MonoBehaviour
         }
     }
 
-    void HandleBounce(Collision collision)
-    { 
-        
-    }
-
     public enum FlareType
     { 
         HandFlare,

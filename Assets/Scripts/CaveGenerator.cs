@@ -182,6 +182,7 @@ public class CaveGenerator : MonoBehaviour
         progressInt = 1;
         yield return StartCoroutine(_cellularAutomata.RunCSCA(width, height, depth));
 
+        ResetBoundary();
         _simplexNoise = new SimplexNoise(width, height, depth, _seed, noiseComputeShader);
         progressInt = 2;
         yield return StartCoroutine(_simplexNoise.GenerateNoise());
@@ -211,6 +212,35 @@ public class CaveGenerator : MonoBehaviour
         if (OnGenComplete != null)
         {
             OnGenComplete();
+        }
+    }
+
+    void ResetBoundary()
+    {
+        for (int x = 0; x < width + 1; x++)
+        {
+            for (int y = 0; y < height + 1; y++)
+            {
+                SetCave(x, y, 0, -1f);
+                SetCave(x, y, depth, -1f);
+            }
+        }
+        for (int x = 0; x < width + 1; x++)
+        {
+            for (int z = 0; z < depth + 1; z++)
+            {
+                SetCave(x, 0, z, -1f);
+                SetCave(x, height, z, -1f);
+            }
+        }
+
+        for (int y = 0; y < height + 1; y++)
+        {
+            for (int z = 0; z < depth + 1; z++)
+            {
+                SetCave(0, y, z, -1f);
+                SetCave(width, y, z, -1f);
+            }
         }
     }
 
@@ -488,7 +518,7 @@ public class CaveGenerator : MonoBehaviour
             {
                 for (int k = -1; k <= 1; k++)
                 {
-                    if (x + i < 0 || x + j < 0 || x + k < 0 || x + i > width -1 || x + j > height - 1 || x + k > depth -1)
+                    if (x + i <= 0 || y + j <= 0 || z + k <= 0 || x + i >= width -1 || y + j >= height - 1 || z + k >= depth -1)
                     { continue; }
 
                     if (GetCave(x + i, y + j, z + k) < 0)
@@ -582,15 +612,21 @@ public class CaveGenerator : MonoBehaviour
     {
         orePointsNew = new List<Vector3>();
 
-        Vector3Int midP = new Vector3Int(4, 4, 4);
-
+        Vector3Int spawnChunkLoc = new Vector3Int(width / 2, depth / 2, height / 2);
         foreach (Vector3Int cLoc in _chunkManager.activeChunk)
         {
-            float noise = _simplexNoise.GetNoise(cLoc.x / 8, cLoc.y / 8, cLoc.z / 8);
-            openList.Add(cLoc);
+            if (cLoc == spawnChunkLoc)
+            {
+                openList.Insert(0, cLoc);
+            }
+            else
+            { 
+                openList.Add(cLoc);
+            }
             openSet.Add(cLoc);
         }
 
+        bool spawnChunk = true;
         while (openList.Count > 0)
         {
             List<Vector3Int> filledArea = FloodFillList(openList[0]);
@@ -604,7 +640,15 @@ public class CaveGenerator : MonoBehaviour
                     totalNoise += _simplexNoise.GetNoise(cLoc.x / 8, cLoc.y / 8, cLoc.z / 8);
                 }
 
-                totalNoise /= filledArea.Count;
+                if (spawnChunk)
+                {
+                    totalNoise = -1f;
+                    spawnChunk = false;
+                }
+                else
+                {
+                    totalNoise /= filledArea.Count;
+                }
 
                 chunkList.Add(new Tuple<List<Vector3Int>, float>(filledArea, totalNoise));
             }
@@ -631,7 +675,11 @@ public class CaveGenerator : MonoBehaviour
             for (int k = 20; k < chunkList.Count; k++)
             {
                 FlowerSpawn(chunkList[k].Item1, 0);
-            }    
+            }
+
+            //Spawn ore and flower guaranteed spawn
+            OreSpawn(chunkList[chunkList.Count - 1].Item1, 2);
+            FlowerSpawn(chunkList[chunkList.Count - 1].Item1, 2);
         }
         else
         {

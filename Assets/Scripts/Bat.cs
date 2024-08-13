@@ -75,14 +75,6 @@ public class Bat : MonoBehaviour
 
     }
 
-
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, wallDistance);
-    }
-
     // Update is called once per frame
     void Update()
     {
@@ -252,7 +244,9 @@ public class Bat : MonoBehaviour
             if (dist < 8)
             {
                 if (currentState != State.Attacking)
+                { 
                     EnterState(State.Attacking);
+                }
             }
             else if (dist >= 12 && currentState == State.Attacking)
             {
@@ -291,6 +285,8 @@ public class Bat : MonoBehaviour
                 marker.gameObject.SetActive(false);
                 break;
             case State.Attacking:
+                AudioManager.instance.PlayOnUnusedTrack(transform.position, "Bat_sound");
+
                 attackTimer = 0f;
                 targetFound = false;
                 marker.gameObject.SetActive(true);

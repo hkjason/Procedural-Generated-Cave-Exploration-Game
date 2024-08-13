@@ -13,6 +13,9 @@ public class Gun : Equipment
 
     private GameManager _gameManager;
 
+    private float noAmmoCooldown = 0.3f;
+    private float lastNoAmmoTime = -1f;
+
     public int spareRounds
     {
         get { return _spareRounds; }
@@ -75,8 +78,11 @@ public class Gun : Equipment
         }
         else
         {
-            //GetComponent<Animation>().Play("noAmmo");
-            //GetComponent<AudioSource>().PlayOneShot(noAmmoSound);
+            if (Time.time >= lastNoAmmoTime + noAmmoCooldown)
+            {
+                AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Flare_no_ammo");
+                lastNoAmmoTime = Time.time; // Update the last play time
+            }
         }
     }
 
