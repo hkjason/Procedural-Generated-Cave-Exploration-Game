@@ -5,10 +5,13 @@ using UnityEngine;
 
 public class Pickaxe : Equipment
 {
+    public LayerMask allLayers;
     public LayerMask terrainLayer;
     public LayerMask oreLayer;
+    public LayerMask plantLayer;
     private int terrainLayerIndex;
     private int oreLayerIndex;
+    private int plantLayerIndex;
 
     public Vector3 digPos;
     public Quaternion digRotation;
@@ -43,6 +46,7 @@ public class Pickaxe : Equipment
 
         terrainLayerIndex = Mathf.RoundToInt(Mathf.Log(terrainLayer.value, 2));
         oreLayerIndex = Mathf.RoundToInt(Mathf.Log(oreLayer.value, 2));
+        plantLayerIndex = Mathf.RoundToInt(Mathf.Log(plantLayer.value, 2));
 
         startPos1 = new Vector3(-0.13f, 0, 0.6f);
         startRotation1 = Quaternion.Euler(new Vector3(29.2f, 295.2f, 355f));
@@ -259,7 +263,7 @@ public class Pickaxe : Equipment
     {
         RaycastHit hit;
 
-        if (Physics.Raycast(ray.origin, ray.direction, out hit, 2f))
+        if (Physics.Raycast(ray.origin, ray.direction, out hit, 2f, allLayers))
         {
             if (hit.transform.gameObject.layer == terrainLayerIndex)
             {
@@ -300,9 +304,18 @@ public class Pickaxe : Equipment
                 AudioManager.instance.PlayOnUnusedTrack(hit.point, "Pick_rock", 0.45f);
                 CaveGenerator.Instance.DigOre(ray, hit);
             }
+            else if (hit.transform.gameObject.layer == plantLayerIndex)
+            {
+                Destroyable destroyable = hit.collider.GetComponent<Destroyable>();
+                if (destroyable != null)
+                {
+                    destroyable.Hit();
+                }
+            }
             else if (hit.transform.gameObject.tag == "Enemy")
             {
                 Bat bat = hit.transform.GetComponent<Bat>();
+                AudioManager.instance.PlayOnUnusedTrack(hit.point, "Bat_Hit");
                 bat.BatHpChange(-20);
             }
         }

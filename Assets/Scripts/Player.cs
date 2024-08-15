@@ -124,6 +124,10 @@ public class Player : MonoBehaviour
     public event Action<int> hpChanged;
     //public event Action<Vector3, Vector3> OnDamageTaken;
 
+    public Mushroom currentMushroom;
+    public event Action<bool> showHUD;
+
+
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position
@@ -170,7 +174,7 @@ public class Player : MonoBehaviour
     void FixedUpdate()
     {
         if (alive)
-        { 
+        {
             PlayerMovement();
         }
     }
@@ -418,7 +422,37 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.E))
         {
+            if (isHoldingE && keyHoldTimeE <= holdThreshold)
+            {
+                if (currentMushroom != null)
+                {
+                    if (currentMushroom.UseHeal())
+                    {
+                        currentMushroom = null;
+                        showHUD?.Invoke(false);
+                        PlayerHpChange(5);
+                    }
+                }
+            }
             isHoldingE = false;
+        }
+    }
+
+    public void EnableHUD(Mushroom mushroom)
+    {
+        if (currentMushroom != mushroom)
+        {
+            currentMushroom = mushroom;
+            showHUD?.Invoke(true);
+        }
+    }
+
+    public void DisableHUD(Mushroom mushroom)
+    {
+        if (currentMushroom == mushroom)
+        {
+            currentMushroom = null;
+            showHUD?.Invoke(false);
         }
     }
 

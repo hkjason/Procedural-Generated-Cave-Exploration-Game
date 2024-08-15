@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 3320964}
   - component: {fileID: 2312722}
   - component: {fileID: 64727393637089700}
-  m_Layer: 0
+  - component: {fileID: 559569432525393358}
+  m_Layer: 10
   m_Name: SM_Env_GlowingOrb_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -107,6 +108,19 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 43944449198229586, guid: a0d772689a07c7e43b780dfa1174a772, type: 2}
+--- !u!114 &559569432525393358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 147436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8518829709055947900993cbbb99188, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timeBetweenHits: 2
 --- !u!1 &8394639167468439160
 GameObject:
   m_ObjectHideFlags: 0

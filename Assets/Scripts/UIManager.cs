@@ -96,6 +96,8 @@ public class UIManager : MonoBehaviour
     public CanvasGroup flaregunCG;
     public CanvasGroup platformLauncherCG;
 
+    public GameObject pickupHUDGO;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -103,10 +105,12 @@ public class UIManager : MonoBehaviour
         _gameManager = GameManager.Instance;
 
         _caveGenerator.OnGenComplete += InactivateLoadPanel;
+
         _player.oreCountChanged += UpdateOreCount;
         _player.flareCountChanged += UpdateFlareCount;
         _player.hpChanged += UpdateHp;
         _player.OnEquipmentChanged += HandleEquipmentChange;
+        _player.showHUD += PickupHUDToggle;
 
         _gameManager.digWallChanged += FirstWallDig;
         _gameManager.digOreChanged += FirstOreDig;
@@ -114,7 +118,6 @@ public class UIManager : MonoBehaviour
         _gameManager.reloadChanged += FirstReload;
         _gameManager.throwFlareChanged += FirstFlareThrow;
         _gameManager.shootFlareChanged += FirstFlareShoot;
-
         _gameManager.gameEndEvent += GameEndEvent;
 
         map.mapChanged += MapToggle;
@@ -345,6 +348,11 @@ public class UIManager : MonoBehaviour
         mapGO.SetActive(b);
     }
 
+    void PickupHUDToggle(bool b)
+    { 
+        pickupHUDGO.SetActive(b);
+    }
+
     void FirstWallDig(bool b)
     {
         set1check1.enabled = b;
@@ -452,6 +460,9 @@ public class UIManager : MonoBehaviour
         { 
             _player.oreCountChanged -= UpdateOreCount;
             _player.flareCountChanged -= UpdateFlareCount;
+            _player.hpChanged -= UpdateHp;
+            _player.OnEquipmentChanged -= HandleEquipmentChange;
+            _player.showHUD -= PickupHUDToggle;
         }
         if (_gameManager != null)
         {
@@ -461,6 +472,7 @@ public class UIManager : MonoBehaviour
             _gameManager.reloadChanged -= FirstReload;
             _gameManager.throwFlareChanged -= FirstFlareThrow;
             _gameManager.shootFlareChanged -= FirstFlareShoot;
+            _gameManager.gameEndEvent -= GameEndEvent;
         }
         if (map != null)
         { 
