@@ -43,6 +43,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Player _player;
 
     public Button continueButton;
+    public Button continueButton2;
     public Button quitButton;
 
     private bool settingsChanged = false;
@@ -98,6 +99,27 @@ public class UIManager : MonoBehaviour
 
     public GameObject pickupHUDGO;
 
+    //manual
+    public Image mineImg;
+    public Image naviImg;
+    public Image traImg;
+    public Image combatImg;
+
+    public Sprite activeSprite;
+    public Sprite inactiveSprite;
+
+    public GameObject mineGO;
+    public GameObject naviGO;
+    public GameObject traGO;
+    public GameObject combatGO;
+
+    public Image settingImg;
+    public Image guideImg;
+    public Sprite tabOnSprite;
+    public Sprite tabOffSprite;
+    public GameObject settingGO;
+    public GameObject guideGO;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -143,6 +165,7 @@ public class UIManager : MonoBehaviour
         sfxSlider.onValueChanged.AddListener(SfxChange);
 
         continueButton.onClick.AddListener(ContinueGame);
+        continueButton2.onClick.AddListener(ContinueGame);
         quitButton.onClick.AddListener(QuitGameCheck);
         quitCancel.onClick.AddListener(QuitGameBack);
         quitConfirm.onClick.AddListener(QuitGameConfirm);
@@ -449,6 +472,65 @@ public class UIManager : MonoBehaviour
             _gameManager.SaveGame();
         }
     }
+
+    #region guidebook
+    public void ListItemOnClick(int i)
+    {
+        DisableItems();
+
+        switch (i)
+        {
+            case 0:
+                mineImg.sprite = activeSprite;
+                mineGO.SetActive(true);
+                break;
+            case 1:
+                naviImg.sprite = activeSprite;
+                naviGO.SetActive(true);
+                break;
+            case 2:
+                traImg.sprite = activeSprite;
+                traGO.SetActive(true);
+                break;
+            case 3:
+                combatImg.sprite = activeSprite;
+                combatGO.SetActive(true);
+                break;
+        }
+    }
+
+    private void DisableItems()
+    {
+        mineImg.sprite = inactiveSprite;
+        naviImg.sprite = inactiveSprite;
+        traImg.sprite = inactiveSprite;
+        combatImg.sprite = inactiveSprite;
+
+        mineGO.SetActive(false);
+        naviGO.SetActive(false);
+        traGO.SetActive(false);
+        combatGO.SetActive(false);
+    }
+
+    public void TabOnClick(int i)
+    {
+        switch (i)
+        {
+            case 0:
+                settingImg.sprite = tabOnSprite;
+                settingGO.SetActive(true);
+                guideImg.sprite = tabOffSprite;
+                guideGO.SetActive(false);
+                break;
+            case 1:
+                settingImg.sprite = tabOffSprite;
+                settingGO.SetActive(false);
+                guideImg.sprite = tabOnSprite;
+                guideGO.SetActive(true);
+                break;
+        }
+    }
+    #endregion
 
     private void OnDestroy()
     {
