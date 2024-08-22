@@ -4,12 +4,11 @@ public class ExcavationAgent : CaveAgent
 {
     public ExcavationAgent(Vector3Int agentStartPt, int tokens, int weight) : base(agentStartPt, tokens, weight)
     {
-        // Any additional initialization for TunnelAgent
     }
 
     public override void Walk()
     {
-        Vector3Int direction = new Vector3Int(0,0,0);
+        Vector3Int direction;
         for (int i = - weight/2; i < weight/2 + 1; i++)
         {
             for (int j = - weight/2; j <  weight /2 +1; j++)

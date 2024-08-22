@@ -1,15 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-
 public class OreGroup : MonoBehaviour
 {
     public List<Ore> ores;
     public MeshFilter oreGroupMf;
     public MeshCollider oreGroupMc;
 
-    //If location hit
-    //check nearest meshes
-    //
     public void SetOreGroup(List<Ore> oreList, MeshFilter mf, MeshCollider mc)
     { 
         ores = oreList;

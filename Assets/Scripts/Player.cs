@@ -1,7 +1,5 @@
 using System;
-using System.Runtime.CompilerServices;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -521,7 +519,6 @@ public class Player : MonoBehaviour
         Vector3 posInGrid = _hit.point * 4;
         return new Vector3Int(Mathf.FloorToInt(posInGrid.x), Mathf.FloorToInt(posInGrid.y), Mathf.FloorToInt(posInGrid.z));
     }
-
 
     public void PlayerHpChange(int delta)
     {

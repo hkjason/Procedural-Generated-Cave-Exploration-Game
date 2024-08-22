@@ -27,11 +27,6 @@ int GetDensityIdx(int x, int y, int z)
 [numthreads(8, 8, 8)]
 void CSMarchingCube (uint3 id : SV_DispatchThreadID)
 {   
-    /*
-    debugBuffer[0] = id.x + 1;
-    debugBuffer[1] = id.y;
-    debugBuffer[2] = id.z;
-    */
     
     float3 cubePos = float3(pos.x + id.x, pos.y + id.y, pos.z + id.z);
     

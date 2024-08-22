@@ -1,6 +1,4 @@
-using GLTFast.Schema;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Pickaxe : Equipment
@@ -27,7 +25,7 @@ public class Pickaxe : Equipment
 
     private GameManager gameManager;
 
-    public UnityEngine.Camera _camera;
+    public Camera _camera;
 
     private void Start()
     {

@@ -26,8 +26,6 @@ public abstract class Equipment : MonoBehaviour
         OnAmmoInfoUpdated?.Invoke(GetAmmoInfo());
     }
 
-    //pos Vector3(0.300000012,0,0.600000024)
-    //rot Vector3(0,270,354.999969)
     public virtual void Equip()
     {
         if (currentUnequipCoroutine != null)

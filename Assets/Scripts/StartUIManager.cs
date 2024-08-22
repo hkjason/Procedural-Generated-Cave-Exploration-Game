@@ -1,21 +1,9 @@
-using System.Collections;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class StartUIManager : MonoBehaviour
 {
-    public Button startButton;
-    public GameObject startButtonGO;
-    public GameObject shopButtonGO;
-
-    public GameObject loadPanel;
-
-    public TMP_Text stateText;
-    public TMP_Text percentageText;
-    public Slider percentageSlider;
-
     //Credit
     public Button creditButton;
     public Button dimmedBackground;
@@ -83,9 +71,6 @@ public class StartUIManager : MonoBehaviour
 
     public void StartGame()
     {
-        //startButtonGO.SetActive(false);
-        //shopButtonGO.SetActive(false);
-        //loadPanel.SetActive(true);
         GameManager.Instance.ResetQuest();
         SceneManager.LoadSceneAsync(1);
     }

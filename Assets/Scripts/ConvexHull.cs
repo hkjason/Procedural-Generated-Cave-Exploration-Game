@@ -43,14 +43,6 @@ namespace GK
 
         [SerializeField] private Player player;
 
-        Vector3 hitVec = new Vector3(0, 0, 0);
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(hitVec, 0.25f);
-            Gizmos.DrawWireSphere(hitVec, 0.3f);
-        }
-
         public void OreMeshGen()
         {
             List<Vector3> orePointsNew = CaveGenerator.Instance.orePointsNew;
@@ -96,7 +88,6 @@ namespace GK
 
             }
         }
-
 
         bool ConvexHulling(Vector3Int pointForOre, bool isGrow, Mesh originalMesh = default)
         {
@@ -344,8 +335,6 @@ namespace GK
 
         public void UpdateOre(RaycastHit hit)
         {
-            hitVec = hit.point;
-
             OreGroup oreGroup = hit.transform.gameObject.GetComponent<OreGroup>();
 
             float radius = UnityEngine.Random.Range(0.25f, 0.3f);

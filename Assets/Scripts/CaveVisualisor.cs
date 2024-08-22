@@ -516,26 +516,6 @@ public class CaveVisualisor : MonoBehaviour
         return meshToReturn;
     }
 
-
-    int VertForIndice(Vector3 vert)
-    {
-
-        // Loop through all the vertices currently in the vertices list.
-        for (int i = 0; i < vertices.Count; i++)
-        {
-
-            // If we find a vert that matches ours, then simply return this index.
-            if (vertices[i] == vert)
-                return i;
-
-        }
-
-        // If we didn't find a match, add this vert to the list and return last index.
-        vertices.Add(vert);
-        return vertices.Count - 1;
-
-    }
-
     float GetPosition(Vector3Int point)
     {
         return caveGenerator.GetCave(point.x, point.y, point.z);

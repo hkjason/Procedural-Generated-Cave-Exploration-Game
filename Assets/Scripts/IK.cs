@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class IK : MonoBehaviour
 {
+    //For Spider Inverse Kinemetic
+    //Implementation was not fully successful
+    /*
     public LayerMask groundLayer;
     public float walkDistance;
     public float stepTime;
@@ -144,10 +146,10 @@ public class IK : MonoBehaviour
                 }
                 posCoroutine = StartCoroutine(LerpPosition(transform.position, transform.position + slopeAdjustedDirection * speed));
 
-                /*if (Physics.Raycast(raycastOrigin, angledDirection, out RaycastHit rhit, 2f, groundLayer))
-                {
-                    Debug.DrawRay(raycastOrigin, angledDirection, Color.green);
-                }*/
+                //if (Physics.Raycast(raycastOrigin, angledDirection, out RaycastHit rhit, 2f, groundLayer))
+                //{
+                    //Debug.DrawRay(raycastOrigin, angledDirection, Color.green);
+                //}
 
 
                 //transform.position += slopeAdjustedDirection * speed * Time.fixedDeltaTime;
@@ -617,4 +619,5 @@ public class SpiderLeg
         originalQuaternion[1] = legPoints[1].localRotation;
         originalQuaternion[0] = legPoints[0].localRotation;
     }
+    */
 }

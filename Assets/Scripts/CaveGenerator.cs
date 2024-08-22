@@ -2,11 +2,8 @@ using GK;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
 public class CaveGenerator : MonoBehaviour
 {
@@ -87,61 +84,6 @@ public class CaveGenerator : MonoBehaviour
         _gameManager = GameManager.Instance;
     }
 
-    Vector3Int[] cornerTable = new Vector3Int[8]
-    {
-        new Vector3Int(0, 0, 0),
-        new Vector3Int(1, 0, 0),
-        new Vector3Int(1, 1, 0),
-        new Vector3Int(0, 1, 0),
-        new Vector3Int(0, 0, 1),
-        new Vector3Int(1, 0, 1),
-        new Vector3Int(1, 1, 1),
-        new Vector3Int(0, 1, 1)
-
-    };
-
-    public float tempSize;
-    public float tempAlpha;
-    private void OnDrawGizmosSelected()
-    {
-        /*
-        for (int x = 256; x <= 264; x++)
-        {
-            for (int y = 192; y <= 200; y++)
-            {
-                for (int z = 176; z <= 184; z++)
-                {
-                    Vector3Int position = new Vector3Int(x, y, z);
-
-                    List<Vector3Int> tempList = _caveVisualisor.Temp(position);
-                    if (tempList.Count > 0)
-                    {
-                        foreach (Vector3Int vv in tempList)
-                        {
-                            float val = GetCave(vv.x, vv.y, vv.z);
-                            float colVal;
-                            
-                            if (val < 0)
-                            {
-                                colVal = 0;
-                            }
-                            else
-                            {
-                                colVal = 255;
-                            }
-
-                            Gizmos.color = new UnityEngine.Color(colVal, colVal, colVal, tempAlpha);
-
-                            Gizmos.DrawSphere(new Vector3(vv.x / 4f, vv.y / 4f, vv.z / 4f), tempSize);
-                        }
-                    }
-                }
-            }
-        }
-        //256, 192, 176
-        */
-    }
-
     void Start()
     {
         caveGrid = new float[(width + 1) * (height + 1) * (depth + 1)];
@@ -166,8 +108,6 @@ public class CaveGenerator : MonoBehaviour
 
         while (!operation.isDone)
         {
-            Debug.Log("progress load 0" + operation.progress);
-
             yield return null;
         }
     }
@@ -250,14 +190,10 @@ public class CaveGenerator : MonoBehaviour
         progressInt = 3;
         yield return StartCoroutine(_chunkManager.CreateChunks(width, height, depth));
 
-
-
         //Array.Clear(caveGrid, 0, caveGrid.Length);
-
         
         DifficultyAreaGen();
 
-        
         if (orePointsNew.Count < 20)
         {
             Debug.LogWarning("Generation Fail");
@@ -268,7 +204,6 @@ public class CaveGenerator : MonoBehaviour
 
         _convexHull.OreMeshGen();
         
-
         player.Spawn(new Vector3(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4));
 
         genSuccess = true;
@@ -446,7 +381,6 @@ public class CaveGenerator : MonoBehaviour
 
             Vector3Int cLoc = cList[randomIdx];
 
-
             int tries = 0;
             while (tries < 5)
             {
@@ -489,7 +423,6 @@ public class CaveGenerator : MonoBehaviour
             int randomIdx = UnityEngine.Random.Range(0, cList.Count);
 
             Vector3Int cLoc = cList[randomIdx];
-
 
             int tries = 0;
             while (tries < 10)
@@ -599,8 +532,6 @@ public class CaveGenerator : MonoBehaviour
 
     public void DigCaveNew(Ray ray, RaycastHit hit)
     {
-        Debug.Log("Hit: " + hit.point * 4);
-        Debug.Log("ray: " + ray.direction);
         Vector3 hitPos = hit.point * 4;
         float rayx = Mathf.Abs(ray.direction.x);
         float rayy = Mathf.Abs(ray.direction.y);
@@ -645,14 +576,10 @@ public class CaveGenerator : MonoBehaviour
         }
 
 
-        Debug.Log("Dig:" + hitPos);
-
         int x = Mathf.RoundToInt(hitPos.x);
         int y = Mathf.RoundToInt(hitPos.y);
         int z = Mathf.RoundToInt(hitPos.z);
         Vector3 digSpot = new Vector3(x, y, z);
-
-        Debug.Log("DigInt:" + digSpot);
 
         List<Vector3Int> updatedPoint = new List<Vector3Int>();
         for (int i = -2; i <= 2; i++)
@@ -749,26 +676,6 @@ public class CaveGenerator : MonoBehaviour
         {
             Debug.Log("Gen fail");
         }
-    }
-
-
-    Vector3Int GetLoc(int index)
-    {
-        int x, y, z;
-
-        int xy = height * depth;
-
-        // Extract x
-        x = index / xy;
-        int remainder = index % xy;
-
-        // Extract y
-        y = remainder / depth;
-
-        // Extract z
-        z = remainder % depth;
-
-        return new Vector3Int(x, y, z);
     }
 
     public void SetCave(int x, int y, int z, float val)

@@ -96,13 +96,6 @@ public class AudioManager : MonoBehaviour
 
     void Awake()
     {
-        /*
-        if (instance == null)
-            instance = this;
-        else
-            this.gameObject.SetActive(false);
-        */
-
         if (instance != null && instance != this)
         {
             Destroy(this.gameObject);
@@ -122,8 +115,6 @@ public class AudioManager : MonoBehaviour
             Player.Instance.runSound.volume = 0.5f * audioSetting.GetSFXValue();
             Player.Instance.jumpSound.volume = 0.5f * audioSetting.GetSFXValue();
         }
-
-        //print("Apply audio settings");
     }
 
     private void Start()
@@ -174,26 +165,6 @@ public class AudioManager : MonoBehaviour
         audioSources[0].clip = (sfxs.Find((s) => s.name == audioName));
         audioSources[0].Play();
     }
-
-
-    //public void PlayNoOverlap(int audioIndex, int channel = 1, float volume = 1)
-    //{
-    //    if (!audioSources[channel].isPlaying)
-    //    {
-    //        audioSources[channel].volume = volume * audioSetting.sfxVolume;
-    //        audioSources[channel].clip = sfxs[audioIndex];
-    //        audioSources[channel].Play();
-    //    }
-    //}
-    //public void PlayNoOverlap(string audioName, int channel = 1, float volume = 1)
-    //{
-    //    if (!audioSources[channel].isPlaying)
-    //    {
-    //        audioSources[channel].volume = volume * audioSetting.sfxVolume;
-    //        audioSources[channel].clip = sfxs.Find((s) => s.name == audioName);
-    //        audioSources[channel].Play();
-    //    }
-    //}
 
     public void PlayOnUnusedTrack(Vector3 loc, int audioIndex, float volume = 1)
     {
@@ -251,7 +222,6 @@ public class AudioManager : MonoBehaviour
 
         }
     }
-
     public void PlayOnUnusedTrack_UI(int audioIndex, float volume = 1)
     {
         for (int i = 0; i < audioSources.Count; i++)
@@ -328,12 +298,6 @@ public class AudioManager : MonoBehaviour
         bgmIntroAudioSource.volume = audioSetting.BGMVolume;
     }
 
-    //public int GetCurrentBGMIndex()
-    //{
-
-    //    return BGMs.FindIndex((b) => b.name.Equals(bgmAudioSource.clip?.name));
-    //}
-
     public void PlayConnectedBGM(int audioIndex, int introAudioIndex)
     {
         print("play connected bgm");
@@ -351,13 +315,6 @@ public class AudioManager : MonoBehaviour
             print("Same bgm is playing already");
             return;
         }
-        //else if (bgmAudioSource_Track1.clip == BGMs[audioIndex])                        // if the same bgm is playing but not in its volume
-        //{
-        //    print("same bgm is playing but not in its volume");
-        //    StopCoroutine(bgmTransitionCoroutine);
-        //    StartCoroutine( FadeInBGM(audioIndex,0.2f));
-        //    bgmTransitionCoroutine = null;
-        //}
         else
         {
             if (bgmIntroAudioSource.isPlaying)
@@ -402,8 +359,6 @@ public class AudioManager : MonoBehaviour
         yield return bgmTransitionCoroutine;
         bgmTransitionCoroutine = null;
     }
-
-
     public void StopBGM(float fadeTime = 1.5f)
     {
         StartCoroutine(FadeOutBGM(fadeTime));
@@ -453,7 +408,6 @@ public class AudioManager : MonoBehaviour
         bgmIntroAudioSource.Stop();
         bgmIntroAudioSource.volume = startVolume;
     }
-
 
     public void StopLooperSFX()
     {

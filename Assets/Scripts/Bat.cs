@@ -1,8 +1,5 @@
 using System.Collections;
-using Unity.Burst.CompilerServices;
 using UnityEngine;
-using UnityEngine.Timeline;
-
 
 public class Bat : MonoBehaviour
 {
@@ -55,11 +52,9 @@ public class Bat : MonoBehaviour
 
     private void Awake()
     {
-        //player = GameObject.FindGameObjectWithTag("Player").transform;
         player = CaveGenerator.Instance.player.transform;
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         marker = Instantiate(markerGO, Vector3.zero, Quaternion.identity).transform;
@@ -105,7 +100,6 @@ public class Bat : MonoBehaviour
             marker.localPosition = transform.position + offset;
         }
     }
-
 
     public void BatHpChange(int delta)
     {
@@ -219,7 +213,7 @@ public class Bat : MonoBehaviour
 
                 attackTimer = 0;
 
-                //ShootProjectile();
+                //ShootProjectile
                 GameObject bulletInstance = Instantiate(proj, projSpawn.position, Quaternion.identity); //INSTANTIATING THE FLARE PROJECTILE
                 bulletInstance.transform.LookAt(player.transform.position);
                 bulletInstance.transform.SetParent(transform);
@@ -228,9 +222,6 @@ public class Bat : MonoBehaviour
             }
         }
     }
-
-    
-
 
     void CheckDistance()
     {

@@ -1,9 +1,8 @@
 using UnityEngine;
-
 public class Mushroom : MonoBehaviour
 {
     bool healUsed = false;
-    public Light mushroomLight;
+    public GameObject parentMushroom;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -27,7 +26,7 @@ public class Mushroom : MonoBehaviour
         if (healUsed)
             return false;
         healUsed = true;
-        mushroomLight.intensity = 0.2f;
+        Destroy(parentMushroom);
         return true;
     }
 

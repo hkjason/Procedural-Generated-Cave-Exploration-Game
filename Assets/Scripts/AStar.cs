@@ -1,19 +1,17 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class AStar : MonoBehaviour
 {
+    //For HPA*
+    //Implementation was not fully successful
+    /*
     private bool[,,] pointGrid;
 
     [Header("Size")]
     public int width;
     public int height;
     public int depth;
-
-    List<Vector3Int> path;
-
-    List<Vector3Int> path1;
 
     public LayerMask groundLayer;
 
@@ -35,112 +33,7 @@ public class AStar : MonoBehaviour
         }
 
         pointGrid = new bool[width, depth, height];
-        path = new List<Vector3Int>();
     }
-
-    private void OnDrawGizmosSelected()
-    {
-
-        Gizmos.color = UnityEngine.Color.red;
-        if (path != null && path.Count > 0)
-        {
-            foreach (var p in path)
-            {
-                Gizmos.DrawSphere(new Vector3(p.x/4f, p.y/4f, p.z/4f), 0.1f);
-            }
-        }
-        Gizmos.DrawRay(new Vector3(20.4239998f, 59.4669991f, 54.6850014f), Vector3.down);
-        Gizmos.color = UnityEngine.Color.yellow;
-        Gizmos.DrawSphere(new Vector3Int(1, 1, 1)/4, 0.3f);
-        Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3)/4, 0.3f);
-
-        Gizmos.color = UnityEngine.Color.cyan;
-        if (path1 != null && path1.Count > 0)
-        {
-            foreach (var p in path1)
-            {
-                Gizmos.DrawSphere(new Vector3(p.x / 4f, p.y / 4f, p.z / 4f), 0.1f);
-            }
-        }
-        Gizmos.DrawRay(new Vector3(20.4239998f, 59.4669991f, 54.6850014f), Vector3.down);
-        Gizmos.color = UnityEngine.Color.yellow;
-        Gizmos.DrawSphere(new Vector3Int(1, 1, 1) / 4, 0.3f);
-        Gizmos.DrawSphere(new Vector3Int(width / 2, depth / 4, height / 3) / 4, 0.3f);
-
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha8))
-        {
-           // AStar.Instance.PathFindBase(new Vector3Int(116,256,255), new Vector3Int(116,256,256), new Vector3Int (112), out int cost);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha9))
-        {
-            Chunk c1 = ChunkManager.Instance.chunkDic[new Vector3Int(80, 232, 216)];
-            Chunk c2 = ChunkManager.Instance.chunkDic[new Vector3Int(72, 232, 216)];
-
-            string pStr = new string("");
-            for (int aa = 7; aa >= 0; aa--)
-            {
-                for (int bb = 0; bb < 8; bb++)
-                {
-                    pStr += Convert.ToInt32(GetGrid(new Vector3Int(80, 232 + aa, 216 + bb)));
-                }
-                pStr += "\n";
-            }
-
-            string pStr1 = new string("");
-            for (int aa = 7; aa >= 0; aa--)
-            {
-                for (int bb = 0; bb < 8; bb++)
-                {
-                    pStr1 += Convert.ToInt32(GetGrid(new Vector3Int(79, 232 + aa, 216 + bb)));
-                }
-                pStr1 += "\n";
-            }
-
-            Debug.Log(pStr);
-            Debug.Log(pStr1);
-
-
-
-
-            Vector3 raycastOrigin = new Vector3(20.4239998f, 59.4669991f, 54.6850014f);
-
-            Vector3 raycastDirection = Vector3.down;
-
-            RaycastHit hit;
-
-            if (Physics.Raycast(raycastOrigin, raycastDirection, out hit, 2f, groundLayer))
-            {
-                Debug.Log("hitpoint:" + hit.point);
-            }
-
-            Vector3 hitVec = hit.point * 4;
-            Vector3Int debugVec = new Vector3Int(Mathf.FloorToInt(hitVec.x), Mathf.FloorToInt(hitVec.y), Mathf.FloorToInt(hitVec.z));
-
-            Debug.Log("hitpoint mul:" + debugVec);
-
-            Debug.Log("ptGrid:" + pointGrid[debugVec.x, debugVec.y, debugVec.z]);
-
-            Vector3Int playerPos = player.GetCurrentGridPos();
-
-            Debug.Log("playerGrid:" + pointGrid[playerPos.x, playerPos.y, playerPos.z]);
-
-            float pfTime = Time.realtimeSinceStartup;
-            path = PathFind(debugVec, playerPos);
-            Debug.Log("pathfindtime: " + (Time.realtimeSinceStartup - pfTime));
-            Debug.Log(path.Count);
-
-            float hpfTime = Time.realtimeSinceStartup;
-            path1 = HPASPathFind(debugVec, playerPos);
-            Debug.Log("Hpathfindtime: " + (Time.realtimeSinceStartup - hpfTime));
-            Debug.Log(path1.Count);
-        }
-    }
-
 
     public void UpdateGrid(int loc, bool val)
     {
@@ -186,7 +79,6 @@ public class AStar : MonoBehaviour
 
             closeList.Add(currentNode.loc);
 
-
             for (int x = 0; x < currentChunk.exitDic[currentNode.loc].Count; x += 2)
             {
 
@@ -201,7 +93,6 @@ public class AStar : MonoBehaviour
                 
                 AStarNode nextNode;
 
-                
                 if (dict.TryGetValue(neighbourLocation, out nextNode))
                 {
                     int nodeCost = currentNode.gCost + 100;
@@ -241,11 +132,7 @@ public class AStar : MonoBehaviour
                     }
                 }
 
-
-
-
                 Chunk neighbourChunk = cm.chunkDic[neighbourChunkLoc];
-
 
                 for (int y = 0; y < neighbourChunk.exitPoints.Count; y++)
                 {
@@ -274,7 +161,6 @@ public class AStar : MonoBehaviour
                         }
                         else
                         {
-
                             neighbourNode = new AStarNode(connectedExit);
                             neighbourNode.gCost = currentNode.gCost + cost;
                             neighbourNode.hCost = CalDist(neighbourNode.loc, endLoc);
@@ -309,7 +195,6 @@ public class AStar : MonoBehaviour
             }
 
             closeList.Add(currentNode.loc);
-
 
             for (int x = -1; x <= 1; x++)
             {
@@ -442,25 +327,25 @@ public class AStar : MonoBehaviour
         Vector3Int lastNodeLoc = new Vector3Int();
         AStarNode currentNode = endNode;
 
-        /*
-        int counter = 0;
-        while (currentNode.parentNode != null)
-        {
+        
+        //int counter = 0;
+        //while (currentNode.parentNode != null)
+        //{
             //paths.Add(currentNode.loc);
 
-            lastNodeLoc = currentNode.loc;
-            currentNode = currentNode.parentNode;
+            //lastNodeLoc = currentNode.loc;
+            //currentNode = currentNode.parentNode;
 
-            if (counter % 2 == 1)
-            { 
-                Chunk c = ChunkManager.Instance.chunkDic[GetChunkPos(lastNodeLoc)];
+            //if (counter % 2 == 1)
+            //{ 
+                //Chunk c = ChunkManager.Instance.chunkDic[GetChunkPos(lastNodeLoc)];
 
-                paths.AddRange(c.pathDic[(lastNodeLoc, currentNode.loc)]);
-            }
+                //paths.AddRange(c.pathDic[(lastNodeLoc, currentNode.loc)]);
+            //}
 
-            counter++;
-        }
-        */
+            //counter++;
+        //}
+        
         bool first = true;
         while (currentNode.parentNode != null)
         {
@@ -488,8 +373,6 @@ public class AStar : MonoBehaviour
                 }
             }
         }
-
-
 
         startExit = currentNode.loc;
 
@@ -540,7 +423,6 @@ public class AStar : MonoBehaviour
         return paths;
     }
 
-
     int CalDist(Vector3Int locA, Vector3Int locB)
     {
         int distX = Mathf.Abs(locA.x - locB.x);
@@ -582,7 +464,6 @@ public class AStar : MonoBehaviour
         }
     }
 
-
     public bool GetGrid(Vector3Int loc)
     {
         return pointGrid[loc.x, loc.y, loc.z];
@@ -614,4 +495,5 @@ public class AStar : MonoBehaviour
     {
         return (pos / 8) * 8;
     }
+    */
 }

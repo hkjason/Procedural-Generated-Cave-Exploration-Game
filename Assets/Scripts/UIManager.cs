@@ -1,55 +1,16 @@
-using System;
 using System.Collections;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    public TMP_Text fpsText;
-
+    //Loading
     public GameObject loadingPanel;
     public Slider loadingSlider;
     public TMP_Text loadingText;
     public TMP_Text percentageText;
-    public TMP_Text oreCountText;
-    public Image oreCountImage;
-    public Slider flareCountSlider;
-
-    public Slider hpSlider;
-    private Coroutine hpCoroutine;
-    public TMP_Text hpText;
-
-    public GameObject pauseMenu;
-    public Slider sensitivitySlider;
-    public Toggle inverseYToggle;
-
-    //Sound
-    public Slider masterSlider;
-    public Slider bgmSlider;
-    public Slider sfxSlider;
-
-    public GameObject inGameUI;
-
-    public TMP_Text roundsText;
-
-    public Map map;
-    public GameObject mapGO;
-
-    private CaveGenerator _caveGenerator;
-    private GameManager _gameManager;
-    [SerializeField] private Player _player;
-
-    public Button continueButton;
-    public Button continueButton2;
-    public Button quitButton;
-
-    private bool settingsChanged = false;
-
-    public float ringRadius;
-
     private string[] textArr =
     {
         "Brave walkers roaming...",
@@ -58,10 +19,53 @@ public class UIManager : MonoBehaviour
         "Marching Cubes parade..."
     };
 
+    //All inGameUI
+    public GameObject inGameUI;
+    public CanvasGroup pickaxeCG;
+    public CanvasGroup gunCG;
+    public CanvasGroup flaregunCG;
+    public CanvasGroup platformLauncherCG;
+    //OreCount
+    public TMP_Text oreCountText;
+    public Image oreCountImage;
+    //FlareCount
+    public Slider flareCountSlider;
+    //Ammo
+    public TMP_Text roundsText;
+    //HP
+    public Slider hpSlider;
+    public TMP_Text hpText;
+    private Coroutine hpCoroutine;
+
+    //Pause
+    public GameObject pauseMenu;
+    //Settings
+    public Slider sensitivitySlider;
+    public Toggle inverseYToggle;
+    //Sound
+    public Slider masterSlider;
+    public Slider bgmSlider;
+    public Slider sfxSlider;
+    //Return
+    public Button continueButton;
+    public Button continueButton2;
+    public Button quitButton;
+    public GameObject quitCheckPanel;
+    public Button quitCancel;
+    public Button quitConfirm;
+
+    //Map
+    public Map map;
+    public GameObject mapGO;
+
+    //Reference Scripts
+    private CaveGenerator _caveGenerator;
+    private GameManager _gameManager;
+    [SerializeField] private Player _player;
+
+
     //TUTORIALS
     public GameObject tutorialGO;
-    //public RectTransform tutorialRect;
-
     public GameObject set1;
     public Image set1check1;
     public Image set1check2;
@@ -76,10 +80,7 @@ public class UIManager : MonoBehaviour
     private int set2Completed;
     private int tutorialCompleted;
 
-    public GameObject quitCheckPanel;
-    public Button quitCancel;
-    public Button quitConfirm;
-
+    //GameEndLogic
     public GameObject victoryPanel;
     public GameObject defeatPanel;
     public Button victoryQuit;
@@ -89,14 +90,7 @@ public class UIManager : MonoBehaviour
     public TMP_Text defeatOre;
     public TMP_Text defeatCoin;
 
-    public Transform triangle;
-    public Transform indicator;
-
-    public CanvasGroup pickaxeCG;
-    public CanvasGroup gunCG;
-    public CanvasGroup flaregunCG;
-    public CanvasGroup platformLauncherCG;
-
+    //HealHUD
     public GameObject pickupHUDGO;
 
     //manual
@@ -184,8 +178,6 @@ public class UIManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        fpsText.text = (1.0f / Time.deltaTime).ToString();
-
         if (_caveGenerator.isGen)
         {
             float progress = _caveGenerator.generateProgress;
@@ -213,7 +205,6 @@ public class UIManager : MonoBehaviour
             {
                 _gameManager.isPause = true;
                 Cursor.lockState = CursorLockMode.None;
-                settingsChanged = false;
                 inGameUI.SetActive(false);
                 pauseMenu.SetActive(true);
                 Time.timeScale = 0;
@@ -242,28 +233,6 @@ public class UIManager : MonoBehaviour
         {
             platformLauncherCG.alpha = 1f;
         }
-    }
-
-    void ShowDamageDirection(Vector3 attackerPosition, Vector3 playerPosition)
-    {
-        Vector3 direction = (attackerPosition - playerPosition).normalized;
-
-        Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
-        triangle.rotation = rotation;
-
-        Vector3 screenPosition = Camera.main.WorldToScreenPoint(attackerPosition);
-
-        indicator.localPosition = screenPosition;
-
-        Vector2 screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
-
-        Vector2 directionFromCenter = new Vector2(screenPosition.x - screenCenter.x, screenPosition.y - screenCenter.y);
-
-        Vector2 normalizedDirection = directionFromCenter.normalized;
-
-        Vector2 ringPosition = screenCenter + normalizedDirection * ringRadius;
-
-        //indicator.localPosition = ringPosition;
     }
 
     void SaveSettings()

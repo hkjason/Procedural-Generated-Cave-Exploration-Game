@@ -5,7 +5,6 @@ public class SimplexNoise
 {
     private int _width, _height, _depth, _seed;
     private float magnitude = 4000f;
-    private CaveGenerator _caveGenerator;
     private FastNoiseLite _fastNoise;
 
     public ComputeShader computeShader;
@@ -18,7 +17,6 @@ public class SimplexNoise
         _height = height;
         _depth = depth;
         _seed = seed;
-        _caveGenerator = CaveGenerator.Instance;
 
         _fastNoise = new FastNoiseLite();
         _fastNoise.SetSeed(_seed);
@@ -52,14 +50,6 @@ public class SimplexNoise
         CaveGenerator.Instance.generateProgress = 0.075f;
         yield return null;
     }
-    private void OnDestroy()
-    {
-        if (_noiseBuffer != null)
-        {
-            _noiseBuffer.Release();
-            _noiseBuffer = null;
-        }
-    }
 
     public float GetNoise(int x, int y, int z)
     {
@@ -70,6 +60,14 @@ public class SimplexNoise
         noise /= 2;
 
         return noise;
+    }
+    private void OnDestroy()
+    {
+        if (_noiseBuffer != null)
+        {
+            _noiseBuffer.Release();
+            _noiseBuffer = null;
+        }
     }
 
 

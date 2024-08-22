@@ -25,7 +25,6 @@ public class ChunkManager : MonoBehaviour
     private ComputeBuffer _countBufferAll;
     //private ComputeBuffer _totalCount;
 
-
     private int _marchKernelIdx;
     private int _marchAllKernelIdx;
 
@@ -60,41 +59,6 @@ public class ChunkManager : MonoBehaviour
         _marchAllKernelIdx = computeShaderMarchAll.FindKernel("CSMarchingCubeAll");
         GlobalCount = 0;
     }
-
-    private void OnDrawGizmosSelected()
-    {
-        Vector3Int aloc = new Vector3Int(160, 152, 160);
-
-        for (int i = 0; i < 8; i++)
-        {
-            for (int j = 0; j < 8; j++)
-            {
-                for (int k = 0; k < 8; k++)
-                {
-                    Vector3Int loc = new Vector3Int(aloc.x + i, aloc.y + j, aloc.z + k);
-
-                    float noise = CaveGenerator.Instance._simplexNoise.GetNoise(loc.x, loc.y, loc.z);
-
-                    if (noise > 0.66f)
-                    {
-                        Gizmos.color = UnityEngine.Color.red;
-                        Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
-                    }
-                    else if (noise >= 0.33f && noise <= 0.66f)
-                    {
-                        Gizmos.color = UnityEngine.Color.yellow;
-                        Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
-                    }
-                    else
-                    {
-                        Gizmos.color = UnityEngine.Color.green;
-                        Gizmos.DrawSphere(new Vector3(loc.x / 4f, loc.y / 4f, loc.z / 4f), 0.1f);
-                    }
-                }
-            }
-        }
-    }
-
 
     public IEnumerator CreateChunks(int xSize, int ySize, int zSize)
     {
@@ -133,12 +97,12 @@ public class ChunkManager : MonoBehaviour
         
         yield return StartCoroutine(MarchAll());
 
-        /*
-        foreach (Chunk c in chunkDic.Values)
-        {
-            c.BuildPaths();
-        }
-        */
+        ///HPA* build map for chunks, not fully successful
+        //foreach (Chunk c in chunkDic.Values)
+        //{
+        //    c.BuildPaths();
+        //}
+        ///
     }
 
     public void BuildChunks(Chunk chunk)
@@ -252,7 +216,7 @@ public class ChunkManager : MonoBehaviour
                     _countBufferAll.GetData(totalCountArr);
                     int totalCount = totalCountArr[0];
 
-                    /*
+                    /* HPA* implementation, not fully successful
                     ComputeBuffer.CopyCount(_totalCount, _countBufferTest, 0);
                     int[] totalCountArr1 = new int[1];
                     _countBufferTest.GetData(totalCountArr1);
@@ -425,6 +389,127 @@ public class ChunkManager : MonoBehaviour
         }
     }
 
+    private int GetUpdatePos(int updatePos)
+    {
+        int pos;
+        pos = (updatePos / 8) * 8;
+
+        return pos;
+    }
+
+
+    private List<Vector3Int> GetChunkPosNew(Vector3Int updatePos)
+    {
+        List<Vector3Int> chunkList = new List<Vector3Int>();
+        int xPos, yPos, zPos;
+
+        int modX = updatePos.x % 8;
+        int modY = updatePos.y % 8;
+        int modZ = updatePos.z % 8;
+
+        if (modX != 0 && modY != 0 && modZ != 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            yPos = GetUpdatePos(updatePos.y);
+            zPos = GetUpdatePos(updatePos.z);
+
+            chunkList.Add(new Vector3Int(xPos, yPos, zPos));
+        }
+        else if (modX == 0 && modY == 0 && modZ == 0)
+        {
+            for (int i = -1; i < 1; i ++)
+            {
+                for (int j = -1; j < 1; j ++)
+                {
+                    for (int k = -1; k < 1; k++)
+                    {
+
+                        chunkList.Add(new Vector3Int(updatePos.x + i * 8, updatePos.y + j * 8, updatePos.z + k * 8));
+                    }
+                }
+            }
+        }
+        else if (modX == 0 && modY == 0)
+        {
+            zPos = GetUpdatePos(updatePos.z);
+            for (int i = -1; i < 1; i ++)
+            {
+                for (int j = -1; j < 1; j ++)
+                {
+                    chunkList.Add(new Vector3Int(updatePos.x + i * 8, updatePos.y + j * 8, zPos));
+                }
+            }
+        }
+        else if (modX == 0 && modZ == 0)
+        {
+            yPos = GetUpdatePos(updatePos.y);
+            for (int i = -1; i < 1; i++)
+            {
+                for (int k = -1; k < 1; k ++)
+                {
+                    chunkList.Add(new Vector3Int(updatePos.x + i * 8, yPos, updatePos.z + k * 8));
+                }
+            }
+        }
+        else if (modY == 0 && modZ == 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            for (int j = -1; j < 1; j ++)
+            {
+                for (int k = -1; k < 1; k ++)
+                {
+                    chunkList.Add(new Vector3Int(xPos, updatePos.y + j * 8, updatePos.z + k * 8));
+                }
+            }
+        }
+        else if (modX == 0)
+        {
+            yPos = GetUpdatePos(updatePos.y);
+            zPos = GetUpdatePos(updatePos.z);
+            for (int i = -1; i < 1; i ++)
+            {
+                chunkList.Add(new Vector3Int(updatePos.x + i * 8, yPos, zPos));
+            }
+        }
+        else if (modY == 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            zPos = GetUpdatePos(updatePos.z);
+            for (int j = -1; j < 1; j ++)
+            {
+                chunkList.Add(new Vector3Int(xPos, updatePos.y + j * 8, zPos));
+            }
+        }
+        else if (modZ == 0)
+        {
+            xPos = GetUpdatePos(updatePos.x);
+            yPos = GetUpdatePos(updatePos.y);
+            for (int k = -1; k < 1; k ++)
+            {
+                chunkList.Add(new Vector3Int(xPos, yPos, updatePos.z + k * 8));
+            }
+        }
+
+        return chunkList;
+    }
+
+    struct Triangle
+    {
+        public Vector3 vertA;
+        public Vector3 vertB;
+        public Vector3 vertC;
+    }
+
+    struct TriangleWithPos
+    {
+        public Vector3 vertA;
+        public Vector3 vertB;
+        public Vector3 vertC;
+        public Vector3 triPos;
+    }
+
+
+    /* Obsolete method for getting chunk position of dig point
     private List<Vector3Int> GetChunkPos(Vector3Int updatePos)
     {
         List<Vector3Int> chunkList = new List<Vector3Int>();
@@ -595,137 +680,5 @@ public class ChunkManager : MonoBehaviour
 
         return chunkList;
     }
-
-    private int GetUpdatePos(int updatePos)
-    {
-        int pos;
-        //int mod = updatePos % 8;
-
-        /*
-        if (mod != 0)
-        {
-            pos = (updatePos / 8) * 8 + 5;
-        }
-        else
-        {
-            pos = ((updatePos / 8) - 1) * 8 + 5;
-        }
-        */
-        pos = (updatePos / 8) * 8;
-
-
-        return pos;
-    }
-
-
-    private List<Vector3Int> GetChunkPosNew(Vector3Int updatePos)
-    {
-        List<Vector3Int> chunkList = new List<Vector3Int>();
-        int xPos, yPos, zPos;
-
-        int modX = updatePos.x % 8;
-        int modY = updatePos.y % 8;
-        int modZ = updatePos.z % 8;
-
-        if (modX != 0 && modY != 0 && modZ != 0)
-        {
-            xPos = GetUpdatePos(updatePos.x);
-            yPos = GetUpdatePos(updatePos.y);
-            zPos = GetUpdatePos(updatePos.z);
-
-            chunkList.Add(new Vector3Int(xPos, yPos, zPos));
-        }
-        else if (modX == 0 && modY == 0 && modZ == 0)
-        {
-            for (int i = -1; i < 1; i ++)
-            {
-                for (int j = -1; j < 1; j ++)
-                {
-                    for (int k = -1; k < 1; k++)
-                    {
-
-                        chunkList.Add(new Vector3Int(updatePos.x + i * 8, updatePos.y + j * 8, updatePos.z + k * 8));
-                    }
-                }
-            }
-        }
-        else if (modX == 0 && modY == 0)
-        {
-            zPos = GetUpdatePos(updatePos.z);
-            for (int i = -1; i < 1; i ++)
-            {
-                for (int j = -1; j < 1; j ++)
-                {
-                    chunkList.Add(new Vector3Int(updatePos.x + i * 8, updatePos.y + j * 8, zPos));
-                }
-            }
-        }
-        else if (modX == 0 && modZ == 0)
-        {
-            yPos = GetUpdatePos(updatePos.y);
-            for (int i = -1; i < 1; i++)
-            {
-                for (int k = -1; k < 1; k ++)
-                {
-                    chunkList.Add(new Vector3Int(updatePos.x + i * 8, yPos, updatePos.z + k * 8));
-                }
-            }
-        }
-        else if (modY == 0 && modZ == 0)
-        {
-            xPos = GetUpdatePos(updatePos.x);
-            for (int j = -1; j < 1; j ++)
-            {
-                for (int k = -1; k < 1; k ++)
-                {
-                    chunkList.Add(new Vector3Int(xPos, updatePos.y + j * 8, updatePos.z + k * 8));
-                }
-            }
-        }
-        else if (modX == 0)
-        {
-            yPos = GetUpdatePos(updatePos.y);
-            zPos = GetUpdatePos(updatePos.z);
-            for (int i = -1; i < 1; i ++)
-            {
-                chunkList.Add(new Vector3Int(updatePos.x + i * 8, yPos, zPos));
-            }
-        }
-        else if (modY == 0)
-        {
-            xPos = GetUpdatePos(updatePos.x);
-            zPos = GetUpdatePos(updatePos.z);
-            for (int j = -1; j < 1; j ++)
-            {
-                chunkList.Add(new Vector3Int(xPos, updatePos.y + j * 8, zPos));
-            }
-        }
-        else if (modZ == 0)
-        {
-            xPos = GetUpdatePos(updatePos.x);
-            yPos = GetUpdatePos(updatePos.y);
-            for (int k = -1; k < 1; k ++)
-            {
-                chunkList.Add(new Vector3Int(xPos, yPos, updatePos.z + k * 8));
-            }
-        }
-
-        return chunkList;
-    }
-
-
-    struct Triangle
-    {
-        public Vector3 vertA;
-        public Vector3 vertB;
-        public Vector3 vertC;
-    }
-
-    struct TriangleWithPos
-    {
-        public Vector3 vertA;
-        public Vector3 vertB;
-        public Vector3 vertC;
-        public Vector3 triPos;
-    }
+    */
 }

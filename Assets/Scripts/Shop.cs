@@ -32,7 +32,7 @@ public class Shop : MonoBehaviour
     public Slider flareIntensitySlider;
     public Slider hpSlider;
 
-    private int pickPowerCost = 60;
+    private int pickPowerCost = 40;
     private int[] pickSpeedCost = { 10, 20, 40};
     private int[] flareRechargeCost = { 10, 20, 20};
     private int[] flareDurationCost = { 20, 40 };
@@ -157,7 +157,6 @@ public class Shop : MonoBehaviour
             UpdateMoney();
         });
     }
-
 
     void UpdateMoney()
     {

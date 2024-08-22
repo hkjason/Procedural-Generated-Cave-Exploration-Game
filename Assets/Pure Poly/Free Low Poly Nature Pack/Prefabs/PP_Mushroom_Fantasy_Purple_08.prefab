@@ -285,4 +285,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6411ea7cdaf465b4288637880e9e091c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mushroomLight: {fileID: 6308645297275787559}
+  parentMushroom: {fileID: 3318689441606926373}

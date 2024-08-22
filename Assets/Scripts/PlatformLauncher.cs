@@ -7,8 +7,8 @@ public class PlatformLauncher : Equipment
     public Transform barrelEnd;
 
     public int bulletSpeed = 500;
-    private int _spareRounds = 8;
-    private int _currentRound = 2;
+    private int _spareRounds = 16;
+    private int _currentRound = 4;
 
     private GameManager _gameManager;
 
@@ -84,11 +84,11 @@ public class PlatformLauncher : Equipment
 
         isAnimating = true;
 
-        if (currentRound >= 2)
+        if (currentRound >= 4)
         {
             isAnimating = false;
         }
-        else if (currentRound < 2 && spareRounds >= 1)
+        else if (currentRound < 4 && spareRounds >= 1)
         {
             AudioManager.instance.PlayOnUnusedTrack(barrelEnd.position, "Platform_reload");
             StartCoroutine(WaitReload());
@@ -104,7 +104,7 @@ public class PlatformLauncher : Equipment
     {
         yield return StartCoroutine(ReloadCoroutine());
 
-        int roundsToReload = 2 - currentRound;
+        int roundsToReload = 4 - currentRound;
         if (spareRounds >= roundsToReload)
         {
             currentRound += roundsToReload;

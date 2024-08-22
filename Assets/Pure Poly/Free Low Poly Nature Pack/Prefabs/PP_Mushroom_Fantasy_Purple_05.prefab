@@ -160,7 +160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6411ea7cdaf465b4288637880e9e091c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mushroomLight: {fileID: 2042316355004708334}
+  parentMushroom: {fileID: 7749838506462483410}
 --- !u!1 &7749838506462483410
 GameObject:
   m_ObjectHideFlags: 0

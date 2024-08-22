@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Chunk
@@ -15,7 +14,81 @@ public class Chunk
     public float[] density;
     const int pointArrSize = 729;
 
+    //Map feature
+    public GameObject wireFrame;
+    private MeshFilter meshFilterWF;
+    private MeshRenderer meshRendererWF;
+
+    public Chunk(Vector3Int pos)
+    {
+        chunkObject = new GameObject(pos.x + ", " + pos.y + ", " + pos.z);
+        meshFilter = chunkObject.AddComponent<MeshFilter>();
+        meshCollider = chunkObject.AddComponent<MeshCollider>();
+        meshRenderer = chunkObject.AddComponent<MeshRenderer>();
+
+        chunkPosition = pos;
+
+        chunkObject.transform.SetParent(ChunkManager.Instance.transform);
+
+        chunkObject.layer = LayerMask.NameToLayer("Terrain");
+
+        density = new float[pointArrSize];
+
+        //Map feature
+        wireFrame = new GameObject("WireFrame " + pos.x + ", " + pos.y + ", " + pos.z);
+        wireFrame.transform.position = new Vector3(400, 0, 0);
+        meshFilterWF = wireFrame.AddComponent<MeshFilter>();
+        meshRendererWF = wireFrame.AddComponent<MeshRenderer>();
+
+        wireFrame.layer = LayerMask.NameToLayer("WireFrame");
+
+
+        //For HPA*
+        //Implementation was not fully successful
+        //exitPoints = new List<Vector3Int>();
+        //pathDic = new Dictionary<(Vector3Int, Vector3Int), List<Vector3Int>>();
+        //costDic = new Dictionary<(Vector3Int, Vector3Int), int>();
+        //exitDic = new Dictionary<Vector3Int, List<Vector3Int>>();
+    }
+
+    public void BuildChunk(Mesh mesh)
+    {
+        meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
+
+        meshRenderer.material = Resources.Load<Material>("Materials/CaveWall");
+
+        meshFilterWF.mesh = mesh;
+
+        meshRendererWF.material = Resources.Load<Material>("Materials/Wireframe-TransparentCulled");
+    }
+
+    public void UpdateChunk(Mesh mesh)
+    {
+        meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
+
+        meshFilterWF.mesh = mesh;
+    }
+
+    public void UpdateDensity()
+    {
+        for (int x = 0; x <= 8; x++)
+        {
+            for (int y = 0; y <= 8; y++)
+            {
+                for (int z = 0; z <= 8; z++)
+                {
+                    int idx = x * 81 + y * 9 + z;
+                    density[idx] = CaveGenerator.Instance.GetCave(x + chunkPosition.x, y + chunkPosition.y, z + chunkPosition.z);
+                }
+            }
+        }
+    }
+
     //For HPA*
+    //Implementation was not fully successful
+    /*
     public List<Vector3Int> exitPoints;
     public Dictionary<(Vector3Int, Vector3Int), List<Vector3Int>> pathDic;
     public Dictionary<(Vector3Int, Vector3Int), int> costDic;
@@ -56,42 +129,6 @@ public class Chunk
         new Vector3Int(0, 1, 1)
     };
 
-    //Map feature
-    public GameObject wireFrame;
-    private MeshFilter meshFilterWF;
-    private MeshRenderer meshRendererWF;
-
-    public Chunk(Vector3Int pos)
-    {
-        chunkObject = new GameObject(pos.x + ", " + pos.y + ", " + pos.z);
-        meshFilter = chunkObject.AddComponent<MeshFilter>();
-        meshCollider = chunkObject.AddComponent<MeshCollider>();
-        meshRenderer = chunkObject.AddComponent<MeshRenderer>();
-
-        chunkPosition = pos;
-
-        chunkObject.transform.SetParent(ChunkManager.Instance.transform);
-
-        chunkObject.layer = LayerMask.NameToLayer("Terrain");
-
-        density = new float[pointArrSize];
-
-        exitPoints = new List<Vector3Int>();
-        pathDic = new Dictionary<(Vector3Int, Vector3Int), List<Vector3Int>>();
-        costDic = new Dictionary<(Vector3Int, Vector3Int), int>();
-        exitDic = new Dictionary<Vector3Int, List<Vector3Int>>();
-
-
-
-        //Map feature
-        wireFrame = new GameObject("WireFrame " + pos.x + ", " + pos.y + ", " + pos.z);
-        wireFrame.transform.position = new Vector3(400, 0, 0);
-        meshFilterWF = wireFrame.AddComponent<MeshFilter>();
-        meshRendererWF = wireFrame.AddComponent<MeshRenderer>();
-
-        wireFrame.layer = LayerMask.NameToLayer("WireFrame");
-    }
-
     HashSet<Vector3Int> openSet;
     List<Vector3Int> openList;
 
@@ -126,9 +163,6 @@ public class Chunk
 
             if (area.Count > 0)
             {
-                
-
-
                 int x = 0;
                 int y = 0;
                 int z = 0;
@@ -159,13 +193,8 @@ public class Chunk
                 Vector3Int neighbourLoc = chunkPosition + new Vector3Int(0, 0, -8);
                 Vector3Int neighbourExit = thisExitPoint + new Vector3Int(0, 0, -1);
 
-
-
                 if (!exitPoints.Contains(thisExitPoint))
                 {
-                    //Debug.Log("XY add: " + thisExitPoint + " at: " + chunkPosition);
-                    //Debug.Log("XY dict add: " + neighbourExit + " at: " + chunkPosition);
-
                     exitPoints.Add(thisExitPoint);
                     connections = new List<Vector3Int>();
                     connections.Add(neighbourLoc);
@@ -175,23 +204,16 @@ public class Chunk
                 }
                 else
                 {
-                    //Debug.Log("XY dict change: " + thisExitPoint + " at: " + chunkPosition);
-
                     connections = exitDic[thisExitPoint];
                     connections.Add(neighbourLoc);
                     connections.Add(neighbourExit);
 
                     exitDic[thisExitPoint] = connections;
                 }
-
-
                 Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
 
                 if (!neighbourChunk.exitPoints.Contains(neighbourExit))
                 {
-                    //Debug.Log("XY neighbour add: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
-                    //Debug.Log("XY neighbour dict add: " + thisExitPoint + " at: " + neighbourChunk.chunkPosition);
-
                     neighbourChunk.exitPoints.Add(neighbourExit);
                     connections = new List<Vector3Int>();
                     connections.Add(chunkPosition);
@@ -201,8 +223,6 @@ public class Chunk
                 }
                 else
                 {
-                    //Debug.Log("XY neighbour dict change: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
-
                     connections = neighbourChunk.exitDic[neighbourExit];
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
@@ -238,18 +258,9 @@ public class Chunk
 
             if (area.Count > 0)
             {
-                /*
-                if (AStar.Instance.testCount > 0)
-                {
-                    return;
-                }
-                AStar.Instance.testCount++;
-                */
-
                 int x = 0;
                 int y = 0;
                 int z = 0;
-               
 
                 foreach (Vector3Int location in area)
                 {
@@ -277,16 +288,8 @@ public class Chunk
                 Vector3Int neighbourLoc = chunkPosition + new Vector3Int(0, -8, 0);
                 Vector3Int neighbourExit = thisExitPoint + new Vector3Int(0, -1, 0);
 
-                //Debug.Log("ChunkPos " + chunkPosition);
-                //Debug.Log("NeighbourChunkLoc " + neighbourLoc);
-                //Debug.Log("ExitPoint XY " + thisExitPoint);
-                //Debug.Log("NExitPoint " + neighbourExit);
-
                 if (!exitPoints.Contains(thisExitPoint))
                 {
-                    //Debug.Log("XZ add: " + thisExitPoint + " at: " + chunkPosition);
-                    //Debug.Log("XZ dict add: " + neighbourExit + " at: " + chunkPosition);
-
                     exitPoints.Add(thisExitPoint);
                     connections = new List<Vector3Int>();
                     connections.Add(neighbourLoc);
@@ -296,8 +299,6 @@ public class Chunk
                 }
                 else
                 {
-                    //Debug.Log("XZ dict change: " + thisExitPoint + " at: " + chunkPosition);
-
                     connections = new List<Vector3Int>();
                     connections = exitDic[thisExitPoint];
                     connections.Add(neighbourLoc);
@@ -309,9 +310,6 @@ public class Chunk
 
                 if (!neighbourChunk.exitPoints.Contains(neighbourExit))
                 {
-                    //Debug.Log("XZ neighbour add: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
-                    //Debug.Log("XZ neighbour dict add: " + thisExitPoint + " at: " + neighbourChunk.chunkPosition);
-
                     neighbourChunk.exitPoints.Add(neighbourExit);
                     connections = new List<Vector3Int>();
                     connections.Add(chunkPosition);
@@ -321,9 +319,6 @@ public class Chunk
                 }
                 else
                 {
-                    //Debug.Log("XZ neighbour dict change: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
-
-
                     connections = neighbourChunk.exitDic[neighbourExit];
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
@@ -351,7 +346,6 @@ public class Chunk
             Vector3Int baseLoc = openList[0];
 
             List<Vector3Int> area = FloodFillYZ(baseLoc);
-
 
             if (AStar.Instance.GetGrid(baseLoc) && AStar.Instance.TryGetGrid(baseLoc.x - 1, baseLoc.y, baseLoc.z))
             {
@@ -391,9 +385,6 @@ public class Chunk
 
                 if (!exitPoints.Contains(thisExitPoint))
                 {
-                    //Debug.Log("YZ add: " + thisExitPoint + " at: " + chunkPosition);
-                    //Debug.Log("YZ dict add: " + neighbourExit + " at: " + chunkPosition);
-
                     exitPoints.Add(thisExitPoint);
                     connections = new List<Vector3Int>();
                     connections.Add(neighbourLoc);
@@ -403,9 +394,6 @@ public class Chunk
                 }
                 else
                 {
-                    //Debug.Log("YZ dict change: " + thisExitPoint + " at: " + chunkPosition);
-
-
                     connections = exitDic[thisExitPoint];
                     connections.Add(neighbourLoc);
                     connections.Add(neighbourExit);
@@ -417,10 +405,6 @@ public class Chunk
                 Chunk neighbourChunk = ChunkManager.Instance.chunkDic[neighbourLoc];
                 if (!neighbourChunk.exitPoints.Contains(neighbourExit))
                 {
-                    //Debug.Log("YZ neighbour add: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
-                    //Debug.Log("YZ neighbour dict add: " + thisExitPoint + " at: " + neighbourChunk.chunkPosition);
-
-
                     neighbourChunk.exitPoints.Add(neighbourExit);
                     connections = new List<Vector3Int>();
                     connections.Add(chunkPosition);
@@ -430,8 +414,6 @@ public class Chunk
                 }
                 else
                 {
-                    //Debug.Log("YZ neighbour dict change: " + neighbourExit + " at: " + neighbourChunk.chunkPosition);
-
                     connections = neighbourChunk.exitDic[neighbourExit];
                     connections.Add(chunkPosition);
                     connections.Add(thisExitPoint);
@@ -540,40 +522,5 @@ public class Chunk
             }
         }
     }
-
-
-    public void BuildChunk(Mesh mesh)
-    {
-        meshFilter.mesh = mesh;
-        meshCollider.sharedMesh = mesh;
-
-        meshRenderer.material = Resources.Load<Material>("Materials/ForTesting");
-
-        meshFilterWF.mesh = mesh;
-
-        meshRendererWF.material = Resources.Load<Material>("Materials/Wireframe-TransparentCulled");
-    }
-
-    public void UpdateChunk(Mesh mesh)
-    {
-        meshFilter.mesh = mesh;
-        meshCollider.sharedMesh = mesh;
-
-        meshFilterWF.mesh = mesh;
-    }
-
-    public void UpdateDensity()
-    {
-        for (int x = 0; x <= 8; x++)
-        {
-            for (int y = 0; y <= 8; y++)
-            {
-                for (int z = 0; z <= 8; z++)
-                {
-                    int idx = x * 81 + y * 9 + z;
-                    density[idx] = CaveGenerator.Instance.GetCave(x + chunkPosition.x, y + chunkPosition.y, z + chunkPosition.z);
-                }
-            }
-        }
-    }
+    */
 }
