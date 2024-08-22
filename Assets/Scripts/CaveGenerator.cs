@@ -2,9 +2,11 @@ using GK;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 public class CaveGenerator : MonoBehaviour
 {
@@ -83,6 +85,61 @@ public class CaveGenerator : MonoBehaviour
             Instance = this;
         }
         _gameManager = GameManager.Instance;
+    }
+
+    Vector3Int[] cornerTable = new Vector3Int[8]
+    {
+        new Vector3Int(0, 0, 0),
+        new Vector3Int(1, 0, 0),
+        new Vector3Int(1, 1, 0),
+        new Vector3Int(0, 1, 0),
+        new Vector3Int(0, 0, 1),
+        new Vector3Int(1, 0, 1),
+        new Vector3Int(1, 1, 1),
+        new Vector3Int(0, 1, 1)
+
+    };
+
+    public float tempSize;
+    public float tempAlpha;
+    private void OnDrawGizmosSelected()
+    {
+        /*
+        for (int x = 256; x <= 264; x++)
+        {
+            for (int y = 192; y <= 200; y++)
+            {
+                for (int z = 176; z <= 184; z++)
+                {
+                    Vector3Int position = new Vector3Int(x, y, z);
+
+                    List<Vector3Int> tempList = _caveVisualisor.Temp(position);
+                    if (tempList.Count > 0)
+                    {
+                        foreach (Vector3Int vv in tempList)
+                        {
+                            float val = GetCave(vv.x, vv.y, vv.z);
+                            float colVal;
+                            
+                            if (val < 0)
+                            {
+                                colVal = 0;
+                            }
+                            else
+                            {
+                                colVal = 255;
+                            }
+
+                            Gizmos.color = new UnityEngine.Color(colVal, colVal, colVal, tempAlpha);
+
+                            Gizmos.DrawSphere(new Vector3(vv.x / 4f, vv.y / 4f, vv.z / 4f), tempSize);
+                        }
+                    }
+                }
+            }
+        }
+        //256, 192, 176
+        */
     }
 
     void Start()
@@ -178,20 +235,26 @@ public class CaveGenerator : MonoBehaviour
         mainTunnelAgent.Walk();
         ExcavationAgent mainCaveAgent = new ExcavationAgent(startingPt, 1, 10);
         mainCaveAgent.Walk();
-
+        
+        
         progressInt = 1;
         yield return StartCoroutine(_cellularAutomata.RunCSCA(width, height, depth));
-
+        
+        
         ResetBoundary();
         _simplexNoise = new SimplexNoise(width, height, depth, _seed, noiseComputeShader);
         progressInt = 2;
         yield return StartCoroutine(_simplexNoise.GenerateNoise());
-
+        
+        
         progressInt = 3;
         yield return StartCoroutine(_chunkManager.CreateChunks(width, height, depth));
 
+
+
         //Array.Clear(caveGrid, 0, caveGrid.Length);
 
+        
         DifficultyAreaGen();
 
         
@@ -202,8 +265,9 @@ public class CaveGenerator : MonoBehaviour
             _seed = 1;
             yield break;
         }
-        
+
         _convexHull.OreMeshGen();
+        
 
         player.Spawn(new Vector3(startingPt.x / 4, startingPt.y / 4, startingPt.z / 4));
 

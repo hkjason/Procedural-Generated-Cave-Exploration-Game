@@ -15,8 +15,6 @@ public class TunnelAgent : CaveAgent
             Vector3Int direction;
             do
             {
-                //direction = new Vector3Int(Random.Range(-1, 2), Random.Range(-1, 2), Random.Range(-1, 2));
-
                 direction = cornerTable[Random.Range(0, 6)];
             }
             while (!WithinBounds(currentPos + (direction * weight)));

@@ -24,7 +24,7 @@ namespace GK
         public LayerMask groundLayerMask;
 
         public int totalOreCount = 0;
-        public int oreCountInGame = 800;
+        private int oreCountInGame = 1200;
 
         Vector3Int[] neighbourTable = new Vector3Int[6]
         {
@@ -67,8 +67,8 @@ namespace GK
             {
                 int idx = UnityEngine.Random.Range(0, orePointsNew.Count);
 
-                oreCount[idx]++;
-                totalOreCount++;
+                oreCount[idx]+=6;
+                totalOreCount+=6;
             }
 
             for (int i = 0; i < CaveGenerator.Instance.orePointsNew.Count; i++)

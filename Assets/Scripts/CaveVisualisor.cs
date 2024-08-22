@@ -285,7 +285,6 @@ public class CaveVisualisor : MonoBehaviour
         new Vector3Int(1, 0, 1),
         new Vector3Int(1, 1, 1),
         new Vector3Int(0, 1, 1)
-
     };
     Vector2Int[] uvTable = new Vector2Int[6]
     {
@@ -363,6 +362,41 @@ public class CaveVisualisor : MonoBehaviour
         }
 
         RebuildMesh(chunk);
+    }
+
+    public List<Vector3Int> Temp(Vector3Int position)
+    {
+        List<Vector3Int> posList = new List<Vector3Int>();
+
+        float[] cube = new float[8];
+        for (int i = 0; i < 8; i++)
+        {
+            cube[i] = GetPosition(position + cornerTable[i]);
+        }
+
+        int configIndex = GetCubeConfiguration(cube);
+
+        if(configIndex == 0 || configIndex == 255) return posList;
+
+        int edgeIndex = 0;
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                int index = triangleTable[configIndex, edgeIndex];
+
+                if (index == -1) return posList;
+
+                Vector3Int vert1 = position + cornerTable[edgeTable[index, 0]];
+                Vector3Int vert2 = position + cornerTable[edgeTable[index, 1]];
+
+
+                posList.Add(vert1);
+                posList.Add(vert2);
+            }
+            edgeIndex++;
+        }
+        return posList;
     }
 
     void MarchingCube(Vector3Int position)
