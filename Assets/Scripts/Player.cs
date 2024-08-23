@@ -531,7 +531,14 @@ public class Player : MonoBehaviour
         {
             hp = 0;
             alive = false;
-            gameManager.GameEndDefeat();
+            if (oreCount < 200)
+            {
+                gameManager.GameEndDefeat();
+            }
+            else
+            {
+                gameManager.GameEndVictory();
+            }
         }
         else
         {

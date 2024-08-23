@@ -28,6 +28,7 @@ public class UIManager : MonoBehaviour
     //OreCount
     public TMP_Text oreCountText;
     public Image oreCountImage;
+    public TMP_Text earlyReturnText;
     //FlareCount
     public Slider flareCountSlider;
     //Ammo
@@ -283,6 +284,7 @@ public class UIManager : MonoBehaviour
         if (oreCount >= 200)
         {
             oreCountImage.enabled = true;
+            earlyReturnText.enabled = true;
         }
     }
 
@@ -409,8 +411,8 @@ public class UIManager : MonoBehaviour
             if (defeatPanel != null)
             { 
                 defeatPanel.SetActive(true);
-                victoryOre.text = Player.Instance.oreCount.ToString();
-                victoryCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 4).ToString();
+                defeatOre.text = Player.Instance.oreCount.ToString();
+                defeatCoin.text = Mathf.FloorToInt(Player.Instance.oreCount / 4).ToString();
             }
         }
     }
