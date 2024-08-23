@@ -337,7 +337,18 @@ namespace GK
         {
             OreGroup oreGroup = hit.transform.gameObject.GetComponent<OreGroup>();
 
-            float radius = UnityEngine.Random.Range(0.25f, 0.3f);
+            float radius;
+            int destructionMagnitude = 7;
+            if (GameManager.Instance.pickPowerLevel >= 1)
+            {
+                radius = UnityEngine.Random.Range(0.3f, 0.35f);
+                UnityEngine.Random.Range(11, 13);
+            }
+            else
+            {
+                radius = UnityEngine.Random.Range(0.25f, 0.3f);
+                UnityEngine.Random.Range(7, 11);
+            }
 
             List<Ore> oresWithinRadius = new List<Ore>();
 
@@ -349,9 +360,6 @@ namespace GK
                     oresWithinRadius.Add(ore);
                 }
             }
-
-            // Random destruction magnitude from 7 to 10
-            int destructionMagnitude = UnityEngine.Random.Range(7, 11);
 
             // Destroy points based on the magnitude
             if (oresWithinRadius.Count <= destructionMagnitude)

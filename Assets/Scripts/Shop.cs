@@ -229,7 +229,7 @@ public class Shop : MonoBehaviour
             flareDurationBtn.interactable = false;
         }
 
-        flareRechargeSlider.value = level;
+        flareDurationSlider.value = level;
     }
 
     void UpdateFlareIntensity()

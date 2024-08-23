@@ -1598,7 +1598,7 @@ GameObject:
   - component: {fileID: 164398536}
   - component: {fileID: 164398535}
   m_Layer: 5
-  m_Name: Text_Value
+  m_Name: DurationCost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2002,7 +2002,7 @@ GameObject:
   - component: {fileID: 220612525}
   - component: {fileID: 220612524}
   m_Layer: 5
-  m_Name: Button_Coin
+  m_Name: DurationBtnCoin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5375,7 +5375,7 @@ GameObject:
   - component: {fileID: 568910390}
   - component: {fileID: 568910389}
   m_Layer: 5
-  m_Name: Text_Value
+  m_Name: RechargeCost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9030,7 +9030,7 @@ GameObject:
   - component: {fileID: 1060998574}
   - component: {fileID: 1060998573}
   m_Layer: 5
-  m_Name: Slider
+  m_Name: RechargeSlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10556,7 +10556,7 @@ GameObject:
   - component: {fileID: 1226762741}
   - component: {fileID: 1226762740}
   m_Layer: 5
-  m_Name: Slider
+  m_Name: DurationSlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12241,13 +12241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 421da870e59d80a48a46ca9746cfd203, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startButton: {fileID: 1021819913}
-  startButtonGO: {fileID: 1021819910}
-  shopButtonGO: {fileID: 101630686}
-  loadPanel: {fileID: 821878213}
-  stateText: {fileID: 952443176}
-  percentageText: {fileID: 334876247}
-  percentageSlider: {fileID: 564206814}
   creditButton: {fileID: 390168567}
   dimmedBackground: {fileID: 162625940}
   closeCreditButton: {fileID: 462767818}
@@ -13073,7 +13066,7 @@ GameObject:
   - component: {fileID: 1559490112}
   - component: {fileID: 1559490111}
   m_Layer: 5
-  m_Name: Button_Coin
+  m_Name: RechargeBtnCoin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

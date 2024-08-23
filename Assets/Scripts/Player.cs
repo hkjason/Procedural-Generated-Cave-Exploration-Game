@@ -104,7 +104,7 @@ public class Player : MonoBehaviour
     public event Action<float> oreCountChanged;
     public event Action<int> flareCountChanged;
 
-    private int[] hpArr = { 100, 140, 160, 180, 200 };
+    private int[] hpArr = { 100, 140, 160, 180, 200, 220 };
     public int maxHp;
     private int _hp;
     public Slider hpSlider;
@@ -125,13 +125,6 @@ public class Player : MonoBehaviour
     public Mushroom currentMushroom;
     public event Action<bool> showHUD;
 
-
-    void OnDrawGizmosSelected()
-    {
-        // Draw a yellow sphere at the transform's position
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(_groundCheck.position, _checkRadius);
-    }
 
     private void Awake()
     {
@@ -161,7 +154,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         if (alive && !gameManager.isPause)
-        {
+        { 
             CameraMovement();
             GetPlayerMovement();
             GetPlayerAction();

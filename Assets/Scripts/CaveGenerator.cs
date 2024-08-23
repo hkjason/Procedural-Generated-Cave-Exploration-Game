@@ -509,24 +509,49 @@ public class CaveGenerator : MonoBehaviour
         Vector3 digSpot = new Vector3(x, y, z);
 
         List<Vector3Int> updatedPoint = new List<Vector3Int>();
-        for (int i = -1; i <= 1; i++)
+        if (_gameManager.pickPowerLevel >= 1)
         {
-            for (int j = -1; j <= 1; j++)
+            for (int i = -2; i <= 2; i++)
             {
-                for (int k = -1; k <= 1; k++)
+                for (int j = -2; j <= 2; j++)
                 {
-                    if (x + i <= 0 || y + j <= 0 || z + k <= 0 || x + i >= width -1 || y + j >= height - 1 || z + k >= depth -1)
-                    { continue; }
-
-                    if (GetCave(x + i, y + j, z + k) < 0)
+                    for (int k = -2; k <= 2; k++)
                     {
-                        Vector3Int point = new Vector3Int(x + i, y + j, z + k);
-                        SetCave(point.x, point.y, point.z, 1f);
-                        updatedPoint.Add(point);
+                        if (x + i <= 0 || y + j <= 0 || z + k <= 0 || x + i >= width - 1 || y + j >= height - 1 || z + k >= depth - 1)
+                        { continue; }
+
+                        if (GetCave(x + i, y + j, z + k) < 0)
+                        {
+                            Vector3Int point = new Vector3Int(x + i, y + j, z + k);
+                            SetCave(point.x, point.y, point.z, 1f);
+                            updatedPoint.Add(point);
+                        }
                     }
                 }
             }
         }
+        else
+        {
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int j = -1; j <= 1; j++)
+                {
+                    for (int k = -1; k <= 1; k++)
+                    {
+                        if (x + i <= 0 || y + j <= 0 || z + k <= 0 || x + i >= width - 1 || y + j >= height - 1 || z + k >= depth - 1)
+                        { continue; }
+
+                        if (GetCave(x + i, y + j, z + k) < 0)
+                        {
+                            Vector3Int point = new Vector3Int(x + i, y + j, z + k);
+                            SetCave(point.x, point.y, point.z, 1f);
+                            updatedPoint.Add(point);
+                        }
+                    }
+                }
+            }
+        }
+        
         _chunkManager.UpdateChunks(updatedPoint);
     }
 

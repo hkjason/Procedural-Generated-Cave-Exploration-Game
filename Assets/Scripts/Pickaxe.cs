@@ -21,7 +21,7 @@ public class Pickaxe : Equipment
 
     private Ray ray;
 
-    private float[] pickSpeedArr = {1f, 0.8f, 0.65f};
+    private float[] pickSpeedArr = {1f, 0.8f, 0.7f, 0.6f};
 
     private GameManager gameManager;
 
@@ -314,7 +314,14 @@ public class Pickaxe : Equipment
             {
                 Bat bat = hit.transform.GetComponent<Bat>();
                 AudioManager.instance.PlayOnUnusedTrack(hit.point, "Bat_Hit");
-                bat.BatHpChange(-20);
+                if (gameManager.pickPowerLevel >= 1)
+                {
+                    bat.BatHpChange(-40);
+                }
+                else
+                { 
+                    bat.BatHpChange(-20);
+                }
             }
         }
     }

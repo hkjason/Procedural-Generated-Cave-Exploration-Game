@@ -5,6 +5,14 @@ public class FlareRound : MonoBehaviour
     private Rigidbody rb;
     [SerializeField]
     private FlareType type;
+    [SerializeField]
+    private Light light;
+    private int[] lightIntensityArr = { 10, 14 };
+
+    private void Start()
+    {
+        light.range = lightIntensityArr[GameManager.Instance.flareIntensityLevel];
+    }
 
     void OnCollisionEnter(Collision collision)
     {

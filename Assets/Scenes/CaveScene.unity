@@ -7197,7 +7197,7 @@ MonoBehaviour:
   platformLauncherCG: {fileID: 815731664}
   oreCountText: {fileID: 2015524662}
   oreCountImage: {fileID: 673574316}
-  earlyReturnText: {fileID: 0}
+  earlyReturnText: {fileID: 170471683}
   flareCountSlider: {fileID: 327208653}
   roundsText: {fileID: 985089412}
   hpSlider: {fileID: 232936902}

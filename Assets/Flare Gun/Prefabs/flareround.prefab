@@ -310,3 +310,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 9010286869742346536}
   type: 1
+  light: {fileID: 7787092137751308924}
