@@ -1,5 +1,9 @@
 # Read me
-This readme file is best read through github, or could be read using any text editor
+This readme file is best read through github, or could be read using any text editor  
+
+To download the **Game**, please download **CaveDiver.zip**, unzip the file, and run Procedural Generated Cave Exploration Game.exe (run it within the folder).  
+
+To download the **Source Code**, please download **Assets/Scripts** folder.
 ## Credits
 ### Code
 * [FastNoiseLite](https://github.com/Auburn/FastNoiseLite/blob/master/HLSL/FastNoiseLite.hlsl) for Simplex Noise Generation, used in main/Assets/Scripts/FastNoiseLite.hlsl and main/Assets/Scripts/FastNoiseLite.cs  
