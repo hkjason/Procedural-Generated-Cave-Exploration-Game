@@ -16,6 +16,7 @@ This readme file is best read through github, or could be read using any text ed
 **Sfx**
 * [Pickaxe digging sound 1](https://assetstore.unity.com/packages/audio/sound-fx/foley/earth-materials-sfx-mini-pack-21405)
 * [Pickaxe digging sound 2](https://www.unrealengine.com/marketplace/en-US/product/rpg-dungeon-sounds)
+* [Pickaxe digging sound 3](https://assetstore.unity.com/packages/audio/sound-fx/horror-game-essentials-153417)
 * [Footstep sound](https://assetstore.unity.com/packages/audio/sound-fx/classic-footstep-sfx-173668)
 * [BGM](https://assetstore.unity.com/packages/audio/music/orchestral/enchanted-world-197452)
 * [Gun shots](https://assetstore.unity.com/packages/audio/sound-fx/weapons/weapons-of-choice-free-101807#content)
@@ -25,6 +26,7 @@ This readme file is best read through github, or could be read using any text ed
 * [Wireframe Shader for in game map](https://github.com/Chaser324/unity-wireframe)
 
 **Models**
+* [Pickaxe model](https://assetstore.unity.com/packages/3d/props/free-mining-pack-low-poly-ores-gems-tools-props-189962)
 * [Bullet models](https://assetstore.unity.com/packages/vfx/particles/epic-toon-fx-57772)
 * [Flaregun and flare models](https://assetstore.unity.com/packages/3d/props/guns/flare-gun-12820)
 * [Gun model](https://assetstore.unity.com/packages/3d/props/guns/sample-low-poly-guns-pack-207957)
